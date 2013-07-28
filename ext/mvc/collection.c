@@ -1419,7 +1419,7 @@ PHP_METHOD(Phalcon_Mvc_Collection, save){
 		/**
 		 * Save the document
 		 */
-		call_user_function(EG(function_table), &collection, &func, status, 2, params TSRMLS_CC);
+		call_user_function(NULL, &collection, &func, status, 2, params TSRMLS_CC);
 		zval_ptr_dtor(&options);
 	}
 
