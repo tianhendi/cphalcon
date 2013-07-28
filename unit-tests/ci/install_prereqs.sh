@@ -1,5 +1,7 @@
 #! /bin/sh
 
+export CFLAGS="-O1 -g3"
+
 DIR=$(readlink -enq $(dirname $0))
 
 if [ "$(php -r 'echo substr(PHP_VERSION, 0, 3);')" = "5.5" ]; then
@@ -8,8 +10,8 @@ else
 	phpenv config-add "$DIR/apc.ini"
 fi
 
-pecl install igbinary < /dev/null && phpenv config-add $(DIR)/igbinary.ini &
-pecl upgrade mongo < /dev/null && phpenv config-add $(DIR)/mongo.ini &
+pecl install igbinary < /dev/null &
+pecl upgrade mongo < /dev/null &
 
 phpenv config-add $(DIR)/memcache.ini
 wait

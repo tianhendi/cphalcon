@@ -2,7 +2,7 @@
 
 shopt -s nullglob
 export LC_ALL=C
-for i in core core.*; do
+for i in core core.* vgcore.*; do
 	if [ -f "$i" -a "$(file "$i" | grep -o 'core file')" ]; then
 		gdb -q $(file "$i" | grep -oE "'[^ ']+" | sed "s/^'//g") "$i" <<EOF
 set pagination 0
