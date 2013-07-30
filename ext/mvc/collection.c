@@ -1411,7 +1411,7 @@ PHP_METHOD(Phalcon_Mvc_Collection, save){
 		 */
 		ALLOC_INIT_ZVAL(options);
 		array_init(options);
-		add_assoc_bool_ex(options, SS("safe"), 1);
+		add_assoc_long_ex(options, SS("w"), 1);
 
 		params[0] = data;
 		params[1] = options;
