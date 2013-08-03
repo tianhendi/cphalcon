@@ -24,7 +24,7 @@ before_script:
  - ulimit -c unlimited || true
 
 script:
- - valgrind $(phpenv which php) ./unit-tests/ci/phpunit.php --debug -c unit-tests/phpunit.xml
+ - valgrind --read-var-info=yes --track-origins=yes --fullpath-after= $(phpenv which php) ./unit-tests/ci/phpunit.php --debug -c unit-tests/phpunit.xml
 
 after_failure:
  - sudo apt-get -qq install gdb
