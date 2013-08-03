@@ -12,4 +12,5 @@ pecl install igbinary < /dev/null &
 CFLAGS="-O1 -g" pecl upgrade mongo < /dev/null &
 
 phpenv config-add "$DIR/memcache.ini"
+phpenv config-rm xdebug.ini
 wait
