@@ -32,42 +32,21 @@
 #include "kernel/main.h"
 #include "kernel/memory.h"
 
-#include "kernel/fcall.h"
-#include "assets/filters/jsminifier.h"
-
 /**
- * Phalcon\Assets\Filters\Jsmin
+ * Phalcon\Image\Exception
  *
- * Deletes the characters which are insignificant to JavaScript. Comments will be removed. Tabs will be
- * replaced with spaces. Carriage returns will be replaced with linefeeds.
- * Most spaces and linefeeds will be removed.
+ * Exceptions thrown in Phalcon\Image will use this class
+ *
  */
 
 
 /**
- * Phalcon\Assets\Filters\Jsmin initializer
+ * Phalcon\Image\Exception initializer
  */
-PHALCON_INIT_CLASS(Phalcon_Assets_Filters_Jsmin){
+PHALCON_INIT_CLASS(Phalcon_Image_Exception){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Assets\\Filters, Jsmin, assets_filters_jsmin, phalcon_assets_filters_jsmin_method_entry, 0);
+	PHALCON_REGISTER_CLASS_EX(Phalcon\\Image, Exception, image_exception, "phalcon\\exception", NULL, 0);
 
 	return SUCCESS;
-}
-
-/**
- * Filters the content using JSMIN
- *
- * @param string $content
- * @return $content
- */
-PHP_METHOD(Phalcon_Assets_Filters_Jsmin, filter){
-
-	zval *content;
-
-	phalcon_fetch_params(0, 1, 0, &content);
-	
-	if (phalcon_jsmin(return_value, content TSRMLS_CC) == FAILURE) {
-		return;
-	}
 }
 

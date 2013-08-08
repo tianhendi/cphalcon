@@ -32,42 +32,41 @@
 #include "kernel/main.h"
 #include "kernel/memory.h"
 
-#include "kernel/fcall.h"
-#include "assets/filters/jsminifier.h"
-
 /**
- * Phalcon\Assets\Filters\Jsmin
+ * Phalcon\Image
  *
- * Deletes the characters which are insignificant to JavaScript. Comments will be removed. Tabs will be
- * replaced with spaces. Carriage returns will be replaced with linefeeds.
- * Most spaces and linefeeds will be removed.
+ * Image manipulation support. Allows images to be resized, cropped, etc.
+ *
+ *<code>
+ *	$image = new Phalcon\Image\Adapter\GD("upload/test.jpg");
+ *	$image->resize(200, 200);
+ *	$$image->save();
+ *</code>
  */
 
 
 /**
- * Phalcon\Assets\Filters\Jsmin initializer
+ * Phalcon\Image initializer
  */
-PHALCON_INIT_CLASS(Phalcon_Assets_Filters_Jsmin){
+PHALCON_INIT_CLASS(Phalcon_Image){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Assets\\Filters, Jsmin, assets_filters_jsmin, phalcon_assets_filters_jsmin_method_entry, 0);
+	PHALCON_REGISTER_CLASS(Phalcon, Image, image, NULL, ZEND_ACC_EXPLICIT_ABSTRACT_CLASS);
+	
+	// Resizing constraints
+	zend_declare_class_constant_long(phalcon_image_ce, SL("NONE"), 1 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("WIDTH"), 2 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("HEIGHT"), 3 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("AUTO"), 4 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("INVERSE"), 5 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("PRECISE"), 6 TSRMLS_CC);
+
+	// Flipping directions
+	zend_declare_class_constant_long(phalcon_image_ce, SL("HORIZONTAL"), 11 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("VERTICAL"), 12 TSRMLS_CC);
+
+	// Driver: GD, ImageMagick, etc
+	zend_declare_class_constant_long(phalcon_image_ce, SL("GD"), 21 TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("IMAGICK"), 22 TSRMLS_CC);
 
 	return SUCCESS;
 }
-
-/**
- * Filters the content using JSMIN
- *
- * @param string $content
- * @return $content
- */
-PHP_METHOD(Phalcon_Assets_Filters_Jsmin, filter){
-
-	zval *content;
-
-	phalcon_fetch_params(0, 1, 0, &content);
-	
-	if (phalcon_jsmin(return_value, content TSRMLS_CC) == FAILURE) {
-		return;
-	}
-}
-
