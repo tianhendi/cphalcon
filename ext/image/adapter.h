@@ -29,12 +29,14 @@ PHP_METHOD(Phalcon_Image_Adapter, getType);
 PHP_METHOD(Phalcon_Image_Adapter, getMime);
 PHP_METHOD(Phalcon_Image_Adapter, getImage);
 PHP_METHOD(Phalcon_Image_Adapter, resize);
+PHP_METHOD(Phalcon_Image_Adapter, liquidRescale);
 PHP_METHOD(Phalcon_Image_Adapter, crop);
 PHP_METHOD(Phalcon_Image_Adapter, rotate);
 PHP_METHOD(Phalcon_Image_Adapter, flip);
 PHP_METHOD(Phalcon_Image_Adapter, sharpen);
 PHP_METHOD(Phalcon_Image_Adapter, reflection);
 PHP_METHOD(Phalcon_Image_Adapter, watermark);
+PHP_METHOD(Phalcon_Image_Adapter, mask);
 PHP_METHOD(Phalcon_Image_Adapter, background);
 PHP_METHOD(Phalcon_Image_Adapter, save);
 PHP_METHOD(Phalcon_Image_Adapter, render);
@@ -47,6 +49,13 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_resize, 0, 0, 0)
 	ZEND_ARG_INFO(0, width)
 	ZEND_ARG_INFO(0, height)
 	ZEND_ARG_INFO(0, master)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_liquidrescale, 0, 0, 2)
+	ZEND_ARG_INFO(0, width)
+	ZEND_ARG_INFO(0, height)
+	ZEND_ARG_INFO(0, delta_x)
+	ZEND_ARG_INFO(0, rigidity)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_crop, 0, 0, 2)
@@ -81,6 +90,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_watermark, 0, 0, 1)
 	ZEND_ARG_INFO(0, opacity)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_mask, 0, 0, 1)
+	ZEND_ARG_INFO(0, mask)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_background, 0, 0, 1)
 	ZEND_ARG_INFO(0, color)
 	ZEND_ARG_INFO(0, quality)
@@ -105,12 +118,14 @@ PHALCON_INIT_FUNCS(phalcon_image_adapter_method_entry){
 	PHP_ME(Phalcon_Image_Adapter, getMime, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, getImage, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, resize, arginfo_phalcon_image_adapter_resize, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Image_Adapter, liquidRescale, arginfo_phalcon_image_adapter_liquidrescale, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, crop, arginfo_phalcon_image_adapter_crop, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, rotate, arginfo_phalcon_image_adapter_rotate, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, flip, arginfo_phalcon_image_adapter_flip, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, sharpen, arginfo_phalcon_image_adapter_sharpen, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, reflection, arginfo_phalcon_image_adapter_reflection, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, watermark, arginfo_phalcon_image_adapter_watermark, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Image_Adapter, mask, arginfo_phalcon_image_adapter_mask, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, background, arginfo_phalcon_image_adapter_background, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, save, arginfo_phalcon_image_adapter_save, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Image_Adapter, render, arginfo_phalcon_image_adapter_render, ZEND_ACC_PUBLIC)

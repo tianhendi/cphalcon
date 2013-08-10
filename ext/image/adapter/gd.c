@@ -48,9 +48,11 @@
  * Image manipulation support. Allows images to be resized, cropped, etc.
  *
  *<code>
- *	$image = new Phalcon\Image\Adapter\GD("upload/test.jpg");
- *	$image->resize(200, 200);
- *	$image->save();
+ *	$image = new Phalcon\Image\Adapter\Imagick("upload/test.jpg");
+ *	$image->resize(200, 200)->rotate(90)->crop(100, 100);
+ *	if ($image->save()) {
+ *		echo 'success';
+ *	}
  *</code>
  */
 
@@ -136,7 +138,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, check){
 
 	if (!zend_is_true(ret)) {
 		PHALCON_INIT_VAR(exception_message);
-		PHALCON_CONCAT_SVSVS(exception_message, "Image_GD requires GD version '", version ,"' or greater, you have '", gd_version, ",");
+		PHALCON_CONCAT_SVSVS(exception_message, "Phalcon\\Image\\Adapter\\GD requires GD version '", version ,"' or greater, you have '", gd_version, ",");
 		PHALCON_THROW_EXCEPTION_ZVAL(phalcon_image_exception_ce, exception_message);
 		return;
 	}
@@ -321,6 +323,28 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _resize) {
 	}
 
 	PHALCON_MM_RESTORE();
+}
+
+/**
+ * This method scales the images using liquid rescaling method. Only support Imagick
+ *
+ * @param int $width   new width
+ * @param int $height  new height
+ * @param int $delta_x How much the seam can traverse on x-axis. Passing 0 causes the seams to be straight. 
+ * @param int $rigidity Introduces a bias for non-straight seams. This parameter is typically 0.
+ * @return Phalcon\Image\Adapter
+ */
+PHP_METHOD(Phalcon_Image_Adapter_GD, _liquidRescale){
+
+	zval *width, *height, *delta_x = NULL, *rigidity = NULL;
+
+	PHALCON_MM_GROW();
+
+	phalcon_fetch_params(1, 4, 0, &width, &height, &delta_x, &rigidity);
+
+	PHALCON_THROW_EXCEPTION_STR(phalcon_image_exception_ce, "The GD does not support liquidRescale");
+
+	RETURN_THIS();
 }
 
 /**
@@ -803,6 +827,136 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark) {
 	} else {
 		ZVAL_BOOL(return_value, 0);
 	}
+
+	PHALCON_MM_RESTORE();
+}
+
+/**
+ * Composite one image onto another
+
+ *
+ * @param Phalcon\Image\Adapter $mask  mask Image instance
+ */
+PHP_METHOD(Phalcon_Image_Adapter_GD, _mask){
+
+	zval *mask, *image, *mask_image, *mask_image_width, *mask_image_height, *newimage, *image_width, *image_height, *saveflag, *color, *c, *alpha = NULL;
+	zval *r = NULL, *g = NULL, *b = NULL, *index = NULL, *index2 = NULL, *zx = NULL, *zy = NULL, *red = NULL;
+	zval *temp_image;
+	int x, y, w, h, i;
+
+	PHALCON_MM_GROW();
+
+	phalcon_fetch_params(1, 1, 0, &mask);
+	
+	PHALCON_SEPARATE_PARAM(mask);
+
+	PHALCON_OBS_VAR(image);
+	phalcon_read_property_this(&image, this_ptr, SL("_image"), PH_NOISY_CC);
+
+	PHALCON_INIT_VAR(mask_image);
+	phalcon_call_method(mask_image, mask, "getImage");
+
+	PHALCON_INIT_VAR(mask_image_width);
+	phalcon_call_func_p1(mask_image_width, "imagesx", mask_image);
+
+	PHALCON_INIT_VAR(mask_image_height);
+	phalcon_call_func_p1(mask_image_height, "imagesy", mask_image);
+
+	PHALCON_OBS_VAR(image_width);
+	phalcon_read_property_this(&image_width, this_ptr, SL("_width"), PH_NOISY_CC);
+
+	PHALCON_OBS_VAR(image_height);
+	phalcon_read_property_this(&image_height, this_ptr, SL("_height"), PH_NOISY_CC);
+
+	PHALCON_INIT_VAR(newimage);
+	phalcon_call_method_p2(newimage, this_ptr, "_create", image_width, image_height);
+
+	PHALCON_INIT_VAR(saveflag);
+	ZVAL_BOOL(saveflag, 1);
+
+	phalcon_call_func_p2_noret("imagesavealpha", newimage, saveflag);
+
+	PHALCON_INIT_VAR(c);
+	ZVAL_LONG(c, 0);
+
+	PHALCON_INIT_VAR(alpha);
+	ZVAL_LONG(alpha, 127);
+
+	PHALCON_INIT_VAR(color);
+	phalcon_call_func_p5(color, "imagecolorallocatealpha", newimage, c, c, c, alpha);
+
+	phalcon_call_func_p4_noret("imagefill", newimage, c, c, color);
+
+	if(!PHALCON_IS_EQUAL(image_width, mask_image_width) || !PHALCON_IS_EQUAL(image_height, mask_image_height)) {
+
+		PHALCON_INIT_VAR(temp_image);
+		phalcon_call_func_p2(temp_image, "imagecreatetruecolor", image_width, image_height);
+
+		PHALCON_CALL_FUNCTION(NULL, "imagecopyresampled", 10, temp_image, mask_image, c, c, c, c, image_width, image_height, mask_image_width, mask_image_height);
+		
+		phalcon_call_func_p1_noret("imagedestroy", mask_image);
+		PHALCON_CPY_WRT(mask_image, temp_image);
+	}
+	
+	w = phalcon_get_intval(image_width);
+	h = phalcon_get_intval(image_height);
+
+	for (x=0; x < w; x++) {
+		PHALCON_INIT_NVAR(zx);
+		ZVAL_LONG(zx, x);
+		for (y=0; y < h; y++) {
+			PHALCON_INIT_NVAR(zy);
+			ZVAL_LONG(zy, y);
+
+			PHALCON_INIT_NVAR(index);
+			phalcon_call_func_p3(index, "imagecolorat", mask_image, zx, zy);
+
+			PHALCON_INIT_NVAR(alpha);
+			phalcon_call_func_p2(alpha, "imagecolorsforindex", mask_image, index);
+
+			if (phalcon_array_isset_string(alpha, SS("red"))) {
+				PHALCON_OBS_VAR(red);
+				phalcon_array_fetch_string(&red, alpha, SL("red"), PH_NOISY);
+
+				i = (int)(127 - (phalcon_get_intval(red) / 2));
+
+				PHALCON_INIT_NVAR(alpha);
+				ZVAL_LONG(alpha, i);
+			}
+
+			PHALCON_INIT_NVAR(index2);
+			phalcon_call_func_p3(index2, "imagecolorat", image, zx, zy);
+
+			PHALCON_INIT_NVAR(c);
+			phalcon_call_func_p2(c, "imagecolorsforindex", image, index2);
+
+			if (phalcon_array_isset_string(c, SS("red"))) {
+				PHALCON_OBS_VAR(r);
+				phalcon_array_fetch_string(&r, c, SL("red"), PH_NOISY);
+			}
+			
+			if (phalcon_array_isset_string(c, SS("green"))) {
+				PHALCON_OBS_VAR(g);
+				phalcon_array_fetch_string(&g, c, SL("green"), PH_NOISY);
+			}
+			
+			if (phalcon_array_isset_string(c, SS("blue"))) {
+				PHALCON_OBS_VAR(b);
+				phalcon_array_fetch_string(&b, c, SL("blue"), PH_NOISY);
+			}
+
+			PHALCON_INIT_VAR(color);
+			phalcon_call_func_p5(color, "imagecolorallocatealpha", newimage, r, g, b, alpha);
+
+			phalcon_call_func_p4_noret("imagesetpixel", newimage, zx, zy, color);
+
+
+		}
+	}
+
+	phalcon_update_property_this(this_ptr, SL("_image"), newimage TSRMLS_CC);
+	phalcon_call_func_p1_noret("imagedestroy", image);
+	phalcon_call_func_p1_noret("imagedestroy", mask_image);
 
 	PHALCON_MM_RESTORE();
 }

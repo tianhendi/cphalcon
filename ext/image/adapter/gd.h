@@ -24,12 +24,14 @@ PHALCON_INIT_CLASS(Phalcon_Image_Adapter_GD);
 PHP_METHOD(Phalcon_Image_Adapter_GD, check);
 PHP_METHOD(Phalcon_Image_Adapter_GD, __construct);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _resize);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _liquidRescale);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _crop);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _rotate);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _flip);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _mask);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _background);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _save);
 PHP_METHOD(Phalcon_Image_Adapter_GD, _render);
@@ -43,6 +45,13 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__resize, 0, 0, 2)
 	ZEND_ARG_INFO(0, width)
 	ZEND_ARG_INFO(0, height)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__liquidrescale, 0, 0, 4)
+	ZEND_ARG_INFO(0, width)
+	ZEND_ARG_INFO(0, height)
+	ZEND_ARG_INFO(0, delta_x)
+	ZEND_ARG_INFO(0, rigidity)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__crop, 0, 0, 4)
@@ -77,6 +86,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__watermark, 0, 0, 4)
 	ZEND_ARG_INFO(0, opacity)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__mask, 0, 0, 1)
+	ZEND_ARG_INFO(0, mask)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__background, 0, 0, 4)
 	ZEND_ARG_INFO(0, r)
 	ZEND_ARG_INFO(0, g)
@@ -103,12 +116,14 @@ PHALCON_INIT_FUNCS(phalcon_image_adapter_gd_method_entry) {
 	PHP_ME(Phalcon_Image_Adapter_GD, check, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC) 
 	PHP_ME(Phalcon_Image_Adapter_GD, __construct, arginfo_phalcon_image_adapter_gd___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _resize, arginfo_phalcon_image_adapter_gd__resize, ZEND_ACC_PROTECTED) 
+	PHP_ME(Phalcon_Image_Adapter_GD, _liquidRescale, arginfo_phalcon_image_adapter_gd__liquidrescale, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _crop, arginfo_phalcon_image_adapter_gd__crop, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _rotate, arginfo_phalcon_image_adapter_gd__rotate, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _flip, arginfo_phalcon_image_adapter_gd__flip, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _sharpen, arginfo_phalcon_image_adapter_gd__sharpen, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _reflection, arginfo_phalcon_image_adapter_gd__reflection, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _watermark, arginfo_phalcon_image_adapter_gd__watermark, ZEND_ACC_PROTECTED) 
+	PHP_ME(Phalcon_Image_Adapter_GD, _mask, arginfo_phalcon_image_adapter_gd__mask, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _background, arginfo_phalcon_image_adapter_gd__background, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _save, arginfo_phalcon_image_adapter_gd__save, ZEND_ACC_PROTECTED) 
 	PHP_ME(Phalcon_Image_Adapter_GD, _render, arginfo_phalcon_image_adapter_gd__render, ZEND_ACC_PROTECTED) 

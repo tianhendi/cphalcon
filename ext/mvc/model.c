@@ -212,6 +212,8 @@ PHP_METHOD(Phalcon_Mvc_Model, __construct){
 			PHALCON_THROW_EXCEPTION_STR(phalcon_mvc_model_exception_ce, "The injected service 'modelsManager' is not valid");
 			return;
 		}
+
+		PHALCON_VERIFY_INTERFACE(models_manager, phalcon_mvc_model_managerinterface_ce);
 	}
 	
 	/** 
@@ -336,6 +338,8 @@ PHP_METHOD(Phalcon_Mvc_Model, getModelsMetaData){
 			return;
 		}
 	
+		PHALCON_VERIFY_INTERFACE(meta_data, phalcon_mvc_model_metadatainterface_ce);
+
 		/** 
 		 * Update the models-metada property
 		 */
@@ -3094,7 +3098,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 	zval *attribute_field = NULL, *exception_message = NULL;
 	zval *value = NULL, *bind_type = NULL, *default_value, *use_explicit_identity;
 	zval *success, *sequence_name = NULL, *support_sequences;
-	zval *source, *last_insert_id;
+	zval *schema, *source, *last_insert_id;
 	HashTable *ah0;
 	HashPosition hp0;
 	zval **hd;
@@ -3294,11 +3298,19 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 			if (phalcon_method_exists_ex(this_ptr, SS("getsequencename") TSRMLS_CC) == SUCCESS) {
 				phalcon_call_method(sequence_name, this_ptr, "getsequencename");
 			} else {
+				PHALCON_INIT_VAR(schema); 
+				phalcon_call_method(schema, this_ptr, "getschema"); 
+
 				PHALCON_INIT_VAR(source);
 				phalcon_call_method(source, this_ptr, "getsource");
-	
-				PHALCON_INIT_NVAR(sequence_name);
-				PHALCON_CONCAT_VSVS(sequence_name, source, "_", identity_field, "_seq");
+
+				if (PHALCON_IS_EMPTY(schema)) {	
+					PHALCON_INIT_NVAR(sequence_name);
+					PHALCON_CONCAT_VSVS(sequence_name, source, "_", identity_field, "_seq");
+				} else {
+					PHALCON_INIT_NVAR(sequence_name);
+					PHALCON_CONCAT_VSVSVS(sequence_name, schema, ".", source, "_", identity_field, "_seq");
+				}
 			}
 		}
 	
@@ -6446,6 +6458,8 @@ PHP_METHOD(Phalcon_Mvc_Model, unserialize){
 				PHALCON_THROW_EXCEPTION_STR(phalcon_mvc_model_exception_ce, "The injected service 'modelsManager' is not valid");
 				return;
 			}
+
+			PHALCON_VERIFY_INTERFACE(manager, phalcon_mvc_model_managerinterface_ce);
 	
 			/** 
 			 * Update the models manager

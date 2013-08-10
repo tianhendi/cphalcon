@@ -49,8 +49,10 @@
  *
  *<code>
  *	$image = new Phalcon\Image\Adapter\Imagick("upload/test.jpg");
- *	$image->resize(200, 200);
- *	$image->save();
+ *	$image->resize(200, 200)->rotate(90)->crop(100, 100);
+ *	if ($image->save()) {
+ *		echo 'success';
+ *	}
  *</code>
  */
 
@@ -74,15 +76,15 @@ PHALCON_INIT_CLASS(Phalcon_Image_Adapter_Imagick){
  */
 PHP_METHOD(Phalcon_Image_Adapter_Imagick, check){
 
-	zval *module_name, *ret = NULL, *exception_message;
+	zval *class_name, *ret = NULL, *exception_message;
 
 	PHALCON_MM_GROW();
 
-	PHALCON_INIT_VAR(module_name);
-	ZVAL_STRING(module_name, "imagick", 1);
+	PHALCON_INIT_VAR(class_name);
+	ZVAL_STRING(class_name, "imagick", 1);
 
 	PHALCON_INIT_NVAR(ret);
-	phalcon_call_func_p1(ret, "extension_loaded", module_name);
+	phalcon_call_func_p1(ret, "class_exists", class_name);
 
 	if (!zend_is_true(ret)) {
 		PHALCON_THROW_EXCEPTION_STR(phalcon_image_exception_ce, "Imagick is not installed, or the extension is not loaded");
@@ -190,6 +192,33 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _resize) {
 	}
 
 	PHALCON_MM_RESTORE();
+}
+
+/**
+ * This method scales the images using liquid rescaling method. Only support Imagick
+ *
+ * @param int $width   new width
+ * @param int $height  new height
+ * @param int $delta_x How much the seam can traverse on x-axis. Passing 0 causes the seams to be straight. 
+ * @param int $rigidity Introduces a bias for non-straight seams. This parameter is typically 0.
+ * @return Phalcon\Image\Adapter
+ */
+PHP_METHOD(Phalcon_Image_Adapter_Imagick, _liquidRescale){
+
+	zval *width, *height, *delta_x = NULL, *rigidity = NULL;
+	zval *im, *ret;
+
+	PHALCON_MM_GROW();
+
+	phalcon_fetch_params(1, 4, 0, &width, &height, &delta_x, &rigidity);
+
+	PHALCON_OBS_VAR(im);
+	phalcon_read_property_this(&im, this_ptr, SL("_image"), PH_NOISY_CC);
+
+	PHALCON_INIT_VAR(ret);
+	phalcon_call_method_p4(ret, im, "liquidRescaleImage", width, height, delta_x, rigidity);
+
+	RETURN_CTOR(ret);
 }
 
 /**
@@ -379,7 +408,7 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _sharpen) {
 PHP_METHOD(Phalcon_Image_Adapter_Imagick, _reflection) {
 
 	zval *height, *opacity, *fade_in, *o;
-	zval *im, *reflection, *image_width, *image_height, *reflection_width, *reflection_height, *tmp, *direction, *tmp_direction;
+	zval *im, *reflection, *image_width, *image_height, *reflection_width, *reflection_height, *tmp, *direction, *tmp_direction = NULL;
 	zval *fade, *pseudoString, *composite, *constant, *channel, *image, *background, *mode, *ret, *w, *h;
 	zend_class_entry *ce0, *ce1;
 	int int_amount, ini_h;
@@ -422,7 +451,6 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _reflection) {
 		PHALCON_CPY_WRT(tmp_direction, direction);
 	}
 
-
 	ce0 = zend_fetch_class(SL("Imagick"), ZEND_FETCH_CLASS_AUTO TSRMLS_CC);
 	
 	PHALCON_INIT_VAR(fade);
@@ -437,7 +465,6 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _reflection) {
 	PHALCON_INIT_VAR(pseudoString);
 	phalcon_call_func_p2(pseudoString, "vsprintf", tmp, tmp_direction);
 
-	
 	PHALCON_INIT_VAR(reflection_width);
 	phalcon_call_method(reflection_width, reflection, "getImageWidth");
 
@@ -457,7 +484,7 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _reflection) {
 	PHALCON_INIT_VAR(constant);
 	phalcon_get_class_constant(constant, ce0, SS("EVALUATE_MULTIPLY") TSRMLS_CC);
 
-	int_amount = Z_LVAL_P(opacity);
+	int_amount = phalcon_get_intval(opacity);
 	num = int_amount / 100;
 
 	PHALCON_INIT_VAR(o);
@@ -474,7 +501,7 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _reflection) {
 		phalcon_call_method_noret(image, "__construct");
 	}
 
-	ini_h = Z_LVAL_P(image_height) + Z_LVAL_P(height);
+	ini_h = phalcon_get_intval(image_height) + phalcon_get_intval(height);
 
 	PHALCON_INIT_NVAR(tmp);
 	ZVAL_LONG(tmp, ini_h);
@@ -606,6 +633,49 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _watermark) {
 		ZVAL_BOOL(return_value, 0);
 	}
 	
+	PHALCON_MM_RESTORE();
+}
+
+/**
+ * Composite one image onto another
+
+ *
+ * @param Phalcon\Image\Adapter $mask  mask Image instance
+ */
+PHP_METHOD(Phalcon_Image_Adapter_Imagick, _mask){
+
+	zval *mask, *im, *mask_im, *matte, *composite, *tmp;
+	zend_class_entry *ce0;
+
+	PHALCON_MM_GROW();
+
+	phalcon_fetch_params(1, 1, 0, &mask);
+	
+	PHALCON_SEPARATE_PARAM(mask);
+
+	PHALCON_OBS_VAR(im);
+	phalcon_read_property_this(&im, this_ptr, SL("_image"), PH_NOISY_CC);
+
+	PHALCON_INIT_VAR(mask_im);
+	phalcon_call_method(mask_im, mask, "getImage");
+
+	PHALCON_INIT_VAR(matte);
+	ZVAL_LONG(matte, 1);
+
+	PHALCON_INIT_VAR(tmp);
+	ZVAL_LONG(tmp, 0);
+
+	ce0 = zend_fetch_class(SL("Imagick"), ZEND_FETCH_CLASS_AUTO TSRMLS_CC);
+
+	PHALCON_INIT_VAR(composite);
+	phalcon_get_class_constant(composite, ce0, SS("COMPOSITE_DSTIN") TSRMLS_CC);
+
+	phalcon_call_method_p1_noret(im, "setImageMatte", matte);
+	phalcon_call_method_p4_noret(im, "compositeImage", mask_im, composite, tmp, tmp);
+
+	phalcon_call_method_noret(mask_im, "clear");
+	phalcon_call_method_noret(mask_im, "destroy");
+
 	PHALCON_MM_RESTORE();
 }
 
@@ -848,5 +918,26 @@ PHP_METHOD(Phalcon_Image_Adapter_Imagick, _render) {
 	PHALCON_INIT_VAR(image_string);
 	phalcon_call_method(image_string, im, "getImagesBlob");
 
-	RETURN_CCTOR(image_string);
+	RETURN_CTOR(image_string);
 }
+
+/**
+ * Destroys the loaded image to free up resources.
+ */
+PHP_METHOD(Phalcon_Image_Adapter_Imagick, __destruct){
+
+	zval *im = NULL;
+
+	PHALCON_MM_GROW();
+
+	PHALCON_OBS_VAR(im);
+	phalcon_read_property_this(&im, this_ptr, SL("_image"), PH_NOISY_CC);
+
+	if (!im) {
+		phalcon_call_method_noret(im, "clear");
+		phalcon_call_method_noret(im, "destroy");
+	}
+	
+	PHALCON_MM_RESTORE();
+}
+
