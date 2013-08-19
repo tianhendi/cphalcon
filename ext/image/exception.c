@@ -14,6 +14,8 @@
   +------------------------------------------------------------------------+
   | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
+  |          ZhuZongXin <dreamsxin@qq.com>                                 |
+  |          Vladimir Kolesnikov <vladimir@free-sevastopol.com>            |
   +------------------------------------------------------------------------+
 */
 
@@ -32,6 +34,8 @@
 #include "kernel/main.h"
 #include "kernel/memory.h"
 
+#include "image/exception.h"
+
 /**
  * Phalcon\Image\Exception
  *
@@ -45,7 +49,7 @@
  */
 PHALCON_INIT_CLASS(Phalcon_Image_Exception){
 
-	PHALCON_REGISTER_CLASS_EX(Phalcon\\Image, Exception, image_exception, "phalcon\\exception", NULL, 0);
+	PHALCON_REGISTER_CLASS_EX(Phalcon\\Image, Exception, image_exception, phalcon_exception_ce, NULL, 0);
 
 	return SUCCESS;
 }
