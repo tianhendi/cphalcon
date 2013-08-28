@@ -33,6 +33,7 @@ int phalcon_memnstr_str(const zval *haystack, char *needle, unsigned int needle_
 /** Function replacement */
 void phalcon_fast_strlen(zval *return_value, zval *str);
 void phalcon_fast_strtolower(zval *return_value, zval *str);
+void phalcon_strtolower_inplace(zval *s);
 void phalcon_fast_join(zval *result, zval *glue, zval *pieces TSRMLS_DC);
 void phalcon_fast_join_str(zval *result, char *glue, unsigned int glue_length, zval *pieces TSRMLS_DC);
 void phalcon_fast_explode(zval *result, zval *delimiter, zval *str);
@@ -97,5 +98,24 @@ void phalcon_htmlentities(zval *return_value, zval *string, zval *quoting, zval 
 void phalcon_strval(zval *return_value, zval *v);
 void phalcon_date(zval *return_value, zval *format, zval *timestamp TSRMLS_DC);
 void phalcon_addslashes(zval *return_value, zval *str TSRMLS_DC);
+
+#if PHP_VERSION_ID < 50400
+
+const char* zend_new_interned_string(const char *arKey, int nKeyLength, int free_src TSRMLS_DC);
+#define PHALCON_ZVAL_MAYBE_INTERNED_STRING(pz, string)  ZVAL_STRING(pz, string, 1);
+
+#else
+
+#define PHALCON_ZVAL_MAYBE_INTERNED_STRING(pz, string) \
+	do { \
+		if (IS_INTERNED(string)) { \
+			ZVAL_STRINGL(pz, string, INTERNED_LEN(string)-1, 0); \
+		} \
+		else { \
+			ZVAL_STRING(pz, string, 1); \
+		} \
+	} while (0)
+
+#endif /* PHP_VERSION_ID < 50400 */
 
 #endif /* PHALCON_KERNEL_STRING_H */

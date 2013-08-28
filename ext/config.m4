@@ -26,6 +26,7 @@ kernel/alternative/fcall.c \
 kernel/framework/orm.c \
 kernel/framework/router.c \
 kernel/framework/url.c \
+interned-strings.c \
 logger.c \
 flash.c \
 cli/dispatcher/exception.c \
@@ -416,4 +417,6 @@ image/adapter/imagick.c"
 	)
 
 	CPPFLAGS=$old_CPPFLAGS
+
+	PHP_ADD_MAKEFILE_FRAGMENT
 fi

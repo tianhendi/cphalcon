@@ -704,7 +704,7 @@ static PHP_MINIT_FUNCTION(phalcon){
 	PHALCON_INIT(Phalcon_Image_Adapter_Imagick);
 
 	orig_execute_internal = zend_execute_internal;
-	if (!zend_execute_internal) {
+	if (!zend_execute_internal && !getenv("PHALCON_NO_RVO")) {
 		zend_execute_internal = phalcon_execute_internal;
 	}
 
@@ -725,6 +725,7 @@ static PHP_MSHUTDOWN_FUNCTION(phalcon){
 static PHP_RINIT_FUNCTION(phalcon){
 
 	php_phalcon_init_globals(PHALCON_VGLOBAL TSRMLS_CC);
+	phalcon_init_interned_strings(TSRMLS_C);
 
 	return SUCCESS;
 }

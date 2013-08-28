@@ -141,6 +141,7 @@ class Build_Generator
 #include "ext/standard/php_array.h"
 #include "ext/standard/php_var.h"
 #include "ext/standard/php_http.h"
+#include "ext/standard/php_versioning.h"
 #include "ext/standard/html.h"
 #include "ext/standard/base64.h"
 #include "ext/standard/md5.h"
@@ -149,6 +150,7 @@ class Build_Generator
 #include "ext/spl/spl_heap.h"
 #include "ext/spl/spl_exceptions.h"
 #include "ext/spl/spl_directory.h"
+#include "ext/spl/spl_iterators.h"
 #include "ext/date/php_date.h"
 
 #ifdef PHALCON_USE_PHP_PCRE
@@ -275,33 +277,30 @@ class Build_Generator
 	 */
 	private function _recursiveAction($path, $handler)
 	{
-		$iterator = new DirectoryIterator($path);
+		$flags = FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::SKIP_DOTS | FilesystemIterator::UNIX_PATHS;
+		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, $flags));
 		foreach ($iterator as $item) {
 			if ($item->isDir()) {
-				$fileName = $item->getFileName();
-				if ($fileName != '.' && $fileName != '..') {
-					$this->_recursiveAction($item->getPathname(), $handler);
-				}
-			} else {
-				$itemPath = $item->getPathname();
-				if (!preg_match('/\.c$/', $itemPath)) {
-					//echo $itemPath, PHP_EOL;
-					continue;
-				}
-				if (strpos($itemPath, '/kernel/') !== false) {
-					//echo $itemPath, PHP_EOL;
-					continue;
-				}
-				if (strpos($itemPath, '/phalcon.c') !== false) {
-					//echo $itemPath, PHP_EOL;
-					continue;
-				}
-				if (isset($this->_exclusions[$itemPath])){
-					//echo $itemPath, PHP_EOL;
-					continue;
-				}
-				call_user_func_array($handler, array($itemPath));
+				continue;
 			}
+			$itemPath = $item->getPathname();
+			if (!preg_match('/\.c$/', $itemPath)) {
+				//echo $itemPath, PHP_EOL;
+				continue;
+			}
+			if (strpos($itemPath, '/kernel/') !== false) {
+				//echo $itemPath, PHP_EOL;
+				continue;
+			}
+			if (strpos($itemPath, '/phalcon.c') !== false) {
+				//echo $itemPath, PHP_EOL;
+				continue;
+			}
+			if (isset($this->_exclusions[$itemPath])){
+				//echo $itemPath, PHP_EOL;
+				continue;
+			}
+			call_user_func_array($handler, array($itemPath));
 		}
 	}
 
