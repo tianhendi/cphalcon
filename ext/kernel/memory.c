@@ -48,62 +48,6 @@
  * Not all methods must grown/restore the phalcon_memory_entry.
  */
 
-/**
- * Initializes/Reinitializes a variable
- */
-inline void phalcon_init_nvar(zval **var TSRMLS_DC) {
-	if (*var) {
-		if (Z_REFCOUNT_PP(var) > 1) {
-			Z_DELREF_PP(var);
-			ALLOC_ZVAL(*var);
-			Z_SET_REFCOUNT_PP(var, 1);
-			Z_UNSET_ISREF_PP(var);
-		} else {
-			zval_ptr_dtor(var);
-			PHALCON_ALLOC_ZVAL(*var);
-		}
-	} else {
-		phalcon_memory_alloc(var TSRMLS_CC);
-	}
-}
-
-/**
- * Copy/Write variables caring of reference counting
- */
-inline void phalcon_cpy_wrt(zval **dest, zval *var TSRMLS_DC) {
-
-	if (*dest) {
-		if (Z_REFCOUNT_PP(dest) > 0) {
-			zval_ptr_dtor(dest);
-		}
-	} else {
-		phalcon_memory_observe(dest TSRMLS_CC);
-	}
-
-	Z_ADDREF_P(var);
-	*dest = var;
-}
-
-/**
- * Copy/Write variables caring of reference counting also duplicating the origin ctor
- */
-inline void phalcon_cpy_wrt_ctor(zval **dest, zval *var TSRMLS_DC) {
-
-	if (*dest) {
-		if (Z_REFCOUNT_PP(dest) > 0) {
-			zval_ptr_dtor(dest);
-		}
-	} else {
-		phalcon_memory_observe(dest TSRMLS_CC);
-	}
-
-	Z_ADDREF_P(var);
-	*dest = var;
-	zval_copy_ctor(*dest);
-	Z_SET_REFCOUNT_PP(dest, 1);
-	Z_UNSET_ISREF_PP(dest);
-}
-
 static phalcon_memory_entry* phalcon_memory_grow_stack_common(zend_phalcon_globals *phalcon_globals_ptr)
 {
 	assert(phalcon_globals_ptr->start_memory != NULL);
@@ -246,6 +190,8 @@ static void phalcon_memory_restore_stack_common(zend_phalcon_globals *phalcon_gl
 	}
 }
 
+#ifndef PHALCON_RELEASE
+
 /**
  * Finishes the current memory stack by releasing allocated memory
  */
@@ -272,7 +218,6 @@ int PHALCON_FASTCALL phalcon_memory_restore_stack(const char *func TSRMLS_DC)
 	return SUCCESS;
 }
 
-#ifndef PHALCON_RELEASE
 /**
  * Adds a memory frame in the current executed method
  */
@@ -294,6 +239,7 @@ void PHALCON_FASTCALL phalcon_memory_grow_stack(TSRMLS_D) {
  */
 int PHALCON_FASTCALL phalcon_memory_restore_stack(TSRMLS_D) {
 	phalcon_memory_restore_stack_common(PHALCON_VGLOBAL TSRMLS_CC);
+	return SUCCESS;
 }
 #endif
 
@@ -418,13 +364,13 @@ void phalcon_create_symbol_table(TSRMLS_D) {
 	zend_phalcon_globals *phalcon_globals_ptr = PHALCON_VGLOBAL;
 	HashTable *symbol_table;
 
-	#ifndef PHALCON_RELEASE
+#ifndef PHALCON_RELEASE
 	if (!phalcon_globals_ptr->active_memory) {
 		fprintf(stderr, "ERROR: Trying to create a virtual symbol table without a memory frame");
 		phalcon_print_backtrace();
 		return;
 	}
-	#endif
+#endif
 
 	entry = (phalcon_symbol_table *) emalloc(sizeof(phalcon_symbol_table));
 	entry->scope = phalcon_globals_ptr->active_memory;
