@@ -175,6 +175,13 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 		PHALCON_INIT_VAR(imageinfo);
 		phalcon_call_func_p1(imageinfo, "getimagesize", realpath);
 
+		if (Z_TYPE_P(imageinfo) != IS_ARRAY) {
+			PHALCON_INIT_VAR(exception_message);
+			PHALCON_CONCAT_SVS(exception_message, "This file '", realpath, "' is not a valid image");
+			PHALCON_THROW_EXCEPTION_ZVAL(phalcon_image_exception_ce, exception_message);
+			return;
+		}
+
 		if (width) {
 			PHALCON_SEPARATE_PARAM(width);
 		}
