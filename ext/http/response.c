@@ -40,6 +40,8 @@
 #include "kernel/string.h"
 #include "kernel/file.h"
 
+#include "interned-strings.h"
+
 /**
  * Phalcon\Http\Response
  *
@@ -90,22 +92,14 @@ PHP_METHOD(Phalcon_Http_Response, __construct){
 
 	phalcon_fetch_params(1, 0, 3, &content, &code, &status);
 	
-	if (!content) {
-		PHALCON_INIT_VAR(content);
-	}
-	
-	if (!code) {
-		PHALCON_INIT_VAR(code);
-	}
-	
 	if (!status) {
-		PHALCON_INIT_VAR(status);
+		status = PHALCON_GLOBAL(z_null);
 	}
 	
-	if (Z_TYPE_P(content) != IS_NULL) {
+	if (content && Z_TYPE_P(content) != IS_NULL) {
 		phalcon_update_property_this(this_ptr, SL("_content"), content TSRMLS_CC);
 	}
-	if (Z_TYPE_P(code) != IS_NULL) {
+	if (code && Z_TYPE_P(code) != IS_NULL) {
 		phalcon_call_method_p2_noret(this_ptr, "setstatuscode", code, status);
 	}
 	
@@ -450,7 +444,7 @@ PHP_METHOD(Phalcon_Http_Response, setContentType){
 	phalcon_fetch_params(1, 1, 1, &content_type, &charset);
 	
 	if (!charset) {
-		PHALCON_INIT_VAR(charset);
+		charset = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(headers);
@@ -540,12 +534,11 @@ PHP_METHOD(Phalcon_Http_Response, redirect){
 	phalcon_fetch_params(1, 0, 3, &location, &external_redirect, &status_code);
 	
 	if (!location) {
-		PHALCON_INIT_VAR(location);
+		location = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (!external_redirect) {
-		PHALCON_INIT_VAR(external_redirect);
-		ZVAL_BOOL(external_redirect, 0);
+		external_redirect = PHALCON_GLOBAL(z_false);
 	}
 	
 	if (!status_code) {
@@ -564,7 +557,7 @@ PHP_METHOD(Phalcon_Http_Response, redirect){
 		phalcon_call_method(dependency_injector, this_ptr, "getdi");
 	
 		PHALCON_INIT_VAR(service);
-		ZVAL_STRING(service, "url", 1);
+		PHALCON_ZVAL_MAYBE_INTERNED_STRING(service, phalcon_interned_url);
 	
 		PHALCON_INIT_VAR(url);
 		phalcon_call_method_p1(url, dependency_injector, "getshared", service);
@@ -841,12 +834,11 @@ PHP_METHOD(Phalcon_Http_Response, setFileToSend){
 	phalcon_fetch_params(1, 1, 2, &file_path, &attachment_name, &attachment);
 	
 	if (!attachment_name) {
-		PHALCON_INIT_VAR(attachment_name);
+		attachment_name = PHALCON_GLOBAL(z_null);
 	}
 
-	if (!attachment) {		
-		PHALCON_INIT_VAR(attachment);
-		ZVAL_BOOL(attachment, 1);
+	if (!attachment) {
+		attachment = PHALCON_GLOBAL(z_true);
 	}
 	
 	if (Z_TYPE_P(attachment_name) != IS_STRING) {
@@ -856,7 +848,7 @@ PHP_METHOD(Phalcon_Http_Response, setFileToSend){
 		PHALCON_CPY_WRT(base_path, attachment_name);
 	}
 	
-	if (zend_is_true(attachment)) {		
+	if (zend_is_true(attachment)) {
 		PHALCON_INIT_VAR(headers);
 		phalcon_call_method(headers, this_ptr, "getheaders");
 

@@ -676,7 +676,7 @@ PHP_METHOD(Phalcon_Mvc_Model, assign){
 	phalcon_fetch_params(1, 1, 1, &data, &column_map);
 	
 	if (!column_map) {
-		PHALCON_INIT_VAR(column_map);
+		column_map = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (Z_TYPE_P(data) != IS_ARRAY) { 
@@ -751,12 +751,11 @@ PHP_METHOD(Phalcon_Mvc_Model, cloneResultMap){
 	phalcon_fetch_params(1, 3, 2, &base, &data, &column_map, &dirty_state, &keep_snapshots);
 	
 	if (!dirty_state) {
-		PHALCON_INIT_VAR(dirty_state);
-		ZVAL_LONG(dirty_state, 0);
+		dirty_state = PHALCON_GLOBAL(z_zero);
 	}
 	
 	if (!keep_snapshots) {
-		PHALCON_INIT_VAR(keep_snapshots);
+		keep_snapshots = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (Z_TYPE_P(data) != IS_ARRAY) { 
@@ -940,8 +939,7 @@ PHP_METHOD(Phalcon_Mvc_Model, cloneResult){
 	phalcon_fetch_params(1, 2, 1, &base, &data, &dirty_state);
 	
 	if (!dirty_state) {
-		PHALCON_INIT_VAR(dirty_state);
-		ZVAL_LONG(dirty_state, 0);
+		dirty_state = PHALCON_GLOBAL(z_zero);
 	}
 	
 	if (Z_TYPE_P(data) != IS_ARRAY) { 
@@ -1029,7 +1027,7 @@ PHP_METHOD(Phalcon_Mvc_Model, find){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(model_name);
@@ -1136,7 +1134,7 @@ PHP_METHOD(Phalcon_Mvc_Model, findFirst){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(model_name);
@@ -1196,8 +1194,7 @@ PHP_METHOD(Phalcon_Mvc_Model, findFirst){
 		phalcon_call_method_p1_noret(query, "cache", cache);
 	}
 	
-	PHALCON_INIT_VAR(unique);
-	ZVAL_BOOL(unique, 1);
+	unique = PHALCON_GLOBAL(z_true);
 	
 	/** 
 	 * Return only the first row
@@ -1635,7 +1632,7 @@ PHP_METHOD(Phalcon_Mvc_Model, count){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(function);
@@ -1674,7 +1671,7 @@ PHP_METHOD(Phalcon_Mvc_Model, sum){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(function);
@@ -1713,7 +1710,7 @@ PHP_METHOD(Phalcon_Mvc_Model, maximum){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(function);
@@ -1752,7 +1749,7 @@ PHP_METHOD(Phalcon_Mvc_Model, minimum){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(function);
@@ -1791,7 +1788,7 @@ PHP_METHOD(Phalcon_Mvc_Model, average){
 	phalcon_fetch_params(1, 0, 1, &parameters);
 	
 	if (!parameters) {
-		PHALCON_INIT_VAR(parameters);
+		parameters = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(function);
@@ -2000,10 +1997,13 @@ PHP_METHOD(Phalcon_Mvc_Model, validate){
 		PHALCON_INIT_VAR(field_name);
 		phalcon_call_method(field_name, validator, "getFieldName");
 
-		PHALCON_INIT_VAR(value);
-		phalcon_call_method_p1(value, this_ptr, "readattribute", field_name);
-
-		if (PHALCON_IS_EMPTY(value)) {
+		if (phalcon_isset_property_zval(this_ptr, field_name TSRMLS_CC)) {
+			PHALCON_OBS_VAR(value);
+			phalcon_read_property_zval(&value, this_ptr, field_name, PH_NOISY_CC);
+			if (PHALCON_IS_EMPTY(value)) {
+				RETURN_THIS();
+			}
+		} else {
 			RETURN_THIS();
 		}
 	}
@@ -3627,8 +3627,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _preSaveRelatedRecords){
 
 	phalcon_fetch_params(1, 2, 0, &connection, &related);
 	
-	PHALCON_INIT_VAR(nesting);
-	ZVAL_BOOL(nesting, 0);
+	nesting = PHALCON_GLOBAL(z_false);
 	
 	/** 
 	 * Start an implicit transaction
@@ -3999,11 +3998,11 @@ PHP_METHOD(Phalcon_Mvc_Model, save){
 	phalcon_fetch_params(1, 0, 2, &data, &white_list);
 	
 	if (!data) {
-		PHALCON_INIT_VAR(data);
+		data = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (!white_list) {
-		PHALCON_INIT_VAR(white_list);
+		white_list = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(meta_data);
@@ -4267,11 +4266,11 @@ PHP_METHOD(Phalcon_Mvc_Model, create){
 	phalcon_fetch_params(1, 0, 2, &data, &white_list);
 	
 	if (!data) {
-		PHALCON_INIT_VAR(data);
+		data = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (!white_list) {
-		PHALCON_INIT_VAR(white_list);
+		white_list = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(meta_data);
@@ -4432,11 +4431,11 @@ PHP_METHOD(Phalcon_Mvc_Model, update){
 	phalcon_fetch_params(1, 0, 2, &data, &white_list);
 	
 	if (!data) {
-		PHALCON_INIT_VAR(data);
+		data = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (!white_list) {
-		PHALCON_INIT_VAR(white_list);
+		white_list = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(meta_data);
@@ -5044,8 +5043,7 @@ PHP_METHOD(Phalcon_Mvc_Model, skipAttributes){
 	}
 
 	if (!replace) {
-		PHALCON_INIT_VAR(replace);
-		ZVAL_FALSE(replace);
+		replace = PHALCON_GLOBAL(z_false);
 	}
 	
 	PHALCON_INIT_VAR(null_value);
@@ -5109,11 +5107,11 @@ PHP_METHOD(Phalcon_Mvc_Model, skipAttributesOnCreate){
 	}
 
 	if (!replace) {
-		PHALCON_INIT_VAR(replace);
+		replace = PHALCON_GLOBAL(z_false);
 		ZVAL_FALSE(replace);
 	}
 	
-	PHALCON_INIT_VAR(null_value);
+	null_value = PHALCON_GLOBAL(z_null);
 	
 	PHALCON_INIT_VAR(keys_attributes);
 	array_init(keys_attributes);
@@ -5173,11 +5171,10 @@ PHP_METHOD(Phalcon_Mvc_Model, skipAttributesOnUpdate){
 	}
 
 	if (!replace) {
-		PHALCON_INIT_VAR(replace);
-		ZVAL_FALSE(replace);
+		replace = PHALCON_GLOBAL(z_false);
 	}
 	
-	PHALCON_INIT_VAR(null_value);
+	null_value = PHALCON_GLOBAL(z_null);
 	
 	PHALCON_INIT_VAR(keys_attributes);
 	array_init(keys_attributes);
@@ -5188,7 +5185,7 @@ PHP_METHOD(Phalcon_Mvc_Model, skipAttributesOnUpdate){
 	
 		PHALCON_GET_HVALUE(attribute);
 	
-		phalcon_array_update_zval(&keys_attributes, attribute, &null_value, PH_COPY | PH_SEPARATE);
+		phalcon_array_update_zval(&keys_attributes, attribute, &null_value, PH_COPY);
 	
 		zend_hash_move_forward_ex(ah0, &hp0);
 	}
@@ -5232,7 +5229,7 @@ PHP_METHOD(Phalcon_Mvc_Model, hasOne){
 	phalcon_fetch_params(1, 3, 1, &fields, &reference_model, &referenced_fields, &options);
 	
 	if (!options) {
-		PHALCON_INIT_VAR(options);
+		options = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_OBS_VAR(manager);
@@ -5273,7 +5270,7 @@ PHP_METHOD(Phalcon_Mvc_Model, belongsTo){
 	phalcon_fetch_params(1, 3, 1, &fields, &reference_model, &referenced_fields, &options);
 	
 	if (!options) {
-		PHALCON_INIT_VAR(options);
+		options = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_OBS_VAR(manager);
@@ -5314,7 +5311,7 @@ PHP_METHOD(Phalcon_Mvc_Model, hasMany){
 	phalcon_fetch_params(1, 3, 1, &fields, &reference_model, &referenced_fields, &options);
 	
 	if (!options) {
-		PHALCON_INIT_VAR(options);
+		options = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_OBS_VAR(manager);
@@ -5366,10 +5363,9 @@ PHP_METHOD(Phalcon_Mvc_Model, hasManyToMany){
 
 	phalcon_fetch_params(1, 6, 1, &fields, &intermediate_model, &intermediate_fields, &intermediate_referenced_fields, &reference_model, &referenced_fields, &options);
 	
-	PHALCON_OBS_VAR(manager);
-	phalcon_read_property_this(&manager, this_ptr, SL("_modelsManager"), PH_NOISY_CC);
+	manager = phalcon_fetch_nproperty_this(this_ptr, SL("_modelsManager"), PH_NOISY_CC);
 	
-	PHALCON_CALL_METHOD(return_value, return_value_ptr, manager, "addhasmanytomany", zend_inline_hash_func(SS("addhasmanytomany")), (options ? 8 : 7), this_ptr, fields, intermediate_model, intermediate_fields, intermediate_referenced_fields, reference_model, referenced_fields, options);
+	PHALCON_RETURN_CALL_METHOD(manager, "addhasmanytomany", zend_inline_hash_func(SS("addhasmanytomany")), (options ? 8 : 7), this_ptr, fields, intermediate_model, intermediate_fields, intermediate_referenced_fields, reference_model, referenced_fields, options);
 	RETURN_MM();
 }
 
@@ -5466,7 +5462,7 @@ PHP_METHOD(Phalcon_Mvc_Model, setSnapshotData){
 	phalcon_fetch_params(1, 1, 1, &data, &column_map);
 	
 	if (!column_map) {
-		PHALCON_INIT_VAR(column_map);
+		column_map = PHALCON_GLOBAL(z_null);
 	}
 	
 	if (Z_TYPE_P(data) != IS_ARRAY) { 
@@ -5575,7 +5571,7 @@ PHP_METHOD(Phalcon_Mvc_Model, hasChanged){
 	phalcon_fetch_params(1, 0, 1, &field_name);
 	
 	if (!field_name) {
-		PHALCON_INIT_VAR(field_name);
+		field_name = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_OBS_VAR(snapshot);
@@ -5891,7 +5887,7 @@ PHP_METHOD(Phalcon_Mvc_Model, getRelated){
 	phalcon_fetch_params(1, 1, 1, &alias, &arguments);
 	
 	if (!arguments) {
-		PHALCON_INIT_VAR(arguments);
+		arguments = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_OBS_VAR(manager);
@@ -6084,7 +6080,7 @@ PHP_METHOD(Phalcon_Mvc_Model, __callStatic){
 	phalcon_fetch_params(1, 1, 1, &method, &arguments);
 	
 	if (!arguments) {
-		PHALCON_INIT_VAR(arguments);
+		arguments = PHALCON_GLOBAL(z_null);
 	}
 	
 	PHALCON_INIT_VAR(extra_method);

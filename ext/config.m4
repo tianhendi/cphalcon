@@ -348,6 +348,8 @@ image/adapterinterface.c \
 image/exception.c \
 image/adapter/gd.c \
 image/adapter/imagick.c \
+utils/exception.c \
+utils/scws.c \
 utils/slug.c \
 utils/date.c \
 utils/arr.c \
@@ -426,6 +428,24 @@ mvc/model/validator/json.c"
 	)
 
 	CPPFLAGS=$old_CPPFLAGS
+
+	if test "$enable_scws" != "yes"; then
+		for i in /usr/local /usr /opt/local /usr/local/scws; do
+			if test -r $i/include/scws/scws.h; then
+				SCWS_DIR=$i
+
+				CPPFLAGS="${CPPFLAGS} -I${SCWS_DIR}/include/scws -L${SCWS_DIR}/lib -lscws -lm"
+
+				AC_MSG_RESULT("scws found ${CPPFLAGS}")
+				break
+			fi
+		done
+
+		if test -z $SCWS_DIR; then
+			AC_MSG_RESULT("scws not found")
+			AC_MSG_ERROR("Please check your scws installation.")
+		fi
+	fi
 
 	for i in /usr/local /usr; do
 		if test -r $i/include/curl/easy.h; then
