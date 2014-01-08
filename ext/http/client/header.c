@@ -327,3 +327,11 @@ PHP_METHOD(Phalcon_Http_Client_Header, build){
 	RETURN_CCTOR(lines);
 }
 
+PHP_METHOD(Phalcon_Http_Client_Header, count){
+
+	zval *fields;
+
+	fields = phalcon_fetch_nproperty_this(this_ptr, SL("_fields"), PH_NOISY_CC)
+	phalcon_fast_count(return_value, fields TSRMLS_CC);
+}
+
