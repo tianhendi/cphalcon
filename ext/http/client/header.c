@@ -57,12 +57,10 @@
 PHALCON_INIT_CLASS(Phalcon_Http_Client_Header){
 
 	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_header_method_entry, 0);
-	//PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_header_method_entry, ZEND_ACC_EXPLICIT_ABSTRACT_CLASS);
 
 	zval *messages;
 	MAKE_STD_ZVAL(messages);
 	array_init(messages);
-	//array_init_size(messages, 41);
 
 	phalcon_array_update_long_string(&messages, 100, SL("Continue"), PH_SEPARATE);
 	phalcon_array_update_long_string(&messages, 101, SL("Switching Protocols"), PH_SEPARATE);
@@ -140,18 +138,6 @@ PHP_METHOD(Phalcon_Http_Client_Header, set){
 
 	zval *name, *value, *fields;
 
-	//PHALCON_MM_GROW();
-
-	//phalcon_fetch_params(1, 2, 0, &name, &value);
-
-	//PHALCON_OBS_VAR(fields);
-	//phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY_CC);
-
-	//phalcon_array_update_zval(&fields, key, &value, PH_COPY);
-	//phalcon_update_property_this(this_ptr, SL("_fields"), fields TSRMLS_CC);
-
-	//PHALCON_MM_RESTORE();
-
 	phalcon_fetch_params(0, 2, 0, &name, &value);
 
 	phalcon_update_property_array(this_ptr, SL("_fields"), name, value TSRMLS_CC);
@@ -179,7 +165,6 @@ PHP_METHOD(Phalcon_Http_Client_Header, addMultiple){
 	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY_CC);
 
 	phalcon_array_merge_recursive_n(&fields, values);
-	//phalcon_merge_append(fields, values);
 
 	phalcon_update_property_this(this_ptr, SL("_fields"), fields TSRMLS_CC);
 
@@ -280,5 +265,65 @@ PHP_METHOD(Phalcon_Http_Client_Header, parse){
 	}
 
 	PHALCON_MM_RESTORE();
+}
+
+PHP_METHOD(Phalcon_Http_Client_Header, build){
+
+	zval *flags = NULL, *messages, *status_code, *message = NULL, *version, *lines, *line = NULL;
+	zval *fields, *filed = NULL, *value = NULL, *join_filed;
+	HashTable *ah0;
+	HashPosition hp0;
+	zval **hd;
+	int f = 0;
+
+	PHALCON_MM_GROW();
+
+	phalcon_fetch_params(1, 0, 1, &flags);
+
+	if (flags) {
+		f = phalcon_get_intval(flags);
+	}
+
+	PHALCON_INIT_VAR(lines);
+	array_init(lines);
+
+	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC)
+	status_code = phalcon_fetch_nproperty_this(this_ptr, SL("_status_code"), PH_NOISY_CC);
+	
+	if ((f & PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS) && phalcon_array_isset_fetch(&message, messages, status_code)) {
+		version  = phalcon_fetch_nproperty_this(this_ptr, SL("_version "), PH_NOISY_CC);
+
+		PHALCON_INIT_NVAR(line);
+		PHALCON_CONCAT_SVS(line, "HTTP/", version, " ");
+		PHALCON_SCONCAT_VSV(line, status_code, " ", message);
+
+		phalcon_merge_append(lines, line);
+
+	}
+
+	fields = phalcon_fetch_nproperty_this(this_ptr, SL("_fields"), PH_NOISY_CC);
+
+	phalcon_is_iterable(fields, &ah0, &hp0, 0, 0);	
+	while (zend_hash_get_current_data_ex(ah0, (void**) &hd, &hp0) == SUCCESS) {
+	
+		PHALCON_GET_HKEY(filed, ah0, hp0);
+		PHALCON_GET_HVALUE(value);
+
+		PHALCON_INIT_NVAR(line);
+		PHALCON_CONCAT_VSV(line, filed, ": ", value);
+
+		phalcon_merge_append(lines, line);
+
+		zend_hash_move_forward_ex(ah0, &hp0);
+	}
+
+	if (f & PHALCON_HTTP_CLIENT_HEADER_BUILD_FIELDS) {
+		PHALCON_INIT_VAR(join_filed);
+		phalcon_fast_join_str(join_filed, SL("\r\n"), lines TSRMLS_CC);
+
+		RETURN_CCTOR(join_filed);
+	}
+
+	RETURN_CCTOR(lines);
 }
 
