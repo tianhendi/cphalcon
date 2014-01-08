@@ -109,7 +109,7 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Header){
 	phalcon_array_update_long_string(&messages, 505, SL("HTTP Version Not Supported"), PH_SEPARATE);
 	phalcon_array_update_long_string(&messages, 506, SL("Bandwidth Limit Exceeded"), PH_SEPARATE);
 
-	zend_declare_property(phalcon_http_client_header_ce, SL("_messages"), messages, ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property(phalcon_http_client_header_ce, SL("_messages"), messages, ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
 
 	zval_ptr_dtor(&messages);
 
@@ -287,7 +287,10 @@ PHP_METHOD(Phalcon_Http_Client_Header, build){
 	PHALCON_INIT_VAR(lines);
 	array_init(lines);
 
-	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC)
+	//messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC);
+	PHALCON_OBS_VAR(messages);
+	phalcon_read_static_property(&messages, phalcon_http_client_header_ce, SL("_messages") TSRMLS_CC);
+
 	status_code = phalcon_fetch_nproperty_this(this_ptr, SL("_status_code"), PH_NOISY_CC);
 	
 	if ((f & PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS) && phalcon_array_isset_fetch(&message, messages, status_code)) {

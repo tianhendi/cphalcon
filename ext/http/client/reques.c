@@ -43,31 +43,38 @@
 #include "kernel/string.h"
 
 #include "header.h"
-#include "response.h"
+#include "request.h"
 
 /**
- * Phalcon\Http\Client\Response
+ * Phalcon\Http\Client\Request
  */
 
 
 /**
  * Phalcon\Http\Client\Header initializer
  */
-PHALCON_INIT_CLASS(Phalcon_Http_Client_Response){
+PHALCON_INIT_CLASS(Phalcon_Http_Client_Request){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_response_method_entry, 0);
+	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_request_method_entry, 0);
 
-	zend_declare_property_null(phalcon_http_client_response_ce, SL("_header") ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_response_ce, SL("_body") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_request_ce, SL("_base_uri") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_request_ce, SL("_header") ZEND_ACC_PROTECTED TSRMLS_CC);
+
+	zend_declare_class_constant_stringl(phalcon_http_client_request_ce, SL("VERSION"), SL("0.0.1") TSRMLS_CC);
 
 	return SUCCESS;
 }
 
-PHP_METHOD(Phalcon_Http_Client_Response, __construct){
+PHP_METHOD(Phalcon_Http_Client_Request, __construct){
 
 	zval *header;
 
 	PHALCON_MM_GROW();
+
+	//PHALCON_INIT_VAR(uri);
+	//object_init_ex(uri, phalcon_http_uri_ce);
+
+	//phalcon_update_property_this(this_ptr, SL("_uri"), uri TSRMLS_CC);
 
 	PHALCON_INIT_VAR(header);
 	object_init_ex(header, phalcon_http_client_header_ce);
@@ -77,22 +84,24 @@ PHP_METHOD(Phalcon_Http_Client_Response, __construct){
 	PHALCON_MM_RESTORE();
 }
 
-PHP_METHOD(Phalcon_Http_Client_Response, getHeader){
+PHP_METHOD(Phalcon_Http_Client_Request, getProvider){
+
+}
+
+PHP_METHOD(Phalcon_Http_Client_Request, getHeader){
 
 	RETURN_MEMBER(this_ptr, "_header");
 }
 
-PHP_METHOD(Phalcon_Http_Client_Response, setBody){
-	
-	zval *body;
+PHP_METHOD(Phalcon_Http_Client_Request, setBaseUri){
 
-	phalcon_fetch_params(0, 1, 0, &body);
-
-	phalcon_update_property_this(this_ptr, SL("_body"), body TSRMLS_CC);
 }
 
-PHP_METHOD(Phalcon_Http_Client_Response, getBody){
+PHP_METHOD(Phalcon_Http_Client_Request, getBaseUri){
 
-	RETURN_MEMBER(this_ptr, "_body");
+}
+
+PHP_METHOD(Phalcon_Http_Client_Request, resolveUri){
+
 }
 
