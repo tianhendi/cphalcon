@@ -422,8 +422,8 @@ PHP_METHOD(Phalcon_Http_Response, resetHeaders){
  *	$this->response->setExpires(new DateTime());
  *</code>
  *
- * @param DateTime $datetime
- * @return Phalcon\Http\ResponseInterface
+ * @param \DateTime $datetime
+ * @return \Phalcon\Http\ResponseInterface
  */
 PHP_METHOD(Phalcon_Http_Response, setExpires){
 
