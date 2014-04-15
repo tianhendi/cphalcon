@@ -112,6 +112,7 @@ zend_class_entry *phalcon_image_adapter_ce;
 zend_class_entry *phalcon_mvc_model_behavior_ce;
 zend_class_entry *phalcon_mvc_model_resultset_ce;
 zend_class_entry *phalcon_mvc_view_engine_ce;
+zend_class_entry *phalcon_session_adapter_ce;
 zend_class_entry *phalcon_acl_adapter_ce;
 zend_class_entry *phalcon_cache_frontend_data_ce;
 zend_class_entry *phalcon_di_factorydefault_ce;
@@ -119,7 +120,6 @@ zend_class_entry *phalcon_logger_adapter_ce;
 zend_class_entry *phalcon_logger_formatter_ce;
 zend_class_entry *phalcon_mvc_model_transaction_exception_ce;
 zend_class_entry *phalcon_mvc_router_ce;
-zend_class_entry *phalcon_session_adapter_ce;
 zend_class_entry *phalcon_translate_adapter_ce;
 zend_class_entry *phalcon_acl_adapter_memory_ce;
 zend_class_entry *phalcon_acl_ce;
@@ -316,6 +316,7 @@ zend_class_entry *phalcon_queue_beanstalk_job_ce;
 zend_class_entry *phalcon_security_ce;
 zend_class_entry *phalcon_security_exception_ce;
 zend_class_entry *phalcon_session_adapter_files_ce;
+zend_class_entry *phalcon_session_adapter_memcache_ce;
 zend_class_entry *phalcon_session_bag_ce;
 zend_class_entry *phalcon_session_ce;
 zend_class_entry *phalcon_session_exception_ce;
@@ -351,7 +352,7 @@ ZEND_DECLARE_MODULE_GLOBALS(phalcon)
 
 #define ZEPHIR_NUM_PREALLOCATED_FRAMES 25
 
-void zephir_initialize_memory(zend_zephir_globals *zephir_globals_ptr TSRMLS_DC)
+void zephir_initialize_memory(zend_zephir_globals_def *zephir_globals_ptr TSRMLS_DC)
 {
 	zephir_memory_entry *start;
 	size_t i;
@@ -386,11 +387,7 @@ void zephir_initialize_memory(zend_zephir_globals *zephir_globals_ptr TSRMLS_DC)
 	zephir_globals_ptr->end_memory   = start + ZEPHIR_NUM_PREALLOCATED_FRAMES;
 
 	zephir_globals_ptr->fcache = pemalloc(sizeof(HashTable), 1);
-#ifndef ZEPHIR_RELEASE
-	zend_hash_init(zephir_globals_ptr->fcache, 128, NULL, zephir_fcall_cache_dtor, 1);
-#else
-	zend_hash_init(zephir_globals_ptr->fcache, 128, NULL, NULL, 1);
-#endif
+	zend_hash_init(zephir_globals_ptr->fcache, 128, NULL, NULL, 1); // zephir_fcall_cache_dtor
 
 	/* 'Allocator sizeof operand mismatch' warning can be safely ignored */
 	ALLOC_INIT_ZVAL(zephir_globals_ptr->global_null);
@@ -457,7 +454,7 @@ int zephir_cleanup_fcache(void *pDest TSRMLS_DC, int num_args, va_list args, zen
 void zephir_deinitialize_memory(TSRMLS_D)
 {
 	size_t i;
-	zend_zephir_globals *zephir_globals_ptr = ZEPHIR_VGLOBAL;
+	zend_zephir_globals_def *zephir_globals_ptr = ZEPHIR_VGLOBAL;
 
 	//if (zephir_globals_ptr->initialized != 1) {
 	//	zephir_globals_ptr->initialized = 0;
@@ -603,6 +600,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	ZEPHIR_INIT(Phalcon_Mvc_Model_Behavior);
 	ZEPHIR_INIT(Phalcon_Mvc_Model_Resultset);
 	ZEPHIR_INIT(Phalcon_Mvc_View_Engine);
+	ZEPHIR_INIT(Phalcon_Session_Adapter);
 	ZEPHIR_INIT(Phalcon_Acl_Adapter);
 	ZEPHIR_INIT(Phalcon_Cache_Frontend_Data);
 	ZEPHIR_INIT(Phalcon_Di_FactoryDefault);
@@ -610,7 +608,6 @@ static PHP_MINIT_FUNCTION(phalcon)
 	ZEPHIR_INIT(Phalcon_Logger_Formatter);
 	ZEPHIR_INIT(Phalcon_Mvc_Model_Transaction_Exception);
 	ZEPHIR_INIT(Phalcon_Mvc_Router);
-	ZEPHIR_INIT(Phalcon_Session_Adapter);
 	ZEPHIR_INIT(Phalcon_Translate_Adapter);
 	ZEPHIR_INIT(Phalcon_Acl);
 	ZEPHIR_INIT(Phalcon_Acl_Adapter_Memory);
@@ -808,6 +805,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	ZEPHIR_INIT(Phalcon_Security_Exception);
 	ZEPHIR_INIT(Phalcon_Session);
 	ZEPHIR_INIT(Phalcon_Session_Adapter_Files);
+	ZEPHIR_INIT(Phalcon_Session_Adapter_Memcache);
 	ZEPHIR_INIT(Phalcon_Session_Bag);
 	ZEPHIR_INIT(Phalcon_Session_Exception);
 	ZEPHIR_INIT(Phalcon_Tag);
