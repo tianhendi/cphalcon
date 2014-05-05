@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,13 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "forms/element/select.h"
+#include "forms/element.h"
+#include "forms/elementinterface.h"
+#include "tag/select.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/object.h"
 #include "kernel/fcall.h"
 
@@ -40,7 +32,36 @@
  *
  * Component SELECT (choice) for forms
  */
+zend_class_entry *phalcon_forms_element_select_ce;
 
+PHP_METHOD(Phalcon_Forms_Element_Select, __construct);
+PHP_METHOD(Phalcon_Forms_Element_Select, setOptions);
+PHP_METHOD(Phalcon_Forms_Element_Select, getOptions);
+PHP_METHOD(Phalcon_Forms_Element_Select, addOption);
+PHP_METHOD(Phalcon_Forms_Element_Select, render);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_element_select___construct, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+	ZEND_ARG_INFO(0, options)
+	ZEND_ARG_INFO(0, attributes)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_element_select_setoptions, 0, 0, 1)
+	ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_element_select_addoption, 0, 0, 1)
+	ZEND_ARG_INFO(0, option)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_forms_element_select_method_entry[] = {
+	PHP_ME(Phalcon_Forms_Element_Select, __construct, arginfo_phalcon_forms_element_select___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Forms_Element_Select, setOptions, arginfo_phalcon_forms_element_select_setoptions, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Element_Select, getOptions, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Element_Select, addOption, arginfo_phalcon_forms_element_select_addoption, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Element_Select, render, arginfo_phalcon_forms_elementinterface_render, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Forms\Element\Select initializer
@@ -80,7 +101,7 @@ PHP_METHOD(Phalcon_Forms_Element_Select, __construct){
 	}
 	
 	phalcon_update_property_this(this_ptr, SL("_optionsValues"), options TSRMLS_CC);
-	phalcon_call_parent_p2_noret(this_ptr, phalcon_forms_element_select_ce, "__construct", name, attributes);
+	PHALCON_CALL_PARENT(NULL, phalcon_forms_element_select_ce, this_ptr, "__construct", name, attributes);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -120,11 +141,23 @@ PHP_METHOD(Phalcon_Forms_Element_Select, getOptions){
  */
 PHP_METHOD(Phalcon_Forms_Element_Select, addOption){
 
-	zval *option;
+	zval **option, *values, *tmp;
 
-	phalcon_fetch_params(0, 1, 0, &option);
+	phalcon_fetch_params_ex(1, 0, &option);
+	PHALCON_ENSURE_IS_ARRAY(option);
+
+	values = phalcon_fetch_nproperty_this(getThis(), SL("_optionsValues"), PH_NOISY TSRMLS_CC);
 	
-	phalcon_update_property_array_append(this_ptr, SL("_optionsValues"), option TSRMLS_CC);
+	ALLOC_ZVAL(tmp);
+	if (Z_TYPE_P(values) != IS_ARRAY) {
+		MAKE_COPY_ZVAL(option, tmp);
+	}
+	else {
+		add_function(tmp, *option, values TSRMLS_CC);
+	}
+
+	Z_SET_REFCOUNT_P(tmp, 0);
+	phalcon_update_property_this(getThis(), SL("_optionsValues"), tmp TSRMLS_CC);
 	RETURN_THISW();
 }
 
@@ -136,7 +169,7 @@ PHP_METHOD(Phalcon_Forms_Element_Select, addOption){
  */
 PHP_METHOD(Phalcon_Forms_Element_Select, render){
 
-	zval *attributes = NULL, *options, *widget_attributes;
+	zval *attributes = NULL, *options, *widget_attributes = NULL;
 
 	PHALCON_MM_GROW();
 
@@ -146,15 +179,12 @@ PHP_METHOD(Phalcon_Forms_Element_Select, render){
 		attributes = PHALCON_GLOBAL(z_null);
 	}
 	
-	PHALCON_OBS_VAR(options);
-	phalcon_read_property_this(&options, this_ptr, SL("_optionsValues"), PH_NOISY_CC);
+	options = phalcon_fetch_nproperty_this(this_ptr, SL("_optionsValues"), PH_NOISY TSRMLS_CC);
 	
 	/** 
 	 * Merged passed attributes with previously defined ones
 	 */
-	PHALCON_INIT_VAR(widget_attributes);
-	phalcon_call_method_p1(widget_attributes, this_ptr, "prepareattributes", attributes);
-	phalcon_call_static_p2(return_value, "phalcon\\tag\\select", "selectfield", widget_attributes, options);
+	PHALCON_CALL_METHOD(&widget_attributes, this_ptr, "prepareattributes", attributes);
+	PHALCON_RETURN_CALL_CE_STATIC(phalcon_tag_select_ce, "selectfield", widget_attributes, options);
 	RETURN_MM();
 }
-

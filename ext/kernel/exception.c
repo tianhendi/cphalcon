@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,20 +17,14 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "kernel/exception.h"
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "php_main.h"
-#include "ext/standard/php_string.h"
+#include <Zend/zend_exceptions.h>
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
 #include "kernel/fcall.h"
 
-#include "Zend/zend_exceptions.h"
 
 /**
  * Throws a zval object as exception
@@ -58,42 +52,6 @@ void phalcon_throw_exception_zval(zend_class_entry *ce, zval *message TSRMLS_DC)
 	MAKE_STD_ZVAL(object);
 	object_init_ex(object, ce);
 
-	if (SUCCESS == phalcon_call_method_params(NULL, NULL, object, SL("__construct"), zend_inline_hash_func(SS("__construct")) TSRMLS_CC, 1, message)) {
-		zend_throw_exception_object(object TSRMLS_CC);
-	}
-}
-
-/**
- * Latest version of zend_throw_exception_internal
- */
-void phalcon_throw_exception_internal(zval *exception TSRMLS_DC) {
-
-	if (exception != NULL) {
-		zval *previous = EG(exception);
-		zend_exception_set_previous(exception, EG(exception) TSRMLS_CC);
-		EG(exception) = exception;
-		if (previous) {
-			return;
-		}
-	}
-
-	if (!EG(current_execute_data)) {
-		if (EG(exception)) {
-			zend_exception_error(EG(exception), E_ERROR TSRMLS_CC);
-		}
-		zend_error(E_ERROR, "Exception thrown without a stack frame");
-	}
-
-	if (zend_throw_exception_hook) {
-    	zend_throw_exception_hook(exception TSRMLS_CC);
-	}
-
-	if (EG(current_execute_data)->opline == NULL ||
-    	(EG(current_execute_data)->opline + 1)->opcode == ZEND_HANDLE_EXCEPTION) {
-		/* no need to rethrow the exception */
-		return;
-	}
-	EG(opline_before_exception) = EG(current_execute_data)->opline;
-	EG(current_execute_data)->opline = EG(exception_op);
-
+	PHALCON_CALL_METHODW(NULL, object, "__construct", message);
+	zend_throw_exception_object(object TSRMLS_CC);
 }

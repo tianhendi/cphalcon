@@ -8,11 +8,11 @@ kernel/fcall.c \
 kernel/require.c \
 kernel/debug.c \
 kernel/backtrace.c \
-kernel/assert.c \
 kernel/object.c \
 kernel/array.c \
 kernel/hash.c \
 kernel/string.c \
+kernel/mbstring.c \
 kernel/filter.c \
 kernel/operators.c \
 kernel/concat.c \
@@ -22,7 +22,6 @@ kernel/output.c \
 kernel/memory.c \
 kernel/session.c \
 kernel/variables.c \
-kernel/alternative/fcall.c \
 kernel/framework/orm.c \
 kernel/framework/router.c \
 kernel/framework/url.c \
@@ -334,8 +333,8 @@ validation/validator/identical.c \
 validation/validator/between.c \
 validation/validator/inclusionin.c \
 validation/validator/stringlength.c \
+validation/validator/url.c \
 validation/validator.c \
-session.c \
 assets/filters/jsminifier.c \
 assets/filters/cssminifier.c \
 mvc/model/query/parser.c \
@@ -349,10 +348,21 @@ image/adapter.c \
 image/adapterinterface.c \
 image/exception.c \
 image/adapter/gd.c \
-image/adapter/imagick.c"
+image/adapter/imagick.c \
+psr/log/abstractlogger.c \
+psr/log/invalidargumentexception.c \
+psr/log/loggerawareinterface.c \
+psr/log/loggerawaretrait.c \
+psr/log/loggerinterface.c \
+psr/log/loggertrait.c \
+psr/log/loglevel.c \
+psr/log/nulllogger.c \
+registry.c"
 
 	PHP_NEW_EXTENSION(phalcon, $phalcon_sources, $ext_shared)
 	PHP_ADD_EXTENSION_DEP([phalcon], [spl])
+
+	PHP_C_BIGENDIAN
 
 	old_CPPFLAGS=$CPPFLAGS
 	CPPFLAGS="$CPPFLAGS $INCLUDES"
@@ -437,7 +447,7 @@ image/adapter/imagick.c"
 
 	CPPFLAGS=$old_CPPFLAGS
 
-	PHP_ADD_MAKEFILE_FRAGMENT
+	PHP_ADD_MAKEFILE_FRAGMENT([Makefile.frag])
 fi
 
 PHP_ARG_ENABLE(coverage,  whether to include code coverage symbols,
@@ -499,4 +509,10 @@ if test "$PHP_COVERAGE" = "yes"; then
 	CFLAGS="$CFLAGS -O0 --coverage"
 	CXXFLAGS="$CXXFLAGS -O0 --coverage"
 	EXTRA_LDFLAGS="$EXTRA_LDFLAGS -precious-files-regex \.gcno\\\$$"
+
+	PHP_ADD_MAKEFILE_FRAGMENT([Makefile.frag.coverage])
+fi
+
+if test "$GCC" = "yes"; then
+	PHP_ADD_MAKEFILE_FRAGMENT([Makefile.frag.deps])
 fi

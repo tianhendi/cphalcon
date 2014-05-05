@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -18,28 +18,19 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "logger/adapter/firephp.h"
+#include "logger/adapter.h"
+#include "logger/adapterinterface.h"
+#include "logger/formatter/firephp.h"
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "main/SAPI.h"
-#include "ext/standard/php_smart_str.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include <main/SAPI.h>
+#include <ext/standard/php_smart_str.h>
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
 #include "kernel/fcall.h"
 #include "kernel/object.h"
 #include "kernel/exception.h"
-
-#include "logger/adapter/firephp.h"
 
 /**
  * Phalcon\Logger\Adapter\Firephp
@@ -53,7 +44,18 @@
  *	$logger->error("This is another error");
  *</code>
  */
+zend_class_entry *phalcon_logger_adapter_firephp_ce;
 
+PHP_METHOD(Phalcon_Logger_Adapter_Firephp, getFormatter);
+PHP_METHOD(Phalcon_Logger_Adapter_Firephp, logInternal);
+PHP_METHOD(Phalcon_Logger_Adapter_Firephp, close);
+
+static const zend_function_entry phalcon_logger_adapter_firephp_method_entry[] = {
+	PHP_ME(Phalcon_Logger_Adapter_Firephp, getFormatter, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Adapter_Firephp, logInternal, arginfo_phalcon_logger_adapter_loginternal, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Logger_Adapter_Firephp, close, NULL, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Logger\Adapter\Firephp initializer
@@ -79,7 +81,7 @@ PHP_METHOD(Phalcon_Logger_Adapter_Firephp, getFormatter){
 
 	zval *formatter;
 
-	formatter = phalcon_fetch_nproperty_this(this_ptr, SL("_formatter"), PH_NOISY_CC);
+	formatter = phalcon_fetch_nproperty_this(this_ptr, SL("_formatter"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(formatter) != IS_OBJECT) {
 		object_init_ex(return_value, phalcon_logger_formatter_firephp_ce);
 		phalcon_update_property_this(this_ptr, SL("_formatter"), return_value TSRMLS_CC);
@@ -95,16 +97,18 @@ PHP_METHOD(Phalcon_Logger_Adapter_Firephp, getFormatter){
  * @param string $message
  * @param int $type
  * @param int $time
+ * @param array $context
  * @see http://www.firephp.org/Wiki/Reference/Protocol
  */
 PHP_METHOD(Phalcon_Logger_Adapter_Firephp, logInternal){
 
-	zval *message, *type, *time, *formatter, *applied_format;
+	zval *message, *type, *time, *context, *formatter = NULL, *applied_format = NULL;
 	zval *initialized, *index;
 	sapi_header_line h = { NULL, 0, 0 };
 	smart_str str      = { NULL, 0, 0 };
-	int size, offset, num_bytes;
+	int size, offset;
 	int separate_index = 0;
+	size_t num_bytes;
 	const int chunk = 4500;
 
 	/* If headers has already been sent, we can do nothing. Exit early. */
@@ -114,10 +118,9 @@ PHP_METHOD(Phalcon_Logger_Adapter_Firephp, logInternal){
 
 	PHALCON_MM_GROW();
 
-	phalcon_fetch_params(1, 3, 0, &message, &type, &time);
+	phalcon_fetch_params(1, 4, 0, &message, &type, &time, &context);
 
-	PHALCON_INIT_VAR(formatter);
-	phalcon_call_method(formatter, this_ptr, "getformatter");
+	PHALCON_CALL_METHOD(&formatter, this_ptr, "getformatter");
 
 	initialized = phalcon_fetch_static_property_ce(phalcon_logger_adapter_firephp_ce, SL("_initialized") TSRMLS_CC);
 	if (!zend_is_true(initialized)) {
@@ -142,12 +145,8 @@ PHP_METHOD(Phalcon_Logger_Adapter_Firephp, logInternal){
 		ZVAL_TRUE(initialized); /* This will also update the property because "initialized" was not separated */
 	}
 
-	PHALCON_INIT_VAR(applied_format);
-	phalcon_call_method_p3(applied_format, formatter, "format", message, type, time);
-	if (Z_TYPE_P(applied_format) != IS_STRING) {
-		PHALCON_THROW_EXCEPTION_STR(phalcon_logger_exception_ce, "The formatted message is not valid");
-		return;
-	}
+	PHALCON_CALL_METHOD(&applied_format, formatter, "format", message, type, time, context);
+	convert_to_string(applied_format);
 
 	index = phalcon_fetch_static_property_ce(phalcon_logger_adapter_firephp_ce, SL("_index") TSRMLS_CC);
 	assert(Z_TYPE_P(index) == IS_LONG);
@@ -164,7 +163,7 @@ PHP_METHOD(Phalcon_Logger_Adapter_Firephp, logInternal){
 	 * We need to send the data in chunks not exceeding 5,000 bytes.
 	 * Allocate the smart string once to avoid performance penalties.
 	 */
-	smart_str_alloc4(&str, (size > chunk ? chunk : size), 0, num_bytes);
+	smart_str_alloc4(&str, (uint)(size > chunk ? chunk : size), 0, num_bytes);
 
 	while (size > 0) {
 		smart_str_appends(&str, "X-Wf-1-1-1-");

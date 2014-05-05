@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,12 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "queue/beanstalk/job.h"
+#include "queue/beanstalk.h"
+#include "exception.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/object.h"
 #include "kernel/concat.h"
 #include "kernel/fcall.h"
@@ -43,7 +34,36 @@
  *
  * Represents a job in a beanstalk queue
  */
+zend_class_entry *phalcon_queue_beanstalk_job_ce;
 
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, __construct);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, getId);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, getBody);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, delete);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, release);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, bury);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, touch);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, kick);
+PHP_METHOD(Phalcon_Queue_Beanstalk_Job, __wakeup);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_queue_beanstalk_job___construct, 0, 0, 3)
+	ZEND_ARG_INFO(0, queue)
+	ZEND_ARG_INFO(0, id)
+	ZEND_ARG_INFO(0, body)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_queue_beanstalk_job_method_entry[] = {
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, __construct, arginfo_phalcon_queue_beanstalk_job___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, getId, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, getBody, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, delete, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, release, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, bury, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, touch, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, kick, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Queue_Beanstalk_Job, __wakeup, NULL, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Queue\Beanstalk\Job initializer
@@ -108,19 +128,18 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, getBody){
  */
 PHP_METHOD(Phalcon_Queue_Beanstalk_Job, delete){
 
-	zval *id, *command, *queue, *response, *status;
+	zval *id, *command, *queue, *response = NULL, *status;
 
 	PHALCON_MM_GROW();
 
-	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY_CC);
-	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY_CC);
+	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY TSRMLS_CC);
+	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY TSRMLS_CC);
 	
 	PHALCON_ALLOC_GHOST_ZVAL(command);
 	PHALCON_CONCAT_SV(command, "delete ", id);
-	phalcon_call_method_p1_noret(queue, "write", command);
+	PHALCON_CALL_METHOD(NULL, queue, "write", command);
 	
-	PHALCON_INIT_VAR(response);
-	phalcon_call_method(response, queue, "readstatus");
+	PHALCON_CALL_METHOD(&response, queue, "readstatus");
 	
 	PHALCON_OBS_VAR(status);
 	phalcon_array_fetch_long(&status, response, 0, PH_NOISY);
@@ -141,7 +160,7 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, delete){
 PHP_METHOD(Phalcon_Queue_Beanstalk_Job, release){
 
 	zval *priority = NULL, *delay = NULL;
-	zval *id, *command, *queue, *response, *status;
+	zval *id, *command, *queue, *response = NULL, *status;
 
 	phalcon_fetch_params(0, 0, 2, &priority, &delay);
 
@@ -156,15 +175,14 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, release){
 		delay = PHALCON_GLOBAL(z_zero);
 	}
 
-	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY_CC);
-	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY_CC);
+	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY TSRMLS_CC);
+	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_ALLOC_GHOST_ZVAL(command);
 	PHALCON_CONCAT_SVSVSV(command, "release ", id, " ", priority, " ", delay);
-	phalcon_call_method_p1_noret(queue, "write", command);
+	PHALCON_CALL_METHOD(NULL, queue, "write", command);
 
-	PHALCON_INIT_VAR(response);
-	phalcon_call_method(response, queue, "readstatus");
+	PHALCON_CALL_METHOD(&response, queue, "readstatus");
 
 	PHALCON_OBS_VAR(status);
 	phalcon_array_fetch_long(&status, response, 0, PH_NOISY);
@@ -185,7 +203,7 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, release){
 PHP_METHOD(Phalcon_Queue_Beanstalk_Job, bury){
 
 	zval *priority = NULL;
-	zval *id, *command, *queue, *response, *status;
+	zval *id, *command, *queue, *response = NULL, *status;
 
 	phalcon_fetch_params(0, 0, 1, &priority);
 
@@ -196,15 +214,13 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, bury){
 		ZVAL_LONG(priority, 100);
 	}
 
-	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY_CC);
-	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY_CC);
+	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY TSRMLS_CC);
+	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_ALLOC_GHOST_ZVAL(command);
 	PHALCON_CONCAT_SVSV(command, "bury ", id, " ", priority);
-	phalcon_call_method_p1_noret(queue, "write", command);
-
-	PHALCON_INIT_VAR(response);
-	phalcon_call_method(response, queue, "readstatus");
+	PHALCON_CALL_METHOD(NULL, queue, "write", command);
+	PHALCON_CALL_METHOD(&response, queue, "readstatus");
 
 	PHALCON_OBS_VAR(status);
 	phalcon_array_fetch_long(&status, response, 0, PH_NOISY);
@@ -224,19 +240,17 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, bury){
  */
 PHP_METHOD(Phalcon_Queue_Beanstalk_Job, touch){
 
-	zval *id, *command, *queue, *response, *status;
+	zval *id, *command, *queue, *response = NULL, *status;
 
 	PHALCON_MM_GROW();
 
-	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY_CC);
-	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY_CC);
+	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY TSRMLS_CC);
+	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_ALLOC_GHOST_ZVAL(command);
 	PHALCON_CONCAT_SV(command, "touch ", id);
-	phalcon_call_method_p1_noret(queue, "write", command);
-
-	PHALCON_INIT_VAR(response);
-	phalcon_call_method(response, queue, "readstatus");
+	PHALCON_CALL_METHOD(NULL, queue, "write", command);
+	PHALCON_CALL_METHOD(&response, queue, "readstatus");
 
 	PHALCON_OBS_VAR(status);
 	phalcon_array_fetch_long(&status, response, 0, PH_NOISY);
@@ -254,19 +268,17 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, touch){
  */
 PHP_METHOD(Phalcon_Queue_Beanstalk_Job, kick){
 
-	zval *id, *command, *queue, *response, *status;
+	zval *id, *command, *queue, *response = NULL, *status;
 
 	PHALCON_MM_GROW();
 
-	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY_CC);
-	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY_CC);
+	id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY TSRMLS_CC);
+	queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_ALLOC_GHOST_ZVAL(command);
 	PHALCON_CONCAT_SV(command, "kick-job ", id);
-	phalcon_call_method_p1_noret(queue, "write", command);
-
-	PHALCON_INIT_VAR(response);
-	phalcon_call_method(response, queue, "readstatus");
+	PHALCON_CALL_METHOD(NULL, queue, "write", command);
+	PHALCON_CALL_METHOD(&response, queue, "readstatus");
 
 	PHALCON_OBS_VAR(status);
 	phalcon_array_fetch_long(&status, response, 0, PH_NOISY);
@@ -279,8 +291,8 @@ PHP_METHOD(Phalcon_Queue_Beanstalk_Job, kick){
 
 PHP_METHOD(Phalcon_Queue_Beanstalk_Job, __wakeup) {
 
-	zval *id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY_CC);
-	zval *queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY_CC);
+	zval *id    = phalcon_fetch_nproperty_this(this_ptr, SL("_id"), PH_NOISY TSRMLS_CC);
+	zval *queue = phalcon_fetch_nproperty_this(this_ptr, SL("_queue"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_VERIFY_CLASS_EX(queue, phalcon_queue_beanstalk_ce, phalcon_exception_ce, 0);
 

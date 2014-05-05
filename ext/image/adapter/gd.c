@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -19,23 +19,17 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
+#include "image/adapter/gd.h"
+#include "image.h"
+#include "image/adapter.h"
+#include "image/adapterinterface.h"
+#include "image/exception.h"
 
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
-
-#include "ext/standard/php_versioning.h"
+#include <ext/standard/php_versioning.h>
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/array.h"
 #include "kernel/string.h"
 #include "kernel/concat.h"
@@ -60,7 +54,61 @@
  *	}
  *</code>
  */
+zend_class_entry *phalcon_image_adapter_gd_ce;
 
+PHP_METHOD(Phalcon_Image_Adapter_GD, check);
+PHP_METHOD(Phalcon_Image_Adapter_GD, __construct);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _resize);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _liquidRescale);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _crop);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _rotate);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _flip);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _text);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _mask);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _background);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _blur);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _pixelate);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _save);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _render);
+PHP_METHOD(Phalcon_Image_Adapter_GD, _create);
+PHP_METHOD(Phalcon_Image_Adapter_GD, __destruct);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd___construct, 0, 0, 1)
+	ZEND_ARG_INFO(0, file)
+	ZEND_ARG_INFO(0, width)
+	ZEND_ARG_INFO(0, height)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_image_adapter_gd__create, 0, 0, 2)
+	ZEND_ARG_INFO(0, width)
+	ZEND_ARG_INFO(0, height)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_image_adapter_gd_method_entry[] = {
+	PHP_ME(Phalcon_Image_Adapter_GD, check, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(Phalcon_Image_Adapter_GD, __construct, arginfo_phalcon_image_adapter_gd___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Image_Adapter_GD, _resize, arginfo_phalcon_image_adapter__resize, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _liquidRescale, arginfo_phalcon_image_adapter__liquidrescale, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _crop, arginfo_phalcon_image_adapter__crop, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _rotate, arginfo_phalcon_image_adapter__rotate, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _flip, arginfo_phalcon_image_adapter__flip, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _sharpen, arginfo_phalcon_image_adapter__sharpen, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _reflection, arginfo_phalcon_image_adapter__reflection, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _watermark, arginfo_phalcon_image_adapter__watermark, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _text, arginfo_phalcon_image_adapter__text, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _mask, arginfo_phalcon_image_adapter__mask, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _background, arginfo_phalcon_image_adapter__background, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _blur, arginfo_phalcon_image_adapter__blur, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _pixelate, arginfo_phalcon_image_adapter__pixelate, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _save, arginfo_phalcon_image_adapter__save, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _render, arginfo_phalcon_image_adapter__render, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, _create, arginfo_phalcon_image_adapter_gd__create, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Image_Adapter_GD, __destruct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Image\Adapter\GD initializer
@@ -81,7 +129,7 @@ PHALCON_INIT_CLASS(Phalcon_Image_Adapter_GD){
  */
 PHP_METHOD(Phalcon_Image_Adapter_GD, check){
 
-	zval *ret = NULL, *gd_info, *gd_version, *version, *exception_message;
+	zval *ret = NULL, *gd_info = NULL, *gd_version, *version, *exception_message;
 	zval *pattern, *matches;
 	int rc;
 
@@ -94,8 +142,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, check){
 
 	PHALCON_INIT_VAR(gd_version);
 	if (!zend_get_constant(SL("GD_VERSION"), gd_version TSRMLS_CC)) {
-		PHALCON_OBS_VAR(gd_info);
-		phalcon_call_func_p0_ex(gd_info, &gd_info, "gd_info");
+		PHALCON_CALL_FUNCTION(&gd_info, "gd_info");
 
 		if (phalcon_array_isset_string_fetch(&gd_version, gd_info, SS("GD Version"))) {
 
@@ -105,7 +152,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, check){
 			ZVAL_STRING(pattern, "#\\d+\\.\\d+(?:\\.\\d+)?#", 1);
 
 			PHALCON_INIT_VAR(ret);
-			phalcon_preg_match(ret, &ret, pattern, gd_version, matches TSRMLS_CC);
+			RETURN_MM_ON_FAILURE(phalcon_preg_match(ret, pattern, gd_version, matches TSRMLS_CC));
 
 			if (zend_is_true(ret)) {
 				if (!phalcon_array_isset_long_fetch(&version, matches, 0)) {
@@ -146,7 +193,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, check){
 PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 
 	zval *file, *width = NULL, *height = NULL, *exception_message;
-	zval *checked, *realpath, *type, *mime = NULL, *image, *imageinfo;
+	zval *checked, *realpath, *type, *mime = NULL, *image = NULL, *imageinfo = NULL;
 	zval *saveflag, *blendmode;
 
 	PHALCON_MM_GROW();
@@ -161,7 +208,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 	checked = phalcon_fetch_static_property_ce(phalcon_image_adapter_gd_ce, SL("_checked") TSRMLS_CC);
 
 	if (!zend_is_true(checked)) {
-		phalcon_call_static_noret("phalcon\\image\\adapter\\gd", "check");
+		PHALCON_CALL_CE_STATIC(NULL, phalcon_image_adapter_gd_ce, "check");
 	}
 	
 	phalcon_update_property_this(this_ptr, SL("_file"), file TSRMLS_CC);
@@ -175,8 +222,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 
 		phalcon_update_property_this(this_ptr, SL("_realpath"), realpath TSRMLS_CC);
 
-		PHALCON_INIT_VAR(imageinfo);
-		phalcon_call_func_p1(imageinfo, "getimagesize", realpath);
+		PHALCON_CALL_FUNCTION(&imageinfo, "getimagesize", realpath);
 
 		if (width) {
 			PHALCON_SEPARATE_PARAM(width);
@@ -212,18 +258,15 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 
 		switch (Z_LVAL_P(type)) {
 			case 1: // GIF
-				PHALCON_OBS_VAR(image);
-				phalcon_call_func_p1_ex(image, &image, "imagecreatefromgif", realpath);
+				PHALCON_CALL_FUNCTION(&image, "imagecreatefromgif", realpath);
 				break;
 
 			case 2: // JPEG
-				PHALCON_OBS_VAR(image);
-				phalcon_call_func_p1_ex(image, &image, "imagecreatefromjpeg", realpath);
+				PHALCON_CALL_FUNCTION(&image, "imagecreatefromjpeg", realpath);
 				break;
 
 			case 3: // PNG
-				PHALCON_OBS_VAR(image);
-				phalcon_call_func_p1_ex(image, &image, "imagecreatefrompng", realpath);
+				PHALCON_CALL_FUNCTION(&image, "imagecreatefrompng", realpath);
 				break;
 
 			default:
@@ -247,10 +290,9 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 		PHALCON_INIT_VAR(saveflag);
 		ZVAL_TRUE(saveflag);
 
-		phalcon_call_func_p2_noret("imagesavealpha", image, saveflag);
+		PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", image, saveflag);
 	} else if (width && height) {
-		PHALCON_OBS_VAR(image);
-		phalcon_call_func_p2_ex(image, &image, "imagecreatetruecolor", width, height);
+		PHALCON_CALL_FUNCTION(&image, "imagecreatetruecolor", width, height);
 
 		if (Z_TYPE_P(image) != IS_RESOURCE) {
 			PHALCON_THROW_EXCEPTION_STR(phalcon_image_exception_ce, "imagecreatetruecolor() failed");
@@ -263,8 +305,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __construct){
 		PHALCON_INIT_VAR(saveflag);
 		ZVAL_TRUE(saveflag);
 
-		phalcon_call_func_p2_noret("imagealphablending", image, blendmode);
-		phalcon_call_func_p2_noret("imagesavealpha", image, saveflag);
+		PHALCON_CALL_FUNCTION(NULL, "imagealphablending", image, blendmode);
+		PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", image, saveflag);
 		
 		phalcon_update_property_this(this_ptr, SL("_realpath"), file TSRMLS_CC);
 		phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
@@ -301,94 +343,88 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _resize) {
 
 	zval *width, *height;
 	zval *image = NULL, *tmp_image = NULL;
-#if PHP_VERSION_ID < 50500
 	zval *ori_width, *ori_height, *pre_width, *pre_height, *reduction_width, *reduction_height, *ret = NULL, *dst;
 	int tmp_width, tmp_height, tmp_pre_width, tmp_pre_height, tmp_reduction_width, tmp_reduction_height;
-#endif
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 2, 0, &width, &height);
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
-#if PHP_VERSION_ID < 50500
-	ori_width      = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY_CC);
-	ori_height     = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-	tmp_width      = phalcon_get_intval(width);
-	tmp_height     = phalcon_get_intval(height);
+	if (PHP_VERSION_ID < 50500) {
+		ori_width      = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
+		ori_height     = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 
-	tmp_pre_width  = phalcon_get_intval(ori_width);
-	tmp_pre_height = phalcon_get_intval(ori_height);
+		tmp_width      = phalcon_get_intval(width);
+		tmp_height     = phalcon_get_intval(height);
 
-	PHALCON_INIT_VAR(dst);
-	ZVAL_LONG(dst, 0);
+		tmp_pre_width  = phalcon_get_intval(ori_width);
+		tmp_pre_height = phalcon_get_intval(ori_height);
 
-	if (tmp_width > (tmp_pre_width / 2) && tmp_height > (tmp_pre_height / 2)) {
-		tmp_reduction_width = (int)(tmp_width*1.1 + 0.5);
+		PHALCON_INIT_VAR(dst);
+		ZVAL_LONG(dst, 0);
 
-		PHALCON_INIT_VAR(reduction_width);
-		ZVAL_LONG(reduction_width, tmp_reduction_width);
+		if (tmp_width > (tmp_pre_width / 2) && tmp_height > (tmp_pre_height / 2)) {
+			tmp_reduction_width = (int)(tmp_width*1.1 + 0.5);
 
-		tmp_reduction_height = (int)(tmp_height*1.1 + 0.5);
+			PHALCON_INIT_VAR(reduction_width);
+			ZVAL_LONG(reduction_width, tmp_reduction_width);
 
-		PHALCON_INIT_VAR(reduction_height);
-		ZVAL_LONG(reduction_height, tmp_reduction_height);
+			tmp_reduction_height = (int)(tmp_height*1.1 + 0.5);
 
-		while ((tmp_pre_width / 2 > tmp_reduction_width) && (tmp_pre_height / 2 > tmp_reduction_height)) {
-			tmp_pre_width = (int)(tmp_pre_width/2);
-			tmp_pre_height = (int)(tmp_pre_height/2);
+			PHALCON_INIT_VAR(reduction_height);
+			ZVAL_LONG(reduction_height, tmp_reduction_height);
+
+			while ((tmp_pre_width / 2 > tmp_reduction_width) && (tmp_pre_height / 2 > tmp_reduction_height)) {
+				tmp_pre_width = (int)(tmp_pre_width/2);
+				tmp_pre_height = (int)(tmp_pre_height/2);
+			}
+
+			PHALCON_INIT_VAR(pre_width);
+			ZVAL_LONG(pre_width, tmp_pre_width);
+
+			PHALCON_INIT_VAR(pre_height);
+			ZVAL_LONG(pre_height, tmp_pre_height);
+
+			PHALCON_CALL_METHOD(&tmp_image, this_ptr, "_create", pre_width, pre_height);
+
+			PHALCON_CALL_FUNCTION(&ret, "imagecopyresized", tmp_image, image, dst, dst, dst, dst, pre_width, pre_height, ori_width, ori_height);
+
+			if (zend_is_true(ret)) {
+				PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+				PHALCON_CPY_WRT_CTOR(image, tmp_image);
+			}
+		} else {
+			PHALCON_INIT_VAR(pre_width);
+			ZVAL_LONG(pre_width, tmp_pre_width);
+
+			PHALCON_INIT_VAR(pre_height);
+			ZVAL_LONG(pre_height, tmp_pre_height);
 		}
 
-		PHALCON_INIT_VAR(pre_width);
-		ZVAL_LONG(pre_width, tmp_pre_width);
+		PHALCON_CALL_METHOD(&tmp_image, this_ptr, "_create", width, height);
+		PHALCON_CALL_FUNCTION(&ret, "imagecopyresampled", tmp_image, image, dst, dst, dst, dst, width, height, pre_width, pre_height);
 
-		PHALCON_INIT_VAR(pre_height);
-		ZVAL_LONG(pre_height, tmp_pre_height);
-
-		PHALCON_OBS_VAR(tmp_image);
-		phalcon_call_method_p2_ex(tmp_image, &tmp_image, this_ptr, "_create", pre_width, pre_height);
-
-		PHALCON_INIT_NVAR(ret);
-		PHALCON_CALL_FUNCTION(ret, NULL, "imagecopyresized", 10, tmp_image, image, dst, dst, dst, dst, pre_width, pre_height, ori_width, ori_height);
-		
 		if (zend_is_true(ret)) {
-			phalcon_call_func_p1_noret("imagedestroy", image);
-			PHALCON_CPY_WRT_CTOR(image, tmp_image);
+			PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+			phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
+
+			phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
 		}
-	} else {
-		PHALCON_INIT_VAR(pre_width);
-		ZVAL_LONG(pre_width, tmp_pre_width);
-
-		PHALCON_INIT_VAR(pre_height);
-		ZVAL_LONG(pre_height, tmp_pre_height);
 	}
+	else {
+		PHALCON_CALL_FUNCTION(&tmp_image, "imagescale", image, width, height);
 
-	PHALCON_INIT_NVAR(tmp_image);
-	phalcon_call_method_p2_ex(tmp_image, NULL, this_ptr, "_create", width, height);
+		if (Z_TYPE_P(tmp_image) == IS_RESOURCE) {
+			PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+			phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
 
-	PHALCON_INIT_NVAR(ret);
-	PHALCON_CALL_FUNCTION(ret, NULL, "imagecopyresampled", 10, tmp_image, image, dst, dst, dst, dst, width, height, pre_width, pre_height);
-
-	if (zend_is_true(ret)) {
-		phalcon_call_func_p1_noret("imagedestroy", image);
-		phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
-
-		phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
-		phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
+		}
 	}
-#else
-	PHALCON_INIT_NVAR(tmp_image);
-	PHALCON_CALL_FUNCTION(tmp_image, NULL, "imagescale", 3, image, width, height);
-
-	if (Z_TYPE_P(tmp_image) == IS_RESOURCE) {
-		phalcon_call_func_p1_noret("imagedestroy", image);
-		phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
-
-		phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
-		phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
-	}
-#endif
 
 	PHALCON_MM_RESTORE();
 }
@@ -404,15 +440,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _resize) {
  */
 PHP_METHOD(Phalcon_Image_Adapter_GD, _liquidRescale){
 
-	zval *width, *height, *delta_x = NULL, *rigidity = NULL;
-
-	PHALCON_MM_GROW();
-
-	phalcon_fetch_params(1, 4, 0, &width, &height, &delta_x, &rigidity);
-
-	PHALCON_THROW_EXCEPTION_STR(phalcon_image_exception_ce, "The GD does not support liquidRescale");
-
-	RETURN_THIS();
+	zend_throw_exception_ex(phalcon_image_exception_ce, 0 TSRMLS_CC, "The GD does not support liquidRescale");
 }
 
 /**
@@ -425,55 +453,50 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _liquidRescale){
  */
 PHP_METHOD(Phalcon_Image_Adapter_GD, _crop) {
 	zval *width, *height, *offset_x, *offset_y;
-	zval *image, *tmp_image;
-#if PHP_VERSION_ID < 50500
-	zval *dst, *ret;
-#else
+	zval *image, *tmp_image = NULL;
+	zval *dst, *ret = NULL;
 	zval *rect;
-#endif
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 4, 0, &width, &height, &offset_x, &offset_y);
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-#if PHP_VERSION_ID < 50500
-	PHALCON_OBS_VAR(tmp_image);
-	phalcon_call_method_p2_ex(tmp_image, &tmp_image, this_ptr, "_create", width, height);
+	if (PHP_VERSION_ID < 50500) {
+		PHALCON_CALL_METHOD(&tmp_image, this_ptr, "_create", width, height);
 
-	PHALCON_INIT_VAR(dst);
-	ZVAL_LONG(dst, 0);
+		PHALCON_INIT_VAR(dst);
+		ZVAL_LONG(dst, 0);
 
-	PHALCON_OBS_VAR(ret);
-	PHALCON_CALL_FUNCTION(ret, &ret, "imagecopyresampled", 10, tmp_image, image, dst, dst, offset_x, offset_y, width, height, width, height);
+		PHALCON_CALL_FUNCTION(&ret, "imagecopyresampled", tmp_image, image, dst, dst, offset_x, offset_y, width, height, width, height);
 
-	if (zend_is_true(ret)) {
-		phalcon_call_func_p1_noret("imagedestroy", image);
-		phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
+		if (zend_is_true(ret)) {
+			PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+			phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
 
-		phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
-		phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
+		}
 	}
-#else
-	PHALCON_INIT_VAR(rect);
-	array_init_size(rect, 4);
-	phalcon_array_update_string(&rect, SL("x"), &offset_x, PH_COPY);
-	phalcon_array_update_string(&rect, SL("y"), &offset_y, PH_COPY);
-	phalcon_array_update_string(&rect, SL("width"), &width, PH_COPY);
-	phalcon_array_update_string(&rect, SL("height"), &height, PH_COPY);
+	else {
+		PHALCON_INIT_VAR(rect);
+		array_init_size(rect, 4);
+		phalcon_array_update_string(&rect, SL("x"), offset_x, PH_COPY);
+		phalcon_array_update_string(&rect, SL("y"), offset_y, PH_COPY);
+		phalcon_array_update_string(&rect, SL("width"), width, PH_COPY);
+		phalcon_array_update_string(&rect, SL("height"), height, PH_COPY);
 
-	PHALCON_OBS_VAR(tmp_image);
-	PHALCON_CALL_FUNCTION(tmp_image, &tmp_image, "imagecrop", 2, image, rect);
+		PHALCON_CALL_FUNCTION(&tmp_image, "imagecrop", image, rect);
 
-	if (Z_TYPE_P(tmp_image) == IS_RESOURCE) {
-		phalcon_call_func_p1_noret("imagedestroy", image);
-		phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
+		if (Z_TYPE_P(tmp_image) == IS_RESOURCE) {
+			PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+			phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
 
-		phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
-		phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
+			phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
+		}
 	}
-#endif
 
 	PHALCON_MM_RESTORE();
 }
@@ -486,9 +509,9 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _crop) {
 PHP_METHOD(Phalcon_Image_Adapter_GD, _rotate) {
 
 	zval *degrees;
-	zval *image = NULL, *tmp_image, *color, *alpha, *transparent;
+	zval *image = NULL, *tmp_image = NULL, *color, *alpha, *transparent = NULL;
 	zval *ignore_transparent, *saveflag;
-	zval *w, *h;
+	zval *w = NULL, *h = NULL;
 	int tmp_degrees;
 
 	PHALCON_MM_GROW();
@@ -503,10 +526,9 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _rotate) {
 	PHALCON_INIT_VAR(alpha);
 	ZVAL_LONG(alpha, 127);
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-	PHALCON_OBS_VAR(transparent);
-	phalcon_call_func_p5_ex(transparent, &transparent, "imagecolorallocatealpha", image, color, color, color, alpha);
+	PHALCON_CALL_FUNCTION(&transparent, "imagecolorallocatealpha", image, color, color, color, alpha);
 
 	tmp_degrees = phalcon_get_intval(degrees);
 
@@ -516,21 +538,15 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _rotate) {
 	PHALCON_INIT_VAR(ignore_transparent);
 	ZVAL_LONG(ignore_transparent, 1);
 
-	PHALCON_OBS_VAR(tmp_image);
-	phalcon_call_func_p4_ex(tmp_image, &tmp_image, "imagerotate", image, degrees, transparent, ignore_transparent);
+	PHALCON_CALL_FUNCTION(&tmp_image, "imagerotate", image, degrees, transparent, ignore_transparent);
 
 	PHALCON_INIT_VAR(saveflag);
 	ZVAL_TRUE(saveflag);
 
-	phalcon_call_func_p2_noret("imagesavealpha", tmp_image, saveflag);
-
-	PHALCON_OBS_VAR(w);
-	phalcon_call_func_p1_ex(w, &w, "imagesx", tmp_image);
-
-	PHALCON_OBS_VAR(h);
-	phalcon_call_func_p1_ex(h, &h, "imagesy", tmp_image);
-
-	phalcon_call_func_p1_noret("imagedestroy", image);
+	PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", tmp_image, saveflag);
+	PHALCON_CALL_FUNCTION(&w, "imagesx", tmp_image);
+	PHALCON_CALL_FUNCTION(&h, "imagesy", tmp_image);
+	PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
 	phalcon_update_property_this(this_ptr, SL("_image"), tmp_image TSRMLS_CC);
 
 	phalcon_update_property_this(this_ptr, SL("_width"), w TSRMLS_CC);
@@ -548,95 +564,92 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _flip) {
 
 	zval *direction;
 	zval *image = NULL;
-#if PHP_VERSION_ID < 50500
-	zval *flipped_image;
+	zval *flipped_image = NULL;
 	zval *width, *height;
 	zval *dst_x = NULL, *dst_y = NULL, *src_x = NULL, *src_y = NULL, *src_width = NULL, *src_height = NULL;
 	int w, h, x, y;
-#else
 	zval *mode;
-#endif
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 1, 0, &direction);
 
-	image  = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image  = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-#if PHP_VERSION_ID < 50500
-	width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY_CC);
-	height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY_CC);
+	if (PHP_VERSION_ID < 50500) {
+		width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
+		height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 
-	PHALCON_OBS_VAR(flipped_image);
-	phalcon_call_method_p2_ex(flipped_image, &flipped_image, this_ptr, "_create", width, height);
+		PHALCON_CALL_METHOD(&flipped_image, this_ptr, "_create", width, height);
 
-	w = Z_LVAL_P(width);
-	h = Z_LVAL_P(height);
+		w = Z_LVAL_P(width);
+		h = Z_LVAL_P(height);
 
-	if (Z_LVAL_P(direction) == PHALCON_IMAGE_HORIZONTAL) {
-		PHALCON_INIT_NVAR(dst_y);
-		ZVAL_LONG(dst_y, 0);
-
-		PHALCON_INIT_NVAR(src_y);
-		ZVAL_LONG(src_y, 0);
-
-		PHALCON_INIT_NVAR(src_width);
-		ZVAL_LONG(src_width, 1);
-
-		PHALCON_INIT_NVAR(src_height);
-		ZVAL_LONG(src_height, h);
-
-		for (x = 0; x < w; x++)
-		{
-			PHALCON_INIT_NVAR(dst_x);
-			ZVAL_LONG(dst_x, x);
-
-			PHALCON_INIT_NVAR(src_x);
-			ZVAL_LONG(src_x, w - x - 1);
-
-			PHALCON_CALL_FUNCTION(NULL, NULL, "imagecopy", 8, flipped_image, image, dst_x, dst_y, src_x, src_y, src_width, src_height);
-		}
-	} else {
-		PHALCON_INIT_NVAR(dst_x);
-		ZVAL_LONG(dst_x, 0);
-
-		PHALCON_INIT_NVAR(src_x);
-		ZVAL_LONG(src_x, 0);
-
-		PHALCON_INIT_NVAR(src_width);
-		ZVAL_LONG(src_width, w);
-
-		PHALCON_INIT_NVAR(src_height);
-		ZVAL_LONG(src_height, 1);
-
-		for (y = 0; y < h; y++)
-		{
+		if (Z_LVAL_P(direction) == PHALCON_IMAGE_HORIZONTAL) {
 			PHALCON_INIT_NVAR(dst_y);
-			ZVAL_LONG(dst_y, y);
+			ZVAL_LONG(dst_y, 0);
 
 			PHALCON_INIT_NVAR(src_y);
-			ZVAL_LONG(src_y, h - y - 1);
+			ZVAL_LONG(src_y, 0);
 
-			PHALCON_CALL_FUNCTION(NULL, NULL, "imagecopy", 8, flipped_image, image, dst_x, dst_y, src_x, src_y, src_width, src_height);
+			PHALCON_INIT_NVAR(src_width);
+			ZVAL_LONG(src_width, 1);
+
+			PHALCON_INIT_NVAR(src_height);
+			ZVAL_LONG(src_height, h);
+
+			for (x = 0; x < w; x++)
+			{
+				PHALCON_INIT_NVAR(dst_x);
+				ZVAL_LONG(dst_x, x);
+
+				PHALCON_INIT_NVAR(src_x);
+				ZVAL_LONG(src_x, w - x - 1);
+
+				PHALCON_CALL_FUNCTION(NULL, "imagecopy", flipped_image, image, dst_x, dst_y, src_x, src_y, src_width, src_height);
+			}
+		} else {
+			PHALCON_INIT_NVAR(dst_x);
+			ZVAL_LONG(dst_x, 0);
+
+			PHALCON_INIT_NVAR(src_x);
+			ZVAL_LONG(src_x, 0);
+
+			PHALCON_INIT_NVAR(src_width);
+			ZVAL_LONG(src_width, w);
+
+			PHALCON_INIT_NVAR(src_height);
+			ZVAL_LONG(src_height, 1);
+
+			for (y = 0; y < h; y++)
+			{
+				PHALCON_INIT_NVAR(dst_y);
+				ZVAL_LONG(dst_y, y);
+
+				PHALCON_INIT_NVAR(src_y);
+				ZVAL_LONG(src_y, h - y - 1);
+
+				PHALCON_CALL_FUNCTION(NULL, "imagecopy", flipped_image, image, dst_x, dst_y, src_x, src_y, src_width, src_height);
+			}
 		}
+
+		PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+		phalcon_update_property_this(this_ptr, SL("_image"), flipped_image TSRMLS_CC);
 	}
+	else {
+		PHALCON_INIT_VAR(mode);
+		if (Z_LVAL_P(direction) == PHALCON_IMAGE_HORIZONTAL) {
+			if (!zend_get_constant(SL("IMG_FLIP_HORIZONTAL"), mode TSRMLS_CC)) {
+				RETURN_MM();
+			}
+		} else {
+			if (!zend_get_constant(SL("IMG_FLIP_VERTICAL"), mode TSRMLS_CC)) {
+				RETURN_MM();
+			}
+		}
 
-	phalcon_call_func_p1_noret("imagedestroy", image);
-	phalcon_update_property_this(this_ptr, SL("_image"), flipped_image TSRMLS_CC);
-#else
-	PHALCON_INIT_VAR(mode);
-	if (Z_LVAL_P(direction) == PHALCON_IMAGE_HORIZONTAL) {
-		if (!zend_get_constant(SL("IMG_FLIP_HORIZONTAL"), mode TSRMLS_CC)) {
-			RETURN_MM();
-		}
-	} else {
-		if (!zend_get_constant(SL("IMG_FLIP_VERTICAL"), mode TSRMLS_CC)) {
-			RETURN_MM();
-		}
+		PHALCON_CALL_FUNCTION(NULL, "imageflip", image, mode);
 	}
-
-	PHALCON_CALL_FUNCTION(NULL, NULL, "imageflip", 2, image, mode);
-#endif
 
 	PHALCON_MM_RESTORE();
 }
@@ -649,7 +662,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _flip) {
 PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen) {
 
 	zval *amount, *tmp = NULL, *tmp_amount = NULL, *matrix, *item = NULL;
-	zval *image = NULL, *ret, *width = NULL, *height = NULL;
+	zval *image = NULL, *ret = NULL, *width = NULL, *height = NULL;
 	int a;
 	double b;
 
@@ -657,7 +670,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen) {
 
 	phalcon_fetch_params(1, 1, 0, &amount);
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
 	a = phalcon_get_intval(amount);
 
@@ -674,7 +687,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen) {
 	}
 
 	PHALCON_INIT_NVAR(tmp_amount);
-	ZVAL_LONG(tmp_amount, floor(a*100+0.5)/100);
+	ZVAL_LONG(tmp_amount, (long int)(floor(a*100.0+0.5)/100));
 
 	PHALCON_INIT_VAR(matrix);
 	array_init_size(matrix, 3);
@@ -717,16 +730,11 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen) {
 	PHALCON_INIT_NVAR(tmp);
 	ZVAL_LONG(tmp, 0);
 
-	PHALCON_OBS_VAR(ret);
-	phalcon_call_func_p4_ex(ret, &ret, "imageconvolution", image, matrix, tmp_amount, tmp);
+	PHALCON_CALL_FUNCTION(&ret, "imageconvolution", image, matrix, tmp_amount, tmp);
 
 	if (zend_is_true(ret)) {
-
-		PHALCON_INIT_NVAR(width);
-		phalcon_call_func_p1(width, "imagesx", image);
-
-		PHALCON_INIT_NVAR(height);
-		phalcon_call_func_p1(height, "imagesy", image);
+		PHALCON_CALL_FUNCTION(&width, "imagesx", image);
+		PHALCON_CALL_FUNCTION(&height, "imagesy", image);
 
 		phalcon_update_property_this(this_ptr, SL("_width"), width TSRMLS_CC);
 		phalcon_update_property_this(this_ptr, SL("_height"), height TSRMLS_CC);
@@ -745,7 +753,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _sharpen) {
 PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection) {
 
 	zval *height, *opacity, *fade_in, *tmp = NULL;
-	zval *reflection, *line = NULL, *image, *image_width, *image_height, *dst, *src_y = NULL, *dst_y = NULL, *dst_opacity = NULL, *filtertype = NULL;
+	zval *reflection = NULL, *line = NULL, *image, *image_width = NULL, *image_height = NULL;
+	zval *dst, *src_y = NULL, *dst_y = NULL, *dst_opacity = NULL, *filtertype = NULL;
 	int h0, h1, tmp_opacity, int_opacity, offset;
 	double stepping;
 
@@ -755,9 +764,9 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection) {
 
 	PHALCON_SEPARATE_PARAM(height);
 
-	image        = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
-	image_width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY_CC);
-	image_height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY_CC);
+	image        = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
+	image_width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
+	image_height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_INIT_VAR(filtertype);
 	if (!zend_get_constant(SL("IMG_FILTER_COLORIZE"), filtertype TSRMLS_CC)) {
@@ -788,13 +797,12 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection) {
 	PHALCON_INIT_NVAR(height);
 	ZVAL_DOUBLE(height, h0 + h1);
 
-	PHALCON_OBS_VAR(reflection);
-	phalcon_call_method_p2_ex(reflection, &reflection, this_ptr, "_create", image_width, height);
+	PHALCON_CALL_METHOD(&reflection, this_ptr, "_create", image_width, height);
 
 	PHALCON_INIT_VAR(dst);
 	ZVAL_LONG(dst, 0);
 
-	PHALCON_CALL_FUNCTION(NULL, NULL, "imagecopy", 8, reflection, image, dst, dst, dst, dst, image_width, image_height);
+	PHALCON_CALL_FUNCTION(NULL, "imagecopy", reflection, image, dst, dst, dst, dst, image_width, image_height);
 
 	PHALCON_INIT_NVAR(tmp);
 	ZVAL_LONG(tmp, 1);
@@ -819,23 +827,21 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection) {
 			ZVAL_LONG(dst_opacity, int_opacity);
 		}
 
-		PHALCON_INIT_NVAR(line);
-		phalcon_call_method_p2(line, this_ptr, "_create", image_width, tmp);
+		PHALCON_CALL_METHOD(&line, this_ptr, "_create", image_width, tmp);
 
-		phalcon_call_func_p8_noret("imagecopy", line, image, dst, dst, dst, src_y, image_width, tmp);
-		phalcon_call_func_p6_noret("imagefilter", line, filtertype, dst, dst, dst, dst_opacity);
+		PHALCON_CALL_FUNCTION(NULL, "imagecopy", line, image, dst, dst, dst, src_y, image_width, tmp);
+		PHALCON_CALL_FUNCTION(NULL, "imagefilter", line, filtertype, dst, dst, dst, dst_opacity);
 
-		phalcon_call_func_p8_noret("imagecopy", reflection, line, dst, dst_y, dst, dst, image_width, tmp);
+		PHALCON_CALL_FUNCTION(NULL, "imagecopy", reflection, line, dst, dst_y, dst, dst, image_width, tmp);
 	}
 
-	phalcon_call_func_p1_noret("imagedestroy", image);
+	PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
 	phalcon_update_property_this(this_ptr, SL("_image"), reflection TSRMLS_CC);
 
-	PHALCON_OBS_VAR(image_width);
-	phalcon_call_func_p1_ex(image_width, &image_width, "imagesx", reflection);
-
-	PHALCON_OBS_VAR(image_height);
-	phalcon_call_func_p1_ex(image_height, &image_height, "imagesy", reflection);
+	image_width = NULL;
+	PHALCON_CALL_FUNCTION(&image_width, "imagesx", reflection);
+	image_height = NULL;
+	PHALCON_CALL_FUNCTION(&image_height, "imagesy", reflection);
 
 	phalcon_update_property_this(this_ptr, SL("_width"), image_width TSRMLS_CC);
 	phalcon_update_property_this(this_ptr, SL("_height"), image_height TSRMLS_CC);
@@ -854,7 +860,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _reflection) {
 PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark) {
 
 	zval *watermark, *offset_x = NULL, *offset_y = NULL, *opacity = NULL, *op = NULL;
-	zval  *image, *overlay, *blob, *saveflag, *width, *height, *color, *tmp = NULL, *effect, *blendmode, *ret;
+	zval *image, *overlay = NULL, *blob = NULL, *saveflag, *width = NULL, *height = NULL;
+	zval *color = NULL, *tmp = NULL, *effect, *blendmode, *ret = NULL;
 	int int_opacity;
 	double num;
 
@@ -862,34 +869,29 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark) {
 
 	phalcon_fetch_params(1, 4, 0, &watermark, &offset_x, &offset_y, &opacity);
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-	PHALCON_INIT_VAR(blob);	
-	phalcon_call_method(blob, watermark, "render");
+	PHALCON_CALL_METHOD(&blob, watermark, "render");
 
-	PHALCON_INIT_VAR(overlay);
-	phalcon_call_func_p1(overlay, "imagecreatefromstring", blob);
+	PHALCON_CALL_FUNCTION(&overlay, "imagecreatefromstring", blob);
 
 	PHALCON_INIT_VAR(saveflag);
 	ZVAL_TRUE(saveflag);
 
-	phalcon_call_func_p2_noret("imagesavealpha", overlay, saveflag);
+	PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", overlay, saveflag);
 
-	PHALCON_OBS_VAR(width);
-	phalcon_call_func_p1_ex(width, &width, "imagesx", overlay);
-
-	PHALCON_OBS_VAR(height);
-	phalcon_call_func_p1_ex(height, &height, "imagesy", overlay);
+	PHALCON_CALL_FUNCTION(&width, "imagesx", overlay);
+	PHALCON_CALL_FUNCTION(&height, "imagesy", overlay);
 
 	int_opacity = Z_LVAL_P(opacity);
 	if (int_opacity < 100) {
-		num = (int_opacity * 127 / 100) - 127;
+		num = (int_opacity * 127.0 / 100) - 127;
 
 		if (num < 0) {
-			num = num * -1;
+			num = -num;
 		}
 
-		int_opacity = num;
+		int_opacity = (int)num;
 
 		PHALCON_INIT_VAR(op);
 		ZVAL_LONG(op, int_opacity);
@@ -898,31 +900,29 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark) {
 		ZVAL_LONG(tmp, 127);
 
 
-		PHALCON_OBS_VAR(color);
-		phalcon_call_func_p5_ex(color, &color, "imagecolorallocatealpha", overlay, tmp, tmp, tmp, op);
+		PHALCON_CALL_FUNCTION(&color, "imagecolorallocatealpha", overlay, tmp, tmp, tmp, op);
 
 		PHALCON_INIT_VAR(effect);
 		if (!zend_get_constant(SL("IMG_EFFECT_OVERLAY"), effect TSRMLS_CC)) {
 			RETURN_MM();
 		}
 
-		phalcon_call_func_p2_noret("imagelayereffect", overlay, effect);
+		PHALCON_CALL_FUNCTION(NULL, "imagelayereffect", overlay, effect);
 
 		PHALCON_INIT_NVAR(tmp);
 		ZVAL_LONG(tmp, 0);
 
-		phalcon_call_func_p6_noret("imagefilledrectangle", overlay, tmp, tmp, width, height, color);
+		PHALCON_CALL_FUNCTION(NULL, "imagefilledrectangle", overlay, tmp, tmp, width, height, color);
 	}
 
 	PHALCON_INIT_VAR(blendmode);
 	ZVAL_LONG(blendmode, 1);
-	phalcon_call_func_p2_noret("imagealphablending", image, blendmode);
+	PHALCON_CALL_FUNCTION(NULL, "imagealphablending", image, blendmode);
 
 	PHALCON_INIT_NVAR(tmp);
 	ZVAL_LONG(tmp, 0);
 
-	PHALCON_OBS_VAR(ret);
-	phalcon_call_func_p8_ex(ret, &ret, "imagecopy", image, overlay, offset_x, offset_y, tmp, tmp, width, height);
+	PHALCON_CALL_FUNCTION(&ret, "imagecopy", image, overlay, offset_x, offset_y, tmp, tmp, width, height);
 
 	RETVAL_BOOL(zend_is_true(ret));
 	PHALCON_MM_RESTORE();
@@ -943,8 +943,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _watermark) {
  */
 PHP_METHOD(Phalcon_Image_Adapter_GD, _text) {
 	zval *text, *offset_x, *offset_y, *opacity, *r, *g, *b, *size, *fontfile = NULL;
-	zval *image, *image_width, *image_height, *tmp = NULL, *space;
-	zval *s0 = NULL, *s1 = NULL, *s4 = NULL, *s5 = NULL, *width, *height, *color;
+	zval *image, *image_width, *image_height, *tmp = NULL, *space = NULL;
+	zval *s0 = NULL, *s1 = NULL, *s4 = NULL, *s5 = NULL, *width = NULL, *height = NULL, *color = NULL;
 	int w, h, w1, h1, x, y, i;
 
 	PHALCON_MM_GROW();
@@ -956,13 +956,13 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _text) {
 	PHALCON_SEPARATE_PARAM(opacity);
 
 	PHALCON_OBS_VAR(image);
-	phalcon_read_property_this(&image, this_ptr, SL("_image"), PH_NOISY_CC);
+	phalcon_read_property_this(&image, this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_OBS_VAR(image_width);
-	phalcon_read_property_this(&image_width, this_ptr, SL("_width"), PH_NOISY_CC);
+	phalcon_read_property_this(&image_width, this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_OBS_VAR(image_height);
-	phalcon_read_property_this(&image_height, this_ptr, SL("_height"), PH_NOISY_CC);
+	phalcon_read_property_this(&image_height, this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 	
 	w = phalcon_get_intval(image_width);
 	h = phalcon_get_intval(image_height);
@@ -982,9 +982,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _text) {
 	ZVAL_LONG(tmp, 0);
 
 	if (Z_TYPE_P(fontfile) == IS_STRING) {
-
-		PHALCON_OBS_VAR(space);
-		phalcon_call_func_p4_ex(space, &space, "imagettfbbox", size, tmp, fontfile, text);
+		PHALCON_CALL_FUNCTION(&space, "imagettfbbox", size, tmp, fontfile, text);
 
 		phalcon_array_isset_long_fetch(&s0, space, 0);
 		phalcon_array_isset_long_fetch(&s1, space, 1);
@@ -1042,16 +1040,11 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _text) {
 		PHALCON_INIT_NVAR(offset_y);
 		ZVAL_LONG(offset_y, y);
 
-		PHALCON_OBS_VAR(color);
-		phalcon_call_func_p5_ex(color, &color, "imagecolorallocatealpha", image, r, g, b, opacity);
-
-		PHALCON_CALL_FUNCTION(NULL, NULL, "imagettftext", 8, image, size, tmp, offset_x, offset_y, color, fontfile, text);
+		PHALCON_CALL_FUNCTION(&color, "imagecolorallocatealpha", image, r, g, b, opacity);
+		PHALCON_CALL_FUNCTION(NULL, "imagettftext", image, size, tmp, offset_x, offset_y, color, fontfile, text);
 	} else {
-		PHALCON_OBS_VAR(width);
-		phalcon_call_func_p1_ex(width, &width, "imagefontwidth", size);
-
-		PHALCON_OBS_VAR(height);
-		phalcon_call_func_p1_ex(height, &height, "imagefontheight", size);
+		PHALCON_CALL_FUNCTION(&width, "imagefontwidth", size);
+		PHALCON_CALL_FUNCTION(&height, "imagefontheight", size);
 
 		i = Z_STRLEN_P(text);
 
@@ -1092,10 +1085,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _text) {
 		PHALCON_INIT_NVAR(offset_y);
 		ZVAL_LONG(offset_y, y);
 
-		PHALCON_OBS_VAR(color);
-		phalcon_call_func_p5_ex(color, &color, "imagecolorallocatealpha", image, r, g, b, opacity);
-
-		phalcon_call_func_p6_noret("imagestring", image, size, offset_x, offset_y, text, color);
+		PHALCON_CALL_FUNCTION(&color, "imagecolorallocatealpha", image, r, g, b, opacity);
+		PHALCON_CALL_FUNCTION(NULL, "imagestring", image, size, offset_x, offset_y, text, color);
 	}
 
 	PHALCON_MM_RESTORE();
@@ -1109,41 +1100,37 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _text) {
  */
 PHP_METHOD(Phalcon_Image_Adapter_GD, _mask){
 
-	zval *mask, *image, *mask_image, *blob, *mask_image_width, *mask_image_height, *newimage, *image_width, *image_height, *saveflag, *color, *c, *alpha = NULL;
+	zval *mask, *image, *mask_image = NULL, *blob = NULL;
+	zval *mask_image_width = NULL, *mask_image_height = NULL, *newimage = NULL;
+	zval *image_width, *image_height, *saveflag, *color = NULL, *c, *alpha = NULL;
 	zval *r = NULL, *g = NULL, *b = NULL, *index = NULL, *index2 = NULL, *zx = NULL, *zy = NULL, *red = NULL;
-	zval *temp_image;
+	zval *temp_image = NULL;
 	int x, y, w, h, i;
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 1, 0, &mask);
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-	PHALCON_INIT_VAR(blob);	
-	phalcon_call_method(blob, mask, "render");
+	PHALCON_CALL_METHOD(&blob, mask, "render");
 
-	PHALCON_INIT_VAR(mask_image);
-	phalcon_call_func_p1(mask_image, "imagecreatefromstring", blob);
+	PHALCON_CALL_FUNCTION(&mask_image, "imagecreatefromstring", blob);
 
 	PHALCON_INIT_VAR(saveflag);
 	ZVAL_TRUE(saveflag);
 
-	phalcon_call_func_p2_noret("imagesavealpha", mask_image, saveflag);
+	PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", mask_image, saveflag);
 
-	PHALCON_OBS_VAR(mask_image_width);
-	phalcon_call_func_p1_ex(mask_image_width, &mask_image_width, "imagesx", mask_image);
+	PHALCON_CALL_FUNCTION(&mask_image_width, "imagesx", mask_image);
+	PHALCON_CALL_FUNCTION(&mask_image_height, "imagesy", mask_image);
 
-	PHALCON_OBS_VAR(mask_image_height);
-	phalcon_call_func_p1_ex(mask_image_height, &mask_image_height, "imagesy", mask_image);
+	image_width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
+	image_height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 
-	image_width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY_CC);
-	image_height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY_CC);
+	PHALCON_CALL_METHOD(&newimage, this_ptr, "_create", image_width, image_height);
 
-	PHALCON_OBS_VAR(newimage);
-	phalcon_call_method_p2_ex(newimage, &newimage, this_ptr, "_create", image_width, image_height);
-
-	phalcon_call_func_p2_noret("imagesavealpha", newimage, saveflag);
+	PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", newimage, saveflag);
 
 	PHALCON_INIT_VAR(c);
 	ZVAL_LONG(c, 0);
@@ -1151,19 +1138,14 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _mask){
 	PHALCON_INIT_VAR(alpha);
 	ZVAL_LONG(alpha, 127);
 
-	PHALCON_OBS_VAR(color);
-	phalcon_call_func_p5_ex(color, &color, "imagecolorallocatealpha", newimage, c, c, c, alpha);
+	PHALCON_CALL_FUNCTION(&color, "imagecolorallocatealpha", newimage, c, c, c, alpha);
 
-	phalcon_call_func_p4_noret("imagefill", newimage, c, c, color);
+	PHALCON_CALL_FUNCTION(NULL, "imagefill", newimage, c, c, color);
 
 	if(!PHALCON_IS_EQUAL(image_width, mask_image_width) || !PHALCON_IS_EQUAL(image_height, mask_image_height)) {
-
-		PHALCON_OBS_VAR(temp_image);
-		phalcon_call_func_p2_ex(temp_image, &temp_image, "imagecreatetruecolor", image_width, image_height);
-
-		PHALCON_CALL_FUNCTION(NULL, NULL, "imagecopyresampled", 10, temp_image, mask_image, c, c, c, c, image_width, image_height, mask_image_width, mask_image_height);
-
-		phalcon_call_func_p1_noret("imagedestroy", mask_image);
+		PHALCON_CALL_FUNCTION(&temp_image, "imagecreatetruecolor", image_width, image_height);
+		PHALCON_CALL_FUNCTION(NULL, "imagecopyresampled", temp_image, mask_image, c, c, c, c, image_width, image_height, mask_image_width, mask_image_height);
+		PHALCON_CALL_FUNCTION(NULL, "imagedestroy", mask_image);
 
 		PHALCON_CPY_WRT(mask_image, temp_image);
 	}
@@ -1178,11 +1160,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _mask){
 			PHALCON_INIT_NVAR(zy);
 			ZVAL_LONG(zy, y);
 
-			PHALCON_INIT_NVAR(index);
-			phalcon_call_func_p3(index, "imagecolorat", mask_image, zx, zy);
-
-			PHALCON_INIT_NVAR(alpha);
-			phalcon_call_func_p2(alpha, "imagecolorsforindex", mask_image, index);
+			PHALCON_CALL_FUNCTION(&index, "imagecolorat", mask_image, zx, zy);
+			PHALCON_CALL_FUNCTION(&alpha, "imagecolorsforindex", mask_image, index);
 
 			if (phalcon_array_isset_string_fetch(&red, alpha, SS("red"))) {
 				i = (int)(127 - (phalcon_get_intval(red) / 2));
@@ -1191,25 +1170,20 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _mask){
 				ZVAL_LONG(alpha, i);
 			}
 
-			PHALCON_INIT_NVAR(index2);
-			phalcon_call_func_p3(index2, "imagecolorat", image, zx, zy);
-
-			PHALCON_INIT_NVAR(c);
-			phalcon_call_func_p2(c, "imagecolorsforindex", image, index2);
+			PHALCON_CALL_FUNCTION(&index2, "imagecolorat", image, zx, zy);
+			PHALCON_CALL_FUNCTION(&c, "imagecolorsforindex", image, index2);
 
 			phalcon_array_isset_string_fetch(&r, c, SS("red"));
 			phalcon_array_isset_string_fetch(&g, c, SS("green"));
 			phalcon_array_isset_string_fetch(&b, c, SS("blue"));
 
-			PHALCON_INIT_NVAR(color);
-			phalcon_call_func_p5(color, "imagecolorallocatealpha", newimage, r, g, b, alpha);
-
-			phalcon_call_func_p4_noret("imagesetpixel", newimage, zx, zy, color);
+			PHALCON_CALL_FUNCTION(&color, "imagecolorallocatealpha", newimage, r, g, b, alpha);
+			PHALCON_CALL_FUNCTION(NULL, "imagesetpixel", newimage, zx, zy, color);
 		}
 	}
 
-	phalcon_call_func_p1_noret("imagedestroy", image);
-	phalcon_call_func_p1_noret("imagedestroy", mask_image);
+	PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
+	PHALCON_CALL_FUNCTION(NULL, "imagedestroy", mask_image);
 	phalcon_update_property_this(this_ptr, SL("_image"), newimage TSRMLS_CC);
 
 	PHALCON_MM_RESTORE();
@@ -1226,7 +1200,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _mask){
 PHP_METHOD(Phalcon_Image_Adapter_GD, _background) {
 
 	zval *r, *g, *b, *opacity, *op;
-	zval  *image, *background, *width, *height, *color, *tmp, *blendmode, *ret;
+	zval *image, *background = NULL, *width, *height, *color = NULL, *tmp, *blendmode, *ret = NULL;
 	int int_opacity;
 	double num;
 
@@ -1234,44 +1208,40 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _background) {
 
 	phalcon_fetch_params(1, 4, 0, &r, &g, &b, &opacity);
 
-	image  = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
-	width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY_CC);
-	height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY_CC);
+	image  = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
+	width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
+	height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 
 	int_opacity = Z_LVAL_P(opacity);
 
-	num = (int_opacity * 127 / 100) - 127;
+	num = (int_opacity * 127.0 / 100) - 127;
 
 	if (num < 0) {
 		num = -num;
 	}
 
-	int_opacity = num;
+	int_opacity = (int)num;
 
-	PHALCON_OBS_VAR(background);
-	phalcon_call_method_p2_ex(background, &background, this_ptr, "_create", width, height);
+	PHALCON_CALL_METHOD(&background, this_ptr, "_create", width, height);
 
 	PHALCON_INIT_VAR(op);
 	ZVAL_LONG(op, int_opacity);
 
-	PHALCON_INIT_VAR(color);
-	phalcon_call_func_p5(color, "imagecolorallocatealpha", background, r, g, b, op);
+	PHALCON_CALL_FUNCTION(&color, "imagecolorallocatealpha", background, r, g, b, op);
 
 	PHALCON_INIT_VAR(tmp);
 	ZVAL_LONG(tmp, 0);
 
-	phalcon_call_func_p6_noret("imagefilledrectangle", background, tmp, tmp, width, height, color);
+	PHALCON_CALL_FUNCTION(NULL, "imagefilledrectangle", background, tmp, tmp, width, height, color);
 
 	PHALCON_INIT_VAR(blendmode);
 	ZVAL_TRUE(blendmode);
 
-	phalcon_call_func_p2_noret("imagealphablending", background, blendmode);
-
-	PHALCON_OBS_VAR(ret);
-	phalcon_call_func_p8_ex(ret, &ret, "imagecopy", background, image, tmp, tmp, tmp, tmp, width, height);
+	PHALCON_CALL_FUNCTION(NULL, "imagealphablending", background, blendmode);
+	PHALCON_CALL_FUNCTION(&ret, "imagecopy", background, image, tmp, tmp, tmp, tmp, width, height);
 
 	if (zend_is_true(ret)) {
-		phalcon_call_func_p1_noret("imagedestroy", image);
+		PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
 		phalcon_update_property_this(this_ptr, SL("_image"), background TSRMLS_CC);
 	}
 
@@ -1293,7 +1263,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _blur){
 
 	phalcon_fetch_params(1, 1, 0, &radius);	
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
 	PHALCON_INIT_VAR(constant);
 	if (!zend_get_constant(SL("IMG_FILTER_GAUSSIAN_BLUR"), constant TSRMLS_CC)) {
@@ -1303,7 +1273,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _blur){
 	r = phalcon_get_intval(radius);
 
 	for (i = 0; i < r; i++) {
-		phalcon_call_func_p2_noret("imagefilter", image, constant);
+		PHALCON_CALL_FUNCTION(NULL, "imagefilter", image, constant);
 	}
 
 	PHALCON_MM_RESTORE();
@@ -1324,9 +1294,9 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _pixelate){
 
 	phalcon_fetch_params(1, 1, 0, &amount);
 
-	image  = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
-	width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY_CC);
-	height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY_CC);
+	image  = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
+	width  = phalcon_fetch_nproperty_this(this_ptr, SL("_width"), PH_NOISY TSRMLS_CC);
+	height = phalcon_fetch_nproperty_this(this_ptr, SL("_height"), PH_NOISY TSRMLS_CC);
 
 	a = phalcon_get_intval(amount);
 	w = phalcon_get_intval(width);
@@ -1343,8 +1313,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _pixelate){
 			PHALCON_INIT_NVAR(tmp2);
 			ZVAL_LONG(tmp2, y1)
 
-			PHALCON_INIT_NVAR(color);
-			phalcon_call_func_p3(color, "imagecolorat", image, tmp1, tmp2);
+			PHALCON_CALL_FUNCTION(&color, "imagecolorat", image, tmp1, tmp2);
 
 			PHALCON_INIT_NVAR(tmp1);
 			ZVAL_LONG(tmp1, x)
@@ -1361,7 +1330,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _pixelate){
 			PHALCON_INIT_NVAR(tmp4);
 			ZVAL_LONG(tmp4, y1)
 
-			phalcon_call_func_p6_noret("imagefilledrectangle", image, tmp1, tmp2, tmp3, tmp4, color);
+			PHALCON_CALL_FUNCTION(NULL, "imagefilledrectangle", image, tmp1, tmp2, tmp3, tmp4, color);
 		}
 	}
 
@@ -1378,7 +1347,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _pixelate){
 PHP_METHOD(Phalcon_Image_Adapter_GD, _save) {
 
 	zval *file = NULL, *quality = NULL, *exception_message, *q = NULL;
-	zval *ret, *extension, *type, *mime, *constant, *image;
+	zval *ret = NULL, *extension, *type, *mime = NULL, *constant, *image;
 	const char *func_name = "imagegif";
 	char *ext;
 
@@ -1391,8 +1360,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _save) {
 		RETURN_MM();
 	}
 
-	PHALCON_OBS_VAR(ret);
-	phalcon_call_func_p2_ex(ret, &ret, "pathinfo", file, constant);
+	PHALCON_CALL_FUNCTION(&ret, "pathinfo", file, constant);
 
 	PHALCON_INIT_VAR(extension);
 	phalcon_fast_strtolower(extension, ret);
@@ -1428,20 +1396,18 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _save) {
 		return;
 	}
 	
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
-	PHALCON_INIT_NVAR(ret);
 	if (Z_TYPE_P(quality) == IS_LONG) {
-		phalcon_call_func_p3(ret, func_name, image, file, q);
+		PHALCON_CALL_FUNCTION(&ret, func_name, image, file, q);
 	} else {
-		phalcon_call_func_p2(ret, func_name, image, file);
+		PHALCON_CALL_FUNCTION(&ret, func_name, image, file);
 	}
 
 	if (zend_is_true(ret)) {
 		phalcon_update_property_this(this_ptr, SL("_type"), type TSRMLS_CC);
 
-		PHALCON_OBS_VAR(mime);
-		phalcon_call_func_p1_ex(mime, &mime, "image_type_to_mime_type", type);
+		PHALCON_CALL_FUNCTION(&mime, "image_type_to_mime_type", type);
 		phalcon_update_property_this(this_ptr, SL("_mime"), mime TSRMLS_CC);
 
 		RETVAL_TRUE;
@@ -1462,7 +1428,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _save) {
 PHP_METHOD(Phalcon_Image_Adapter_GD, _render) {
 
 	zval *extension = NULL, *quality = NULL, *exception_message, *q = NULL;
-	zval *file, *ret = NULL, *type, *mime, *image;
+	zval *file, *ret = NULL, *type, *mime = NULL, *image;
 	const char *func_name = "imagegif";
 	char *ext;
 
@@ -1506,15 +1472,14 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _render) {
 		return;
 	}
 	
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
 	phalcon_ob_start(TSRMLS_C);
 
-	PHALCON_INIT_NVAR(ret);
 	if (Z_TYPE_P(quality) == IS_LONG) {
-		phalcon_call_func_p3(ret, func_name, image, file, q);
+		PHALCON_CALL_FUNCTION(&ret, func_name, image, file, q);
 	} else {
-		phalcon_call_func_p2(ret, func_name, image, file);
+		PHALCON_CALL_FUNCTION(&ret, func_name, image, file);
 	}
 
 	phalcon_ob_get_contents(return_value TSRMLS_CC);
@@ -1523,8 +1488,7 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _render) {
 	if (zend_is_true(ret)) {
 		phalcon_update_property_this(this_ptr, SL("_type"), type TSRMLS_CC);
 
-		PHALCON_OBS_VAR(mime);
-		phalcon_call_func_p1_ex(mime, &mime, "image_type_to_mime_type", type);
+		PHALCON_CALL_FUNCTION(&mime, "image_type_to_mime_type", type);
 		phalcon_update_property_this(this_ptr, SL("_mime"), mime TSRMLS_CC);
 	}
 
@@ -1540,14 +1504,13 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _render) {
  */
 PHP_METHOD(Phalcon_Image_Adapter_GD, _create) {
 
-	zval *width, *height, *image, *blendmode, *saveflag;
+	zval *width, *height, *image = NULL, *blendmode, *saveflag;
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 2, 0, &width, &height);
 
-	PHALCON_OBS_VAR(image);
-	phalcon_call_func_p2_ex(image, &image, "imagecreatetruecolor", width, height);
+	PHALCON_CALL_FUNCTION(&image, "imagecreatetruecolor", width, height);
 
 	if (Z_TYPE_P(image) != IS_RESOURCE) {
 		PHALCON_THROW_EXCEPTION_STR(phalcon_image_exception_ce, "imagecreatetruecolor() failed");
@@ -1560,8 +1523,8 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, _create) {
 	PHALCON_INIT_VAR(saveflag);
 	ZVAL_TRUE(saveflag);
 
-	phalcon_call_func_p2_noret("imagealphablending", image, blendmode);
-	phalcon_call_func_p2_noret("imagesavealpha", image, saveflag);
+	PHALCON_CALL_FUNCTION(NULL, "imagealphablending", image, blendmode);
+	PHALCON_CALL_FUNCTION(NULL, "imagesavealpha", image, saveflag);
 
 	RETURN_CTOR(image);
 }
@@ -1575,10 +1538,10 @@ PHP_METHOD(Phalcon_Image_Adapter_GD, __destruct){
 
 	PHALCON_MM_GROW();
 
-	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY_CC);
+	image = phalcon_fetch_nproperty_this(this_ptr, SL("_image"), PH_NOISY TSRMLS_CC);
 
 	if (Z_TYPE_P(image) == IS_RESOURCE) {
-		phalcon_call_func_p1_noret("imagedestroy", image);
+		PHALCON_CALL_FUNCTION(NULL, "imagedestroy", image);
 	}
 	
 	PHALCON_MM_RESTORE();

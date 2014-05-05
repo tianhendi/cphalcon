@@ -4,7 +4,7 @@
 	+------------------------------------------------------------------------+
 	| Phalcon Framework                                                      |
 	+------------------------------------------------------------------------+
-	| Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+	| Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
 	+------------------------------------------------------------------------+
 	| This source file is subject to the New BSD License that is bundled     |
 	| with this package in the file docs/LICENSE.txt.                        |
@@ -21,6 +21,9 @@
 class ImageTest extends PHPUnit_Framework_TestCase
 {
 
+	/**
+	 * @large
+	 */
 	public function testGD()
 	{
 		if (!function_exists('gd_info')) {
@@ -158,6 +161,9 @@ class ImageTest extends PHPUnit_Framework_TestCase
 		//$data = $image->render('png');
 	}
 
+	/**
+	 * @medium
+	 */
 	public function testImagick()
 	{
 		if (!class_exists('imagick')) {
@@ -292,5 +298,18 @@ class ImageTest extends PHPUnit_Framework_TestCase
 		
 		// Render the image as a PNG
 		//$data = $image->render('png');
+	}
+
+	public function testIssues2259()
+	{
+		$image = new Phalcon\Image\Adapter\GD('unit-tests/assets/phalconphp.jpg');
+
+		$image->crop(100, 100, 0.5, 0.5)->save('unit-tests/assets/production/2259.jpg');
+		$this->assertTrue(file_exists('unit-tests/assets/production/2259.jpg'));
+
+		@unlink('unit-tests/assets/production/2259.jpg');
+
+		$image->crop("100", "100", "0.5", "0.5")->save('unit-tests/assets/production/gd-2259.jpg');
+		$this->assertTrue(file_exists('unit-tests/assets/production/gd-2259.jpg'));
 	}
 }

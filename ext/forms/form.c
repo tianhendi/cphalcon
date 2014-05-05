@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,17 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "forms/form.h"
+#include "forms/elementinterface.h"
+#include "forms/exception.h"
+#include "di/injectable.h"
+#include "filterinterface.h"
+#include "validation.h"
+#include "validation/exception.h"
+#include "validation/message/group.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/exception.h"
 #include "kernel/object.h"
 #include "kernel/fcall.h"
@@ -41,12 +37,286 @@
 #include "kernel/operators.h"
 #include "kernel/file.h"
 
+#include "interned-strings.h"
+
 /**
  * Phalcon\Forms\Form
  *
  * This component allows to build forms using an object-oriented interface
  */
+zend_class_entry *phalcon_forms_form_ce;
 
+PHP_METHOD(Phalcon_Forms_Form, __construct);
+PHP_METHOD(Phalcon_Forms_Form, setAction);
+PHP_METHOD(Phalcon_Forms_Form, getAction);
+PHP_METHOD(Phalcon_Forms_Form, setUserOption);
+PHP_METHOD(Phalcon_Forms_Form, getUserOption);
+PHP_METHOD(Phalcon_Forms_Form, setUserOptions);
+PHP_METHOD(Phalcon_Forms_Form, getUserOptions);
+PHP_METHOD(Phalcon_Forms_Form, setEntity);
+PHP_METHOD(Phalcon_Forms_Form, getEntity);
+PHP_METHOD(Phalcon_Forms_Form, getElements);
+PHP_METHOD(Phalcon_Forms_Form, bind);
+PHP_METHOD(Phalcon_Forms_Form, isValid);
+PHP_METHOD(Phalcon_Forms_Form, getMessages);
+PHP_METHOD(Phalcon_Forms_Form, getMessagesFor);
+PHP_METHOD(Phalcon_Forms_Form, hasMessagesFor);
+PHP_METHOD(Phalcon_Forms_Form, add);
+PHP_METHOD(Phalcon_Forms_Form, render);
+PHP_METHOD(Phalcon_Forms_Form, get);
+PHP_METHOD(Phalcon_Forms_Form, label);
+PHP_METHOD(Phalcon_Forms_Form, getLabel);
+PHP_METHOD(Phalcon_Forms_Form, getValue);
+PHP_METHOD(Phalcon_Forms_Form, has);
+PHP_METHOD(Phalcon_Forms_Form, remove);
+PHP_METHOD(Phalcon_Forms_Form, clear);
+PHP_METHOD(Phalcon_Forms_Form, count);
+PHP_METHOD(Phalcon_Forms_Form, rewind);
+PHP_METHOD(Phalcon_Forms_Form, current);
+PHP_METHOD(Phalcon_Forms_Form, key);
+PHP_METHOD(Phalcon_Forms_Form, next);
+PHP_METHOD(Phalcon_Forms_Form, valid);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form___construct, 0, 0, 0)
+	ZEND_ARG_INFO(0, entity)
+	ZEND_ARG_INFO(0, userOptions)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_setaction, 0, 0, 1)
+	ZEND_ARG_INFO(0, action)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_setuseroption, 0, 0, 2)
+	ZEND_ARG_INFO(0, option)
+	ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_getuseroption, 0, 0, 1)
+	ZEND_ARG_INFO(0, option)
+	ZEND_ARG_INFO(0, defaultValue)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_setuseroptions, 0, 0, 1)
+	ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_setentity, 0, 0, 1)
+	ZEND_ARG_INFO(0, entity)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_bind, 0, 0, 2)
+	ZEND_ARG_INFO(0, data)
+	ZEND_ARG_INFO(0, entity)
+	ZEND_ARG_INFO(0, whitelist)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_isvalid, 0, 0, 0)
+	ZEND_ARG_INFO(0, data)
+	ZEND_ARG_INFO(0, entity)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_getmessages, 0, 0, 0)
+	ZEND_ARG_INFO(0, byItemName)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_getmessagesfor, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_hasmessagesfor, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_add, 0, 0, 1)
+	ZEND_ARG_INFO(0, element)
+	ZEND_ARG_INFO(0, postion)
+	ZEND_ARG_INFO(0, type)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_render, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+	ZEND_ARG_INFO(0, attributes)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_get, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_label, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+	ZEND_ARG_INFO(0, attributes)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_getlabel, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_getvalue, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_has, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_remove, 0, 0, 1)
+	ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_forms_form_clear, 0, 0, 0)
+	ZEND_ARG_INFO(0, fields)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_forms_form_method_entry[] = {
+	PHP_ME(Phalcon_Forms_Form, __construct, arginfo_phalcon_forms_form___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Forms_Form, setAction, arginfo_phalcon_forms_form_setaction, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getAction, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, setUserOption, arginfo_phalcon_forms_form_setuseroption, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getUserOption, arginfo_phalcon_forms_form_getuseroption, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, setUserOptions, arginfo_phalcon_forms_form_setuseroptions, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getUserOptions, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, setEntity, arginfo_phalcon_forms_form_setentity, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getEntity, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getElements, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, bind, arginfo_phalcon_forms_form_bind, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, isValid, arginfo_phalcon_forms_form_isvalid, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getMessages, arginfo_phalcon_forms_form_getmessages, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getMessagesFor, arginfo_phalcon_forms_form_getmessagesfor, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, hasMessagesFor, arginfo_phalcon_forms_form_hasmessagesfor, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, add, arginfo_phalcon_forms_form_add, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, render, arginfo_phalcon_forms_form_render, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, get, arginfo_phalcon_forms_form_get, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, label, arginfo_phalcon_forms_form_label, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getLabel, arginfo_phalcon_forms_form_getlabel, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, getValue, arginfo_phalcon_forms_form_getvalue, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, has, arginfo_phalcon_forms_form_has, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, remove, arginfo_phalcon_forms_form_remove, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, clear, arginfo_phalcon_forms_form_clear, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, count, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, rewind, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, current, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, key, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, next, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Forms_Form, valid, NULL, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
+
+static zend_object_handlers phalcon_forms_form_object_handlers;
+
+static void phalcon_forms_form_dtor(zend_object_iterator *it TSRMLS_DC)
+{
+	zval_ptr_dtor((zval**)&it->data);
+	efree(it);
+}
+
+static int phalcon_forms_form_valid(zend_object_iterator *it TSRMLS_DC)
+{
+	zval *position, *elements;
+
+	position = phalcon_fetch_nproperty_this((zval*)it->data, SL("_position"), PH_NOISY TSRMLS_CC);
+	elements = phalcon_fetch_nproperty_this((zval*)it->data, SL("_elementsIndexed"), PH_NOISY TSRMLS_CC);
+	return (phalcon_array_isset(elements, position)) ? SUCCESS : FAILURE;
+}
+
+static void phalcon_forms_form_get_current_data(zend_object_iterator *it, zval ***data TSRMLS_DC)
+{
+	zval *position, *elements;
+
+	position = phalcon_fetch_nproperty_this((zval*)it->data, SL("_position"), PH_NOISY TSRMLS_CC);
+	elements = phalcon_fetch_nproperty_this((zval*)it->data, SL("_elementsIndexed"), PH_NOISY TSRMLS_CC);
+	*data = phalcon_hash_get(Z_ARRVAL_P(elements), position, BP_VAR_NA);
+}
+
+#if ZEND_MODULE_API_NO >= 20121212
+static void phalcon_forms_form_get_current_key(zend_object_iterator *it, zval *key TSRMLS_DC)
+{
+	zval *position;
+
+	position = phalcon_fetch_nproperty_this((zval*)it->data, SL("_position"), PH_NOISY TSRMLS_CC);
+	ZVAL_ZVAL(key, position, 1, 0);
+}
+#else
+static int phalcon_forms_form_get_current_key(zend_object_iterator *it, char **str_key, uint *str_key_len, ulong *int_key TSRMLS_DC)
+{
+	zval *position;
+
+	position = phalcon_fetch_nproperty_this((zval*)it->data, SL("_position"), PH_NOISY TSRMLS_CC);
+	*int_key = (IS_LONG == Z_TYPE_P(position)) ? Z_LVAL_P(position) : phalcon_get_intval(position);
+	return HASH_KEY_IS_LONG;
+}
+#endif
+
+static void phalcon_forms_form_move_forward(zend_object_iterator *it TSRMLS_DC)
+{
+	phalcon_property_incr((zval*)it->data, SL("_position") TSRMLS_CC);
+}
+
+static void phalcon_forms_form_rewind(zend_object_iterator *it TSRMLS_DC)
+{
+	zval *elements, *indexed;
+
+	phalcon_update_property_long((zval*)it->data, SL("_position"), 0 TSRMLS_CC);
+
+	elements = phalcon_fetch_nproperty_this((zval*)it->data, SL("_elements"), PH_NOISY TSRMLS_CC);
+
+	PHALCON_ALLOC_GHOST_ZVAL(indexed);
+	if (Z_TYPE_P(elements) == IS_ARRAY) {
+		phalcon_array_values(indexed, elements);
+	}
+	else {
+		array_init_size(indexed, 0);
+	}
+
+	phalcon_update_property_this((zval*)it->data, SL("_elementsIndexed"), indexed TSRMLS_CC);
+}
+
+static zend_object_iterator_funcs phalcon_forms_form_iterator_funcs = {
+	phalcon_forms_form_dtor,
+	phalcon_forms_form_valid,
+	phalcon_forms_form_get_current_data,
+	phalcon_forms_form_get_current_key,
+	phalcon_forms_form_move_forward,
+	phalcon_forms_form_rewind,
+	NULL
+};
+
+static zend_object_iterator* phalcon_forms_form_get_iterator(zend_class_entry *ce, zval *object, int by_ref TSRMLS_DC)
+{
+	zend_object_iterator *result;
+
+	if (by_ref) {
+		zend_throw_exception_ex(phalcon_validation_exception_ce, 0 TSRMLS_CC, "Cannot iterate Phalcon\\Froms\\Form by reference");
+		return NULL;
+	}
+
+	result = emalloc(sizeof(zend_object_iterator));
+
+	Z_ADDREF_P(object);
+	result->data  = object;
+	result->funcs = &phalcon_forms_form_iterator_funcs;
+
+	return result;
+}
+
+static int phalcon_forms_form_count_elements(zval *object, long int *count TSRMLS_DC)
+{
+	int res;
+	zval *cnt = NULL;
+
+	if (is_phalcon_class(Z_OBJCE_P(object))) {
+		zval *elements = phalcon_fetch_nproperty_this(object, SL("_elements"), PH_NOISY TSRMLS_CC);
+		*count = (Z_TYPE_P(elements) == IS_ARRAY) ? zend_hash_num_elements(Z_ARRVAL_P(elements)) : 0;
+		return SUCCESS;
+	}
+
+	res = phalcon_call_method(&cnt, object, "count", 0, NULL TSRMLS_CC);
+	if (res == SUCCESS) {
+		*count = (Z_TYPE_P(cnt) == IS_LONG) ? Z_LVAL_P(cnt) : phalcon_get_intval(cnt);
+		zval_ptr_dtor(&cnt);
+	}
+
+	return res;
+}
 
 /**
  * Phalcon\Forms\Form initializer
@@ -64,6 +334,12 @@ PHALCON_INIT_CLASS(Phalcon_Forms_Form){
 	zend_declare_property_null(phalcon_forms_form_ce, SL("_messages"), ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(phalcon_forms_form_ce, SL("_action"), ZEND_ACC_PROTECTED TSRMLS_CC);
 
+	phalcon_forms_form_ce->get_iterator         = phalcon_forms_form_get_iterator;
+	phalcon_forms_form_ce->iterator_funcs.funcs = &phalcon_forms_form_iterator_funcs;
+
+	phalcon_forms_form_object_handlers = *zend_get_std_object_handlers();
+	phalcon_forms_form_object_handlers.count_elements = phalcon_forms_form_count_elements;
+
 	zend_class_implements(phalcon_forms_form_ce TSRMLS_CC, 2, spl_ce_Countable, zend_ce_iterator);
 
 	return SUCCESS;
@@ -79,9 +355,9 @@ PHP_METHOD(Phalcon_Forms_Form, __construct){
 
 	zval *entity = NULL, *user_options = NULL;
 
-	PHALCON_MM_GROW();
+	Z_OBJ_HT_P(getThis()) = &phalcon_forms_form_object_handlers;
 
-	phalcon_fetch_params(1, 0, 2, &entity, &user_options);
+	phalcon_fetch_params(0, 0, 2, &entity, &user_options);
 	
 	if (!entity) {
 		entity = PHALCON_GLOBAL(z_null);
@@ -93,9 +369,10 @@ PHP_METHOD(Phalcon_Forms_Form, __construct){
 	
 	if (Z_TYPE_P(entity) != IS_NULL) {
 		if (Z_TYPE_P(entity) != IS_OBJECT) {
-			PHALCON_THROW_EXCEPTION_STR(phalcon_forms_exception_ce, "The base entity is not valid");
+			PHALCON_THROW_EXCEPTION_STRW(phalcon_forms_exception_ce, "The base entity is not valid");
 			return;
 		}
+
 		phalcon_update_property_this(this_ptr, SL("_entity"), entity TSRMLS_CC);
 	}
 	
@@ -110,10 +387,10 @@ PHP_METHOD(Phalcon_Forms_Form, __construct){
 	 * Check for an 'initialize' method and call it
 	 */
 	if (phalcon_method_exists_ex(this_ptr, SS("initialize") TSRMLS_CC) == SUCCESS) {
-		phalcon_call_method_p2_noret(this_ptr, "initialize", entity, user_options);
+		PHALCON_MM_GROW();
+		PHALCON_CALL_METHOD(NULL, this_ptr, "initialize", entity, user_options);
+		PHALCON_MM_RESTORE();
 	}
-	
-	PHALCON_MM_RESTORE();
 }
 
 /**
@@ -177,7 +454,7 @@ PHP_METHOD(Phalcon_Forms_Form, getUserOption){
 		default_value = PHALCON_GLOBAL(z_null);
 	}
 	
-	options = phalcon_fetch_nproperty_this(this_ptr, SL("_options"), PH_NOISY_CC);
+	options = phalcon_fetch_nproperty_this(this_ptr, SL("_options"), PH_NOISY TSRMLS_CC);
 	if (phalcon_array_isset_fetch(&value, options, option)) {
 		RETURN_ZVAL(value, 1, 0);
 	}
@@ -229,6 +506,11 @@ PHP_METHOD(Phalcon_Forms_Form, setEntity){
 
 	phalcon_fetch_params(0, 1, 0, &entity);
 	
+	if (Z_TYPE_P(entity) != IS_NULL && Z_TYPE_P(entity) != IS_OBJECT) {
+		zend_throw_exception_ex(phalcon_forms_exception_ce, 0 TSRMLS_CC, "'%s' must be an object or NULL", "entity");
+		return;
+	}
+
 	phalcon_update_property_this(this_ptr, SL("_entity"), entity TSRMLS_CC);
 	RETURN_THISW();
 }
@@ -290,7 +572,7 @@ PHP_METHOD(Phalcon_Forms_Form, bind){
 	}
 	
 	PHALCON_OBS_VAR(elements);
-	phalcon_read_property_this(&elements, this_ptr, SL("_elements"), PH_NOISY_CC);
+	phalcon_read_property_this(&elements, this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(elements) != IS_ARRAY) { 
 		PHALCON_THROW_EXCEPTION_STR(phalcon_forms_exception_ce, "There are no elements in the form");
 		return;
@@ -329,38 +611,34 @@ PHP_METHOD(Phalcon_Forms_Form, bind){
 		/** 
 		 * Check if the method has filters
 		 */
-		PHALCON_INIT_NVAR(filters);
-		phalcon_call_method(filters, element, "getfilters");
+		PHALCON_CALL_METHOD(&filters, element, "getfilters");
 		if (zend_is_true(filters)) {
 			if (Z_TYPE_P(filter) != IS_OBJECT) {
 				PHALCON_INIT_NVAR(service_name);
-				ZVAL_STRING(service_name, "filter", 1);
+				PHALCON_ZVAL_MAYBE_INTERNED_STRING(service_name, phalcon_interned_filter);
 	
-				PHALCON_INIT_NVAR(dependency_injector);
-				phalcon_call_method(dependency_injector, this_ptr, "getdi");
-	
-				PHALCON_INIT_NVAR(filter);
-				phalcon_call_method_p1(filter, dependency_injector, "getshared", service_name);
+				PHALCON_CALL_METHOD(&dependency_injector, this_ptr, "getdi");
+				PHALCON_CALL_METHOD(&filter, dependency_injector, "getshared", service_name);
 				PHALCON_VERIFY_INTERFACE(filter, phalcon_filterinterface_ce);
 			}
 	
 			/** 
 			 * Sanitize the filters
 			 */
-			PHALCON_INIT_NVAR(filtered_value);
-			phalcon_call_method_p2(filtered_value, filter, "sanitize", value, filters);
+			PHALCON_CALL_METHOD(&filtered_value, filter, "sanitize", value, filters);
 		} else {
 			PHALCON_CPY_WRT(filtered_value, value);
 		}
 	
 		PHALCON_INIT_NVAR(method);
 		PHALCON_CONCAT_SV(method, "set", key);
+		zend_str_tolower(Z_STRVAL_P(method), Z_STRLEN_P(method));
 	
 		/** 
 		 * Use the setter if any available
 		 */
 		if (phalcon_method_exists(entity, method TSRMLS_CC) == SUCCESS) {
-			phalcon_call_method_zval_p1_noret(entity, method, filtered_value);
+			PHALCON_CALL_METHOD(NULL, entity, Z_STRVAL_P(method), filtered_value);
 			zend_hash_move_forward_ex(ah0, &hp0);
 			continue;
 		}
@@ -387,7 +665,7 @@ PHP_METHOD(Phalcon_Forms_Form, bind){
  */
 PHP_METHOD(Phalcon_Forms_Form, isValid){
 
-	zval *data = NULL, *entity = NULL, *elements, *status, *not_failed = NULL;
+	zval *data = NULL, *entity = NULL, *elements, *status = NULL, *not_failed = NULL;
 	zval *messages, *element = NULL, *validators = NULL, *name = NULL, *prepared_validators = NULL;
 	zval *validator = NULL, *scope = NULL, *validation = NULL, *filters = NULL;
 	zval *element_messages = NULL;
@@ -407,7 +685,7 @@ PHP_METHOD(Phalcon_Forms_Form, isValid){
 		entity = PHALCON_GLOBAL(z_null);
 	}
 	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(elements) != IS_ARRAY) { 
 		RETURN_MM_TRUE;
 	}
@@ -416,23 +694,21 @@ PHP_METHOD(Phalcon_Forms_Form, isValid){
 	 * If the user doesn't pass an entity we use the one in this_ptr->_entity
 	 */
 	if (Z_TYPE_P(entity) == IS_OBJECT) {
-		phalcon_call_method_p2_noret(this_ptr, "bind", data, entity);
+		PHALCON_CALL_METHOD(NULL, this_ptr, "bind", data, entity);
 	}
 	
 	/** 
 	 * If the data is not an array use the one passed previously
 	 */
 	if (Z_TYPE_P(data) != IS_ARRAY) { 
-		data = phalcon_fetch_nproperty_this(this_ptr, SL("_data"), PH_NOISY_CC);
+		data = phalcon_fetch_nproperty_this(this_ptr, SL("_data"), PH_NOISY TSRMLS_CC);
 	}
 	
 	/** 
 	 * Check if there is a method 'beforeValidation'
 	 */
 	if (phalcon_method_exists_ex(this_ptr, SS("beforevalidation") TSRMLS_CC) == SUCCESS) {
-	
-		PHALCON_INIT_VAR(status);
-		phalcon_call_method_p2(status, this_ptr, "beforevalidation", data, entity);
+		PHALCON_CALL_METHOD(&status, this_ptr, "beforevalidation", data, entity);
 		if (PHALCON_IS_FALSE(status)) {
 			RETURN_CTOR(status);
 		}
@@ -449,16 +725,14 @@ PHP_METHOD(Phalcon_Forms_Form, isValid){
 	
 		PHALCON_GET_HVALUE(element);
 	
-		PHALCON_INIT_NVAR(validators);
-		phalcon_call_method(validators, element, "getvalidators");
+		PHALCON_CALL_METHOD(&validators, element, "getvalidators");
 		if (Z_TYPE_P(validators) == IS_ARRAY) { 
 			if (phalcon_fast_count_ev(validators TSRMLS_CC)) {
 	
 				/** 
 				 * Element's name
 				 */
-				PHALCON_INIT_NVAR(name);
-				phalcon_call_method(name, element, "getname");
+				PHALCON_CALL_METHOD(&name, element, "getname");
 	
 				/** 
 				 * Prepare the validators
@@ -486,32 +760,28 @@ PHP_METHOD(Phalcon_Forms_Form, isValid){
 				 */
 				PHALCON_INIT_NVAR(validation);
 				object_init_ex(validation, phalcon_validation_ce);
-				phalcon_call_method_p1_noret(validation, "__construct", prepared_validators);
+				PHALCON_CALL_METHOD(NULL, validation, "__construct", prepared_validators);
 	
 				/** 
 				 * Get filters in the element
 				 */
-				PHALCON_INIT_NVAR(filters);
-				phalcon_call_method(filters, element, "getfilters");
+				PHALCON_CALL_METHOD(&filters, element, "getfilters");
 	
 				/** 
 				 * Assign the filters to the validation
 				 */
 				if (Z_TYPE_P(filters) == IS_ARRAY) { 
-					PHALCON_INIT_NVAR(name);
-					phalcon_call_method(name, element, "getname");
-					phalcon_call_method_p2_noret(validation, "setfilters", name, filters);
+					PHALCON_CALL_METHOD(&name, element, "getname");
+					PHALCON_CALL_METHOD(NULL, validation, "setfilters", name, filters);
 				}
 	
 				/** 
 				 * Perform the validation
 				 */
-				PHALCON_INIT_NVAR(element_messages);
-				phalcon_call_method_p2(element_messages, validation, "validate", data, entity);
+				PHALCON_CALL_METHOD(&element_messages, validation, "validate", data, entity);
 				if (phalcon_fast_count_ev(element_messages TSRMLS_CC)) {
-					PHALCON_INIT_NVAR(name);
-					phalcon_call_method(name, element, "getname");
-					phalcon_array_update_zval(&messages, name, &element_messages, PH_COPY | PH_SEPARATE);
+					PHALCON_CALL_METHOD(&name, element, "getname");
+					phalcon_array_update_zval(&messages, name, element_messages, PH_COPY | PH_SEPARATE);
 	
 					not_failed = PHALCON_GLOBAL(z_false);
 				}
@@ -532,7 +802,7 @@ PHP_METHOD(Phalcon_Forms_Form, isValid){
 	 * Check if there is a method 'afterValidation'
 	 */
 	if (phalcon_method_exists_ex(this_ptr, SS("aftervalidation") TSRMLS_CC) == SUCCESS) {
-		phalcon_call_method_p1_noret(this_ptr, "aftervalidation", messages);
+		PHALCON_CALL_METHOD(NULL, this_ptr, "aftervalidation", messages);
 	}
 	
 	/** 
@@ -550,44 +820,37 @@ PHP_METHOD(Phalcon_Forms_Form, isValid){
  */
 PHP_METHOD(Phalcon_Forms_Form, getMessages){
 
-	zval *by_item_name = NULL, *messages;
-	HashTable *ah0;
-	HashPosition hp0;
-	zval **hd;
+	zval **by_item_name = NULL, *messages;
 
-	PHALCON_MM_GROW();
-
-	phalcon_fetch_params(1, 0, 1, &by_item_name);
+	phalcon_fetch_params_ex(0, 1, &by_item_name);
 	
-	if (!by_item_name) {
-		by_item_name = PHALCON_GLOBAL(z_false);
-	}
-	
-	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC);
-	if (zend_is_true(by_item_name)) {
+	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY TSRMLS_CC);
+	if (by_item_name && zend_is_true(*by_item_name)) {
 		if (Z_TYPE_P(messages) != IS_ARRAY) { 
 			object_init_ex(return_value, phalcon_validation_message_group_ce);
-			phalcon_call_method_noret(return_value, "__construct");
-	
-			RETURN_MM();
+			phalcon_validation_group_construct_helper(return_value, NULL TSRMLS_CC);
 		}
-	
-		RETURN_CTOR(messages);
+		else {
+			RETURN_ZVAL(messages, 1, 0);
+		}
 	}
-	
-	object_init_ex(return_value, phalcon_validation_message_group_ce);
-	phalcon_call_method_noret(return_value, "__construct");
-	
-	if (Z_TYPE_P(messages) == IS_ARRAY) {
-		phalcon_is_iterable(messages, &ah0, &hp0, 0, 0);
+	else {
+		object_init_ex(return_value, phalcon_validation_message_group_ce);
+		phalcon_validation_group_construct_helper(return_value, NULL TSRMLS_CC);
 
-		while (zend_hash_get_current_data_ex(ah0, (void**) &hd, &hp0) == SUCCESS) {
-			phalcon_call_method_p1_noret(return_value, "appendmessages", *hd);
-			zend_hash_move_forward_ex(ah0, &hp0);
+		if (Z_TYPE_P(messages) == IS_ARRAY) {
+			HashPosition hp;
+			zval **v;
+
+			for (
+				zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(messages), &hp);
+				zend_hash_get_current_data_ex(Z_ARRVAL_P(messages), (void**)&v, &hp) == SUCCESS;
+				zend_hash_move_forward_ex(Z_ARRVAL_P(messages), &hp)
+			) {
+				PHALCON_CALL_METHODW(NULL, return_value, "appendmessages", *v);
+			}
 		}
 	}
-	
-	PHALCON_MM_RESTORE();
 }
 
 /**
@@ -597,23 +860,17 @@ PHP_METHOD(Phalcon_Forms_Form, getMessages){
  */
 PHP_METHOD(Phalcon_Forms_Form, getMessagesFor){
 
-	zval *name, *messages, *element_messages;
+	zval **name, *messages, *element_messages;
 
-	PHALCON_MM_GROW();
-
-	phalcon_fetch_params(1, 1, 0, &name);
+	phalcon_fetch_params_ex(1, 0, &name);
 	
-	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC);
-	if (phalcon_array_isset_fetch(&element_messages, messages, name)) {
-		RETURN_CTOR(element_messages);
+	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY TSRMLS_CC);
+	if (phalcon_array_isset_fetch(&element_messages, messages, *name)) {
+		RETURN_ZVAL(element_messages, 1, 0);
 	}
 	
 	object_init_ex(return_value, phalcon_validation_message_group_ce);
-	phalcon_call_method_noret(return_value, "__construct");
-	
-	phalcon_update_property_array(this_ptr, SL("_messages"), name, return_value TSRMLS_CC);
-	
-	PHALCON_MM_RESTORE();
+	phalcon_validation_group_construct_helper(return_value, NULL TSRMLS_CC);
 }
 
 /**
@@ -623,16 +880,12 @@ PHP_METHOD(Phalcon_Forms_Form, getMessagesFor){
  */
 PHP_METHOD(Phalcon_Forms_Form, hasMessagesFor){
 
-	zval *name, *messages, *element_messages;
+	zval **name, *messages;
 
-	phalcon_fetch_params(0, 1, 0, &name);
+	phalcon_fetch_params_ex(1, 0, &name);
 	
-	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC);
-	if (phalcon_array_isset_fetch(&element_messages, messages, name)) {
-		RETURN_ZVAL(element_messages, 1, 0);
-	}
-	
-	RETURN_FALSE;
+	messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY TSRMLS_CC);
+	RETURN_BOOL(phalcon_array_isset(messages, *name));
 }
 
 /**
@@ -645,70 +898,57 @@ PHP_METHOD(Phalcon_Forms_Form, hasMessagesFor){
  */
 PHP_METHOD(Phalcon_Forms_Form, add){
 
-	zval *element, *pos = NULL, *type = NULL, *name, *values, *elements, *key = NULL, *tmp0, *tmp1, *length, *offset, *preserve_keys;
-	HashTable *ah0;
-	HashPosition hp0;
-	zval **hd;
+	zval *element, *pos = NULL, *type = NULL, *name = NULL, *values, *elements;
+	zval *tmp0 = NULL, *tmp1 = NULL, *length, *offset, *preserve_keys;
 	int found = 0, i = 0;
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 1, 2, &element, &pos, &type);
 	
-	if (Z_TYPE_P(element) != IS_OBJECT) {
-		PHALCON_THROW_EXCEPTION_STR(phalcon_forms_exception_ce, "The element is not valid");
-		return;
-	}
+	PHALCON_VERIFY_INTERFACE_EX(element, phalcon_forms_elementinterface_ce, phalcon_forms_exception_ce, 1);
 	
 	/** 
 	 * Gets the element's name
 	 */
-	PHALCON_INIT_VAR(name);
-	phalcon_call_method(name, element, "getname");
+	PHALCON_CALL_METHOD(&name, element, "getname");
 	
 	/** 
 	 * Link the element to the form
 	 */
-	phalcon_call_method_p1_noret(element, "setform", this_ptr);
+	PHALCON_CALL_METHOD(NULL, element, "setform", this_ptr);
 
-	if (!pos) {	
-		/** 
-		 * Append the element by its name
-		 */
+	if (!pos || Z_TYPE_P(pos) == IS_NULL) {
+		/* Append the element by its name */
 		phalcon_update_property_array(this_ptr, SL("_elements"), name, element TSRMLS_CC);
 	} else {
-		if (!type) {
-			type = PHALCON_GLOBAL(z_false);
-		}
-
-		if (zend_is_true(type)) {
+		if (type && zend_is_true(type)) {
 			i = -1;
 		}
 
 		PHALCON_INIT_VAR(values);
 		array_init_size(values, 1);
 
-		phalcon_array_update_zval(&values, name, &element, PH_COPY);
+		phalcon_array_update_zval(&values, name, element, PH_COPY);
 
-		PHALCON_OBS_VAR(elements);
-		phalcon_read_property_this(&elements, this_ptr, SL("_elements"), PH_NOISY_CC);
+		elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
 
-		if (Z_TYPE_P(elements) != IS_ARRAY) {
-			convert_to_array(elements);
-		}
+		if (Z_TYPE_P(elements) == IS_ARRAY) {
+			HashPosition hp;
 
-		phalcon_is_iterable(elements, &ah0, &hp0, 0, 0);
-		while (zend_hash_get_current_data_ex(ah0, (void**) &hd, &hp0) == SUCCESS) {
-			PHALCON_GET_HKEY(key, ah0, hp0);
+			for (
+				zend_hash_internal_pointer_reset_ex(Z_ARRVAL_P(elements), &hp);
+				zend_hash_get_current_key_type_ex(Z_ARRVAL_P(elements), &hp) != HASH_KEY_NON_EXISTANT;
+				zend_hash_move_forward_ex(Z_ARRVAL_P(elements), &hp)
+			) {
+				zval key = phalcon_get_current_key_w(Z_ARRVAL_P(elements), &hp);
 
-			i++;
-
-			if (PHALCON_IS_EQUAL(key, pos)) {
-				found = 1;
-				break;
+				++i;
+				if (phalcon_is_equal(&key, pos TSRMLS_CC)) {
+					found = 1;
+					break;
+				}
 			}
-
-			zend_hash_move_forward_ex(ah0, &hp0);
 		}
 
 		if (!found) {
@@ -719,18 +959,14 @@ PHP_METHOD(Phalcon_Forms_Form, add){
 		PHALCON_INIT_VAR(offset);
 		ZVAL_LONG(offset, i);
 
-		PHALCON_INIT_VAR(length);
-		ZVAL_LONG(length, 0);
-
+		length        = PHALCON_GLOBAL(z_zero);
 		preserve_keys = PHALCON_GLOBAL(z_true);
 
-		PHALCON_INIT_VAR(tmp0);
-		phalcon_call_func_p4(tmp0, "array_slice", elements, length, offset, preserve_keys);
+		PHALCON_CALL_FUNCTION(&tmp0, "array_slice", elements, length, offset, preserve_keys);
 
-		PHALCON_INIT_NVAR(length);
+		length = PHALCON_GLOBAL(z_null);
 
-		PHALCON_INIT_VAR(tmp1);
-		phalcon_call_func_p4(tmp1, "array_slice", elements, offset, length, preserve_keys);
+		PHALCON_CALL_FUNCTION(&tmp1, "array_slice", elements, offset, length, preserve_keys);
 
 		PHALCON_INIT_NVAR(elements);
 		array_init(elements);
@@ -754,33 +990,22 @@ PHP_METHOD(Phalcon_Forms_Form, add){
  */
 PHP_METHOD(Phalcon_Forms_Form, render){
 
-	zval *name, *attributes = NULL, *elements, *exception_message;
-	zval *element;
+	zval **name, **attributes = NULL, *elements, *element;
 
-	PHALCON_MM_GROW();
-
-	phalcon_fetch_params(1, 1, 1, &name, &attributes);
+	phalcon_fetch_params_ex(1, 1, &name, &attributes);
 	
+	PHALCON_ENSURE_IS_STRING(name);
 	if (!attributes) {
-		attributes = PHALCON_GLOBAL(z_null);
+		attributes = &PHALCON_GLOBAL(z_null);
 	}
 	
-	if (Z_TYPE_P(name) != IS_STRING) {
-		PHALCON_THROW_EXCEPTION_STR(phalcon_forms_exception_ce, "The name must be a string");
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
+	if (!phalcon_array_isset_fetch(&element, elements, *name)) {
+		zend_throw_exception_ex(phalcon_forms_exception_ce, 0 TSRMLS_CC, "Element with ID=%s is not a part of the form", Z_STRVAL_P(*name));
 		return;
 	}
-	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	if (!phalcon_array_isset_fetch(&element, elements, name)) {
-		PHALCON_INIT_VAR(exception_message);
-		PHALCON_CONCAT_SVS(exception_message, "Element with ID=", name, " is not part of the form");
-		PHALCON_THROW_EXCEPTION_ZVAL(phalcon_forms_exception_ce, exception_message);
-		return;
-	}
-	
-	phalcon_call_method_p1(return_value, element, "render", attributes);
-	
-	PHALCON_MM_RESTORE();
+
+	PHALCON_RETURN_CALL_METHODW(element, "render", *attributes);
 }
 
 /**
@@ -791,16 +1016,14 @@ PHP_METHOD(Phalcon_Forms_Form, render){
  */
 PHP_METHOD(Phalcon_Forms_Form, get){
 
-	zval *name, *elements, *exception_message, *element;
+	zval **name, *elements, *element;
 
-	phalcon_fetch_params(0, 1, 0, &name);
+	phalcon_fetch_params_ex(1, 0, &name);
 	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	if (!phalcon_array_isset_fetch(&element, elements, name)) {
-		PHALCON_MM_GROW();
-		PHALCON_INIT_VAR(exception_message);
-		PHALCON_CONCAT_SVS(exception_message, "Element with ID=", name, " is not part of the form");
-		PHALCON_THROW_EXCEPTION_ZVAL(phalcon_forms_exception_ce, exception_message);
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
+	if (!phalcon_array_isset_fetch(&element, elements, *name)) {
+		PHALCON_ENSURE_IS_STRING(name);
+		zend_throw_exception_ex(phalcon_forms_exception_ce, 0 TSRMLS_CC, "Element with ID=%s is not a part of the form", Z_STRVAL_P(*name));
 		return;
 	}
 	
@@ -815,27 +1038,22 @@ PHP_METHOD(Phalcon_Forms_Form, get){
  */
 PHP_METHOD(Phalcon_Forms_Form, label){
 
-	zval *name, *attributes = NULL, *elements, *exception_message, *element;
+	zval **name, **attributes = NULL, *elements, *element;
 
-	PHALCON_MM_GROW();
-
-	phalcon_fetch_params(1, 1, 1, &name, &attributes);
+	phalcon_fetch_params_ex(1, 1, &name, &attributes);
 
 	if (!attributes) {
-		attributes = PHALCON_GLOBAL(z_null);
+		attributes = &PHALCON_GLOBAL(z_null);
 	}
-	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	if (!phalcon_array_isset_fetch(&element, elements, name)) {
-		PHALCON_INIT_VAR(exception_message);
-		PHALCON_CONCAT_SVS(exception_message, "Element with ID=", name, " is not part of the form");
-		PHALCON_THROW_EXCEPTION_ZVAL(phalcon_forms_exception_ce, exception_message);
+
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
+	if (!phalcon_array_isset_fetch(&element, elements, *name)) {
+		PHALCON_ENSURE_IS_STRING(name);
+		zend_throw_exception_ex(phalcon_forms_exception_ce, 0 TSRMLS_CC, "Element with ID=%s is not a part of the form", Z_STRVAL_P(*name));
 		return;
 	}
 	
-	phalcon_call_method_p1(return_value, element, "label", attributes);
-	
-	PHALCON_MM_RESTORE();
+	PHALCON_RETURN_CALL_METHODW(element, "label", *attributes);
 }
 
 /**
@@ -846,29 +1064,23 @@ PHP_METHOD(Phalcon_Forms_Form, label){
  */
 PHP_METHOD(Phalcon_Forms_Form, getLabel){
 
-	zval *name, *elements, *exception_message, *element;
-	zval *label;
+	zval **name, *elements, *element, *label = NULL;
 
-	PHALCON_MM_GROW();
-
-	phalcon_fetch_params(1, 1, 0, &name);
+	phalcon_fetch_params_ex(1, 0, &name);
 	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	if (!phalcon_array_isset_fetch(&element, elements, name)) {
-		PHALCON_INIT_VAR(exception_message);
-		PHALCON_CONCAT_SVS(exception_message, "Element with ID=", name, " is not part of the form");
-		PHALCON_THROW_EXCEPTION_ZVAL(phalcon_forms_exception_ce, exception_message);
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
+	if (!phalcon_array_isset_fetch(&element, elements, *name)) {
+		PHALCON_ENSURE_IS_STRING(name);
+		zend_throw_exception_ex(phalcon_forms_exception_ce, 0 TSRMLS_CC, "Element with ID=%s is not a part of the form", Z_STRVAL_P(*name));
 		return;
 	}
 	
-	PHALCON_INIT_VAR(label);
-	phalcon_call_method(label, element, "getlabel");
+	PHALCON_MM_GROW();
+	PHALCON_CALL_METHOD(&label, element, "getlabel");
 	
-	/** 
-	 * Use the element's name as label if the label is not available
-	 */
+	/* Use the element's name as label if the label is not available */
 	if (!zend_is_true(label)) {
-		RETURN_CTOR(name);
+		RETURN_CTOR(*name);
 	}
 	
 	RETURN_CTOR(label);
@@ -888,15 +1100,16 @@ PHP_METHOD(Phalcon_Forms_Form, getValue){
 
 	phalcon_fetch_params(1, 1, 0, &name);
 	
-	entity = phalcon_fetch_nproperty_this(this_ptr, SL("_entity"), PH_NOISY_CC);
+	entity = phalcon_fetch_nproperty_this(this_ptr, SL("_entity"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(entity) == IS_OBJECT) {
 		/** 
 		 * Check if the entity has a getter
 		 */
 		PHALCON_INIT_VAR(method);
 		PHALCON_CONCAT_SV(method, "get", name);
-		if (phalcon_method_exists(entity, method TSRMLS_CC) == SUCCESS) {
-			phalcon_call_method_zval(return_value, entity, method);
+		zend_str_tolower(Z_STRVAL_P(method), Z_STRLEN_P(method));
+		if (phalcon_method_exists_ex(entity, Z_STRVAL_P(method), Z_STRLEN_P(method)+1 TSRMLS_CC) == SUCCESS) {
+			PHALCON_RETURN_CALL_METHOD(entity, Z_STRVAL_P(method));
 			RETURN_MM();
 		}
 	
@@ -905,12 +1118,12 @@ PHP_METHOD(Phalcon_Forms_Form, getValue){
 		 */
 		if (phalcon_isset_property_zval(entity, name TSRMLS_CC)) {
 			PHALCON_OBS_VAR(value);
-			phalcon_read_property_zval(&value, entity, name, PH_NOISY_CC);
+			phalcon_read_property_zval(&value, entity, name, PH_NOISY TSRMLS_CC);
 			RETURN_CTOR(value);
 		}
 	}
 	
-	data = phalcon_fetch_nproperty_this(this_ptr, SL("_data"), PH_NOISY_CC);
+	data = phalcon_fetch_nproperty_this(this_ptr, SL("_data"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(data) == IS_ARRAY) { 
 	
 		/** 
@@ -932,20 +1145,12 @@ PHP_METHOD(Phalcon_Forms_Form, getValue){
  */
 PHP_METHOD(Phalcon_Forms_Form, has){
 
-	zval *name, *elements;
+	zval **name, *elements;
 
-	phalcon_fetch_params(0, 1, 0, &name);
+	phalcon_fetch_params_ex(1, 0, &name);
 	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	
-	/** 
-	 * Checks if the element is in the form
-	 */
-	if (phalcon_array_isset(elements, name)) {
-		RETURN_TRUE;
-	}
-	
-	RETURN_FALSE;
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
+	RETURN_BOOL(phalcon_array_isset(elements, *name));
 }
 
 /**
@@ -960,20 +1165,17 @@ PHP_METHOD(Phalcon_Forms_Form, remove){
 
 	phalcon_fetch_params(0, 1, 0, &name);
 	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
 	
-	/** 
-	 * Checks if the element is in the form
-	 */
 	if (phalcon_array_isset(elements, name)) {
 		phalcon_unset_property_array(this_ptr, SL("_elements"), name TSRMLS_CC);
+
+		/* Clean the iterator index */
+		phalcon_update_property_null(this_ptr, SL("_elementsIndexed") TSRMLS_CC);
+
 		RETURN_TRUE;
 	}
-	
-	/** 
-	 * Clean the iterator index
-	 */
-	phalcon_update_property_null(this_ptr, SL("_elementsIndexed") TSRMLS_CC);
+
 	RETURN_FALSE;
 }
 
@@ -998,7 +1200,7 @@ PHP_METHOD(Phalcon_Forms_Form, clear){
 		fields = PHALCON_GLOBAL(z_null);
 	}
 	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
+	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(elements) == IS_ARRAY) { 
 	
 		phalcon_is_iterable(elements, &ah0, &hp0, 0, 0);
@@ -1008,12 +1210,11 @@ PHP_METHOD(Phalcon_Forms_Form, clear){
 			PHALCON_GET_HVALUE(element);
 	
 			if (Z_TYPE_P(fields) != IS_ARRAY) { 
-				phalcon_call_method_noret(element, "clear");
+				PHALCON_CALL_METHOD(NULL, element, "clear");
 			} else {
-				PHALCON_INIT_NVAR(name);
-				phalcon_call_method(name, element, "getname");
+				PHALCON_CALL_METHOD(&name, element, "getname");
 				if (phalcon_fast_in_array(name, fields TSRMLS_CC)) {
-					phalcon_call_method_noret(element, "clear");
+					PHALCON_CALL_METHOD(NULL, element, "clear");
 				}
 			}
 	
@@ -1032,10 +1233,13 @@ PHP_METHOD(Phalcon_Forms_Form, clear){
  */
 PHP_METHOD(Phalcon_Forms_Form, count){
 
-	zval *elements;
+	long int count;
 
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	phalcon_fast_count(return_value, elements TSRMLS_CC);
+	if (SUCCESS == phalcon_forms_form_count_elements(getThis(), &count TSRMLS_CC)) {
+		RETURN_LONG(count);
+	}
+
+	RETURN_NULL();
 }
 
 /**
@@ -1043,19 +1247,9 @@ PHP_METHOD(Phalcon_Forms_Form, count){
  */
 PHP_METHOD(Phalcon_Forms_Form, rewind){
 
-	zval *elements, *elements_indexed;
-
-	PHALCON_MM_GROW();
-
-	phalcon_update_property_long(this_ptr, SL("_position"), 0 TSRMLS_CC);
-	
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elements"), PH_NOISY_CC);
-	
-	PHALCON_INIT_VAR(elements_indexed);
-	phalcon_array_values(elements_indexed, elements);
-	phalcon_update_property_this(this_ptr, SL("_elementsIndexed"), elements_indexed TSRMLS_CC);
-	
-	PHALCON_MM_RESTORE();
+	zend_object_iterator it;
+	it.data = getThis();
+	phalcon_forms_form_iterator_funcs.rewind(&it TSRMLS_CC);
 }
 
 /**
@@ -1065,14 +1259,15 @@ PHP_METHOD(Phalcon_Forms_Form, rewind){
  */
 PHP_METHOD(Phalcon_Forms_Form, current){
 
-	zval *position, *elements, *element;
+	zval **ret;
+	zend_object_iterator it;
+	it.data = getThis();
 
-	position = phalcon_fetch_nproperty_this(this_ptr, SL("_position"), PH_NOISY_CC);
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elementsIndexed"), PH_NOISY_CC);
-	if (phalcon_array_isset_fetch(&element, elements, position)) {
-		RETURN_CTORW(element);
+	phalcon_forms_form_iterator_funcs.get_current_data(&it, &ret TSRMLS_CC);
+	if (ret) {
+		RETURN_ZVAL(*ret, 1, 0);
 	}
-	
+
 	RETURN_NULL();
 }
 
@@ -1083,8 +1278,22 @@ PHP_METHOD(Phalcon_Forms_Form, current){
  */
 PHP_METHOD(Phalcon_Forms_Form, key){
 
+	zend_object_iterator it;
+	it.data = getThis();
+#if ZEND_MODULE_API_NO >= 20121212
+	phalcon_forms_form_iterator_funcs.get_current_key(&it, return_value TSRMLS_CC);
+#else
+	{
+		char *str_key;
+		uint str_key_len;
+		ulong int_key;
+		if (HASH_KEY_IS_STRING == phalcon_forms_form_iterator_funcs.get_current_key(&it, &str_key, &str_key_len, &int_key TSRMLS_CC)) {
+			RETURN_STRINGL(str_key, str_key_len-1, 1);
+		}
 
-	RETURN_MEMBER(this_ptr, "_position");
+		RETURN_LONG(int_key);
+	}
+#endif
 }
 
 /**
@@ -1093,9 +1302,9 @@ PHP_METHOD(Phalcon_Forms_Form, key){
  */
 PHP_METHOD(Phalcon_Forms_Form, next){
 
-
-	phalcon_property_incr(this_ptr, SL("_position") TSRMLS_CC);
-	
+	zend_object_iterator it;
+	it.data = getThis();
+	phalcon_forms_form_iterator_funcs.move_forward(&it TSRMLS_CC);
 }
 
 /**
@@ -1105,13 +1314,7 @@ PHP_METHOD(Phalcon_Forms_Form, next){
  */
 PHP_METHOD(Phalcon_Forms_Form, valid){
 
-	zval *position, *elements;
-
-	position = phalcon_fetch_nproperty_this(this_ptr, SL("_position"), PH_NOISY_CC);
-	elements = phalcon_fetch_nproperty_this(this_ptr, SL("_elementsIndexed"), PH_NOISY_CC);
-	if (phalcon_array_isset(elements, position)) {
-		RETURN_TRUE;
-	}
-	
-	RETURN_FALSE;
+	zend_object_iterator it;
+	it.data = getThis();
+	RETURN_BOOL(phalcon_forms_form_iterator_funcs.valid(&it TSRMLS_CC) == SUCCESS);
 }

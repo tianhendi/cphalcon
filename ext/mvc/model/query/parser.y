@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -38,17 +38,12 @@
 
 %include {
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
 #include "php_phalcon.h"
-#include "phalcon.h"
 
-#include "parser.h"
-#include "scanner.h"
-#include "phql.h"
+#include "mvc/model/query/parser.h"
+#include "mvc/model/query/scanner.h"
+#include "mvc/model/query/phql.h"
+#include "mvc/model/exception.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
@@ -471,8 +466,8 @@ static zval *phql_ret_func_call(phql_parser_token *name, zval *arguments, zval *
 			int token_found = 0;
 			unsigned int token_length;
 			const phql_token_names *tokens = phql_tokens;
-			int active_token = status->scanner_state->active_token;
-			int near_length = status->scanner_state->start_length;
+			uint active_token = status->scanner_state->active_token;
+			uint near_length = status->scanner_state->start_length;
 
 			if (active_token) {
 
@@ -594,7 +589,7 @@ column_list(R) ::= column_list(L) COMMA column_item(C) . {
 }
 
 column_list(R) ::= column_item(I) . {
-	R = I;
+	R = phql_ret_zval_list(I, NULL);
 }
 
 %destructor column_item { zval_ptr_dtor(&$$); }
@@ -740,7 +735,7 @@ values_list(R) ::= values_list(L) COMMA value_item(I) . {
 }
 
 values_list(R) ::= value_item(I) . {
-	R = I;
+	R = phql_ret_zval_list(I, NULL);
 }
 
 value_item(R) ::= expr(E) . {
@@ -753,8 +748,8 @@ field_list(R) ::= field_list(L) COMMA field_item(I) . {
 	R = phql_ret_zval_list(L, I);
 }
 
-field_list(R) ::= field_item(F) . {
-	R = F;
+field_list(R) ::= field_item(I) . {
+	R = phql_ret_zval_list(I, NULL);
 }
 
 %destructor field_item { zval_ptr_dtor(&$$); }

@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,12 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "paginator/adapter/nativearray.h"
+#include "paginator/adapterinterface.h"
+#include "paginator/exception.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/object.h"
 #include "kernel/array.h"
 #include "kernel/exception.h"
@@ -60,7 +51,22 @@
  *</code>
  *
  */
+zend_class_entry *phalcon_paginator_adapter_nativearray_ce;
 
+PHP_METHOD(Phalcon_Paginator_Adapter_NativeArray, __construct);
+PHP_METHOD(Phalcon_Paginator_Adapter_NativeArray, setCurrentPage);
+PHP_METHOD(Phalcon_Paginator_Adapter_NativeArray, getPaginate);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_paginator_adapter_nativearray___construct, 0, 0, 1)
+	ZEND_ARG_INFO(0, config)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_paginator_adapter_nativearray_method_entry[] = {
+	PHP_ME(Phalcon_Paginator_Adapter_NativeArray, __construct, arginfo_phalcon_paginator_adapter_nativearray___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Paginator_Adapter_NativeArray, setCurrentPage, arginfo_phalcon_paginator_adapterinterface_setcurrentpage, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Paginator_Adapter_NativeArray, getPaginate, arginfo_phalcon_paginator_adapterinterface_getpaginate, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Paginator\Adapter\NativeArray initializer
@@ -135,6 +141,7 @@ PHP_METHOD(Phalcon_Paginator_Adapter_NativeArray, getPaginate){
 
 	zval *items, *limit, *number_page, *lim;
 	zval *start, *slice = NULL;
+	zval *params[3];
 	long int i_limit, i_number_page, i_number, i_before, i_rowcount;
 	long int i_total_pages, i_next;
 	ldiv_t tp;
@@ -145,8 +152,8 @@ PHP_METHOD(Phalcon_Paginator_Adapter_NativeArray, getPaginate){
 		return;
 	}
 
-	limit         = phalcon_fetch_nproperty_this(this_ptr, SL("_limitRows"), PH_NOISY_CC);
-	number_page   = phalcon_fetch_nproperty_this(this_ptr, SL("_page"), PH_NOISY_CC);
+	limit         = phalcon_fetch_nproperty_this(this_ptr, SL("_limitRows"), PH_NOISY TSRMLS_CC);
+	number_page   = phalcon_fetch_nproperty_this(this_ptr, SL("_page"), PH_NOISY TSRMLS_CC);
 	i_limit       = phalcon_get_intval(limit);
 	i_number_page = phalcon_get_intval(number_page);
 
@@ -170,10 +177,11 @@ PHP_METHOD(Phalcon_Paginator_Adapter_NativeArray, getPaginate){
 	PHALCON_ALLOC_GHOST_ZVAL(lim);
 	ZVAL_LONG(start, i_number);
 	ZVAL_LONG(lim, i_limit);
-	phalcon_call_func_params(slice, &slice, SL("array_slice") TSRMLS_CC, 3, items, start, lim);
-	if (UNEXPECTED(EG(exception) != NULL)) {
-		return;
-	}
+
+	params[0] = items;
+	params[1] = start;
+	params[2] = lim;
+	RETURN_ON_FAILURE(phalcon_call_func_aparams(&slice, SL("array_slice"), 3, params TSRMLS_CC));
 
 	Z_DELREF_P(slice);
 	

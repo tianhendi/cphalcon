@@ -2,7 +2,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -16,27 +16,12 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "cache/frontend/data.h"
 #include "cache/frontend/json.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "cache/frontend/data.h"
+#include "cache/frontendinterface.h"
 
 #include "kernel/main.h"
-#include "kernel/memory.h"
 #include "kernel/string.h"
-#include "kernel/object.h"
-#include "kernel/array.h"
-#include "kernel/fcall.h"
 #include "kernel/string.h"
 
 /**
@@ -70,7 +55,16 @@
  * $data = $cache->get('my-data');
  *</code>
  */
+zend_class_entry *phalcon_cache_frontend_json_ce;
 
+PHP_METHOD(Phalcon_Cache_Frontend_Json, beforeStore);
+PHP_METHOD(Phalcon_Cache_Frontend_Json, afterRetrieve);
+
+static const zend_function_entry phalcon_cache_frontend_json_method_entry[] = {
+	PHP_ME(Phalcon_Cache_Frontend_Json, beforeStore, arginfo_phalcon_cache_frontendinterface_beforestore, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Cache_Frontend_Json, afterRetrieve, arginfo_phalcon_cache_frontendinterface_afterretrieve, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Cache\Frontend\Json initializer
@@ -95,7 +89,7 @@ PHP_METHOD(Phalcon_Cache_Frontend_Json, beforeStore){
 	zval *data;
 
 	phalcon_fetch_params(0, 1, 0, &data);
-	phalcon_json_encode(return_value, return_value_ptr, data, 0 TSRMLS_CC);
+	RETURN_ON_FAILURE(phalcon_json_encode(return_value, data, 0 TSRMLS_CC));
 }
 
 /**
@@ -109,5 +103,5 @@ PHP_METHOD(Phalcon_Cache_Frontend_Json, afterRetrieve){
 	zval *data;
 
 	phalcon_fetch_params(0, 1, 0, &data);
-	phalcon_json_decode(return_value, return_value_ptr, data, 0 TSRMLS_CC);
+	RETURN_ON_FAILURE(phalcon_json_decode(return_value, data, 0 TSRMLS_CC));
 }

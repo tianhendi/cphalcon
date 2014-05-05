@@ -132,4 +132,24 @@ HTML;
 		$html = Phalcon\Tag::linkTo('mailto:dreamsxin@gmail.com', 'dreamsxin@gmail.com', FALSE);
 		$this->assertEquals($html, '<a href="mailto:dreamsxin@gmail.com">dreamsxin@gmail.com</a>');
 	 }
+
+	public function testIssue2142()
+	{
+		$di = new Phalcon\DI\FactoryDefault();
+		$di->getshared('url')->setBaseUri('/');
+		\Phalcon\Tag::setDI($di);
+
+		$html = \Phalcon\Tag::stylesheetLink(array('css/phalcon.css', 'rel' => 'stylesheet/less'));
+		$this->assertEquals($html, '<link rel="stylesheet/less" type="text/css" href="/css/phalcon.css" />'.PHP_EOL);
+	}
+
+	public function testIssue2002()
+	{
+		$di = new Phalcon\DI\FactoryDefault();
+		$di->getshared('url')->setBaseUri('/');
+		\Phalcon\Tag::setDI($di);
+
+		$html = Phalcon\Tag::linkTo(array('signup/register', 'Register Here!', 'class' => 'btn-primary', 'query' => array('from' => 'github', 'token' => '123456')));
+		$this->assertEquals($html, '<a href="/signup/register?from=github&amp;token=123456" class="btn-primary">Register Here!</a>');
+	}
 }

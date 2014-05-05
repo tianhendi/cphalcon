@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,15 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "mvc/model/behavior/timestampable.h"
+#include "mvc/model/behavior.h"
+#include "mvc/model/behaviorinterface.h"
+#include "mvc/model/exception.h"
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include <Zend/zend_closures.h>
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/fcall.h"
 #include "kernel/operators.h"
 #include "kernel/array.h"
@@ -45,7 +39,14 @@
  * Allows to automatically update a model’s attribute saving the
  * datetime when a record is created or updated
  */
+zend_class_entry *phalcon_mvc_model_behavior_timestampable_ce;
 
+PHP_METHOD(Phalcon_Mvc_Model_Behavior_Timestampable, notify);
+
+static const zend_function_entry phalcon_mvc_model_behavior_timestampable_method_entry[] = {
+	PHP_ME(Phalcon_Mvc_Model_Behavior_Timestampable, notify, arginfo_phalcon_mvc_model_behaviorinterface_notify, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Mvc\Model\Behavior\Timestampable initializer
@@ -67,7 +68,7 @@ PHALCON_INIT_CLASS(Phalcon_Mvc_Model_Behavior_Timestampable){
  */
 PHP_METHOD(Phalcon_Mvc_Model_Behavior_Timestampable, notify){
 
-	zval *type, *model, *take_action, *options, *timestamp = NULL;
+	zval *type, *model, *take_action = NULL, *options = NULL, *timestamp = NULL;
 	zval *format, *generator, *field, *single_field = NULL;
 	HashTable *ah0;
 	HashPosition hp0;
@@ -80,14 +81,12 @@ PHP_METHOD(Phalcon_Mvc_Model_Behavior_Timestampable, notify){
 	/** 
 	 * Check if the developer decided to take action here
 	 */
-	PHALCON_INIT_VAR(take_action);
-	phalcon_call_method_p1(take_action, this_ptr, "musttakeaction", type);
+	PHALCON_CALL_METHOD(&take_action, this_ptr, "musttakeaction", type);
 	if (PHALCON_IS_NOT_TRUE(take_action)) {
 		RETURN_MM_NULL();
 	}
 	
-	PHALCON_INIT_VAR(options);
-	phalcon_call_method_p1(options, this_ptr, "getoptions", type);
+	PHALCON_CALL_METHOD(&options, this_ptr, "getoptions", type);
 	if (Z_TYPE_P(options) == IS_ARRAY) { 
 	
 		/** 
@@ -107,19 +106,16 @@ PHP_METHOD(Phalcon_Mvc_Model_Behavior_Timestampable, notify){
 			phalcon_array_fetch_string(&format, options, SL("format"), PH_NOISY);
 	
 			phalcon_date(timestamp, format, NULL TSRMLS_CC);
-		} else {
-			if (phalcon_array_isset_string(options, SS("generator"))) {
-	
-				/** 
-				 * A generator is a closure that produce the correct timestamp value
-				 */
-				PHALCON_OBS_VAR(generator);
-				phalcon_array_fetch_string(&generator, options, SL("generator"), PH_NOISY);
-				if (Z_TYPE_P(generator) == IS_OBJECT) {
-					if (phalcon_is_instance_of(generator, SL("Closure") TSRMLS_CC)) {
-						PHALCON_INIT_NVAR(timestamp);
-						PHALCON_CALL_USER_FUNC(timestamp, generator);
-					}
+		} else if (phalcon_array_isset_string(options, SS("generator"))) {
+			/**
+			 * A generator is a closure that produce the correct timestamp value
+			 */
+			PHALCON_OBS_VAR(generator);
+			phalcon_array_fetch_string(&generator, options, SL("generator"), PH_NOISY);
+			if (Z_TYPE_P(generator) == IS_OBJECT) {
+				if (instanceof_function(Z_OBJCE_P(generator), zend_ce_closure TSRMLS_CC)) {
+					PHALCON_INIT_NVAR(timestamp);/**/
+					PHALCON_CALL_USER_FUNC(timestamp, generator);
 				}
 			}
 		}
@@ -146,16 +142,15 @@ PHP_METHOD(Phalcon_Mvc_Model_Behavior_Timestampable, notify){
 	
 				PHALCON_GET_HVALUE(single_field);
 	
-				phalcon_call_method_p2_noret(model, "writeattribute", single_field, timestamp);
+				PHALCON_CALL_METHOD(NULL, model, "writeattribute", single_field, timestamp);
 	
 				zend_hash_move_forward_ex(ah0, &hp0);
 			}
 	
 		} else {
-			phalcon_call_method_p2_noret(model, "writeattribute", field, timestamp);
+			PHALCON_CALL_METHOD(NULL, model, "writeattribute", field, timestamp);
 		}
 	}
 	
 	PHALCON_MM_RESTORE();
 }
-

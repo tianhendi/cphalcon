@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,11 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "mvc/model/metadata/strategy/annotations.h"
+#include "mvc/model/exception.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/exception.h"
 #include "kernel/fcall.h"
 #include "kernel/object.h"
@@ -46,7 +36,21 @@
  *
  * Queries the table meta-data in order to instrospect the model's metadata
  */
+zend_class_entry *phalcon_mvc_model_metadata_strategy_annotations_ce;
 
+PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData);
+PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getColumnMaps);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_mvc_model_metadata_strategy_annotations_getmetadata, 0, 0, 2)
+	ZEND_ARG_INFO(0, model)
+	ZEND_ARG_INFO(0, dependencyInjector)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_mvc_model_metadata_strategy_annotations_method_entry[] = {
+	PHP_ME(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData, arginfo_phalcon_mvc_model_metadata_strategy_annotations_getmetadata, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getColumnMaps, NULL, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Mvc\Model\MetaData\Strategy\Annotations initializer
@@ -68,8 +72,8 @@ PHALCON_INIT_CLASS(Phalcon_Mvc_Model_MetaData_Strategy_Annotations){
 PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 
 	zval *model, *dependency_injector, *service;
-	zval *annotations, *class_name, *reflection;
-	zval *exception_message = NULL, *properties_annotations;
+	zval *annotations = NULL, *class_name, *reflection = NULL;
+	zval *exception_message = NULL, *properties_annotations = NULL;
 	zval *attributes, *primary_keys, *non_primary_keys;
 	zval *numeric_typed, *not_null, *field_types;
 	zval *field_bind_types, *automatic_default;
@@ -94,14 +98,12 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 	PHALCON_INIT_VAR(service);
 	ZVAL_STRING(service, "annotations", 1);
 	
-	PHALCON_INIT_VAR(annotations);
-	phalcon_call_method_p1(annotations, dependency_injector, "get", service);
+	PHALCON_CALL_METHOD(&annotations, dependency_injector, "get", service);
 	
 	PHALCON_INIT_VAR(class_name);
 	phalcon_get_class(class_name, model, 0 TSRMLS_CC);
 	
-	PHALCON_INIT_VAR(reflection);
-	phalcon_call_method_p1(reflection, annotations, "get", class_name);
+	PHALCON_CALL_METHOD(&reflection, annotations, "get", class_name);
 	if (Z_TYPE_P(reflection) != IS_OBJECT) {
 		PHALCON_INIT_VAR(exception_message);
 		PHALCON_CONCAT_SV(exception_message, "No annotations were found in class ", class_name);
@@ -112,8 +114,7 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 	/** 
 	 * Get the properties defined in 
 	 */
-	PHALCON_INIT_VAR(properties_annotations);
-	phalcon_call_method(properties_annotations, reflection, "getpropertiesannotations");
+	PHALCON_CALL_METHOD(&properties_annotations, reflection, "getpropertiesannotations");
 	if (!phalcon_fast_count_ev(properties_annotations TSRMLS_CC)) {
 		PHALCON_INIT_NVAR(exception_message);
 		PHALCON_CONCAT_SV(exception_message, "No properties with annotations were found in class ", class_name);
@@ -176,8 +177,7 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 		/** 
 		 * All columns marked with the 'Column' annotation are considered columns
 		 */
-		PHALCON_INIT_NVAR(has_annotation);
-		phalcon_call_method_p1(has_annotation, prop_annotations, "has", column_annot_name);
+		PHALCON_CALL_METHOD(&has_annotation, prop_annotations, "has", column_annot_name);
 		if (!zend_is_true(has_annotation)) {
 			zend_hash_move_forward_ex(ah0, &hp0);
 			continue;
@@ -186,46 +186,39 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 		/** 
 		 * Fetch the 'column' annotation
 		 */
-		PHALCON_INIT_NVAR(column_annotation);
-		phalcon_call_method_p1(column_annotation, prop_annotations, "get", column_annot_name);
+		PHALCON_CALL_METHOD(&column_annotation, prop_annotations, "get", column_annot_name);
 	
 		/** 
 		 * Check if annotation has the 'type' named parameter
 		 */
-		PHALCON_INIT_NVAR(feature);
-		phalcon_call_method_p1(feature, column_annotation, "getnamedparameter", column_type_name);
+		PHALCON_CALL_METHOD(&feature, column_annotation, "getargument", column_type_name);
 		if (PHALCON_IS_STRING(feature, "integer")) {
 			phalcon_array_update_zval_long(&field_types, property, 0, PH_SEPARATE);
 			phalcon_array_update_zval_long(&field_bind_types, property, 1, PH_SEPARATE);
 			phalcon_array_update_zval_bool(&numeric_typed, property, 1, PH_SEPARATE);
+		} else if (PHALCON_IS_STRING(feature, "decimal")) {
+			phalcon_array_update_zval_long(&field_types, property, 3, PH_SEPARATE);
+			phalcon_array_update_zval_long(&field_bind_types, property, 32, PH_SEPARATE);
+			phalcon_array_update_zval_bool(&numeric_typed, property, 1, PH_SEPARATE);
+		} else if (PHALCON_IS_STRING(feature, "boolean")) {
+			phalcon_array_update_zval_long(&field_types, property, 8, PH_SEPARATE);
+			phalcon_array_update_zval_long(&field_bind_types, property, 5, PH_SEPARATE);
 		} else {
-			if (PHALCON_IS_STRING(feature, "decimal")) {
-				phalcon_array_update_zval_long(&field_types, property, 3, PH_SEPARATE);
-				phalcon_array_update_zval_long(&field_bind_types, property, 32, PH_SEPARATE);
-				phalcon_array_update_zval_bool(&numeric_typed, property, 1, PH_SEPARATE);
+			if (PHALCON_IS_STRING(feature, "date")) {
+				phalcon_array_update_zval_long(&field_types, property, 1, PH_SEPARATE);
 			} else {
-				if (PHALCON_IS_STRING(feature, "boolean")) {
-					phalcon_array_update_zval_long(&field_types, property, 8, PH_SEPARATE);
-					phalcon_array_update_zval_long(&field_bind_types, property, 5, PH_SEPARATE);
-				} else {
-					if (PHALCON_IS_STRING(feature, "date")) {
-						phalcon_array_update_zval_long(&field_types, property, 1, PH_SEPARATE);
-					} else {
-						/** 
-						 * By default all columns are varchar/string
-						 */
-						phalcon_array_update_zval_long(&field_types, property, 2, PH_SEPARATE);
-					}
-					phalcon_array_update_zval_long(&field_bind_types, property, 2, PH_SEPARATE);
-				}
+				/**
+				 * By default all columns are varchar/string
+				 */
+				phalcon_array_update_zval_long(&field_types, property, 2, PH_SEPARATE);
 			}
+			phalcon_array_update_zval_long(&field_bind_types, property, 2, PH_SEPARATE);
 		}
 	
 		/** 
 		 * All columns marked with the 'Primary' annotation are considered primary keys
 		 */
-		PHALCON_INIT_NVAR(has_annotation);
-		phalcon_call_method_p1(has_annotation, prop_annotations, "has", primary_annot_name);
+		PHALCON_CALL_METHOD(&has_annotation, prop_annotations, "has", primary_annot_name);
 		if (zend_is_true(has_annotation)) {
 			phalcon_array_append(&primary_keys, property, PH_SEPARATE);
 		} else {
@@ -235,8 +228,7 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 		/** 
 		 * All columns marked with the 'Primary' annotation are considered primary keys
 		 */
-		PHALCON_INIT_NVAR(has_annotation);
-		phalcon_call_method_p1(has_annotation, prop_annotations, "has", id_annot_name);
+		PHALCON_CALL_METHOD(&has_annotation, prop_annotations, "has", id_annot_name);
 		if (zend_is_true(has_annotation)) {
 			PHALCON_CPY_WRT(identity_field, property);
 		}
@@ -244,8 +236,7 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 		/** 
 		 * Check if the column 
 		 */
-		PHALCON_INIT_NVAR(feature);
-		phalcon_call_method_p1(feature, column_annotation, "getnamedparameter", column_nullable_name);
+		PHALCON_CALL_METHOD(&feature, column_annotation, "getargument", column_nullable_name);
 		if (!zend_is_true(feature)) {
 			phalcon_array_append(&not_null, property, PH_SEPARATE);
 		}
@@ -259,22 +250,22 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Annotations, getMetaData){
 	 * Create an array using the MODELS_* constants as indexes
 	 */
 	array_init_size(return_value, 10);
-	phalcon_array_update_long(&return_value, 0, &attributes, PH_COPY);
-	phalcon_array_update_long(&return_value, 1, &primary_keys, PH_COPY);
-	phalcon_array_update_long(&return_value, 2, &non_primary_keys, PH_COPY);
-	phalcon_array_update_long(&return_value, 3, &not_null, PH_COPY);
-	phalcon_array_update_long(&return_value, 4, &field_types, PH_COPY);
-	phalcon_array_update_long(&return_value, 5, &numeric_typed, PH_COPY);
-	phalcon_array_update_long(&return_value, 8, &identity_field, PH_COPY);
-	phalcon_array_update_long(&return_value, 9, &field_bind_types, PH_COPY);
-	phalcon_array_update_long(&return_value, 10, &automatic_default, PH_COPY);
-	phalcon_array_update_long(&return_value, 11, &automatic_default, PH_COPY);
+	phalcon_array_update_long(&return_value, 0,  attributes, PH_COPY);
+	phalcon_array_update_long(&return_value, 1,  primary_keys, PH_COPY);
+	phalcon_array_update_long(&return_value, 2,  non_primary_keys, PH_COPY);
+	phalcon_array_update_long(&return_value, 3,  not_null, PH_COPY);
+	phalcon_array_update_long(&return_value, 4,  field_types, PH_COPY);
+	phalcon_array_update_long(&return_value, 5,  numeric_typed, PH_COPY);
+	phalcon_array_update_long(&return_value, 8,  identity_field, PH_COPY);
+	phalcon_array_update_long(&return_value, 9,  field_bind_types, PH_COPY);
+	phalcon_array_update_long(&return_value, 10, automatic_default, PH_COPY);
+	phalcon_array_update_long(&return_value, 11, automatic_default, PH_COPY);
 	
 	PHALCON_MM_RESTORE();
 }
 
 /**
- * Read the model's column map, this can't be infered
+ * Read the model's column map, this can't be inferred
  *
  * @param Phalcon\Mvc\ModelInterface $model
  * @param Phalcon\DiInterface $dependencyInjector

@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -18,21 +18,13 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "db/dialect/postgresql.h"
+#include "db/dialect.h"
+#include "db/dialectinterface.h"
+#include "db/exception.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/exception.h"
 #include "kernel/fcall.h"
 #include "kernel/operators.h"
@@ -42,9 +34,60 @@
 /**
  * Phalcon\Db\Dialect\Postgresql
  *
- * Generates database specific SQL for the PostgreSQL RBDM
+ * Generates database specific SQL for the PostgreSQL RBDMS
  */
+zend_class_entry *phalcon_db_dialect_postgresql_ce;
 
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, getColumnDefinition);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, addColumn);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, modifyColumn);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropColumn);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, addIndex);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropIndex);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, addPrimaryKey);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropPrimaryKey);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, addForeignKey);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropForeignKey);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, _getTableOptions);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, createTable);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropTable);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, createView);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropView);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, tableExists);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, viewExists);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, describeColumns);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, listTables);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, listViews);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, describeIndexes);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, describeReferences);
+PHP_METHOD(Phalcon_Db_Dialect_Postgresql, tableOptions);
+
+static const zend_function_entry phalcon_db_dialect_postgresql_method_entry[] = {
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, getColumnDefinition, arginfo_phalcon_db_dialectinterface_getcolumndefinition, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, addColumn, arginfo_phalcon_db_dialectinterface_addcolumn, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, modifyColumn, arginfo_phalcon_db_dialectinterface_modifycolumn, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, dropColumn, arginfo_phalcon_db_dialectinterface_dropcolumn, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, addIndex, arginfo_phalcon_db_dialectinterface_addindex, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, dropIndex, arginfo_phalcon_db_dialectinterface_dropindex, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, addPrimaryKey, arginfo_phalcon_db_dialectinterface_addprimarykey, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, dropPrimaryKey, arginfo_phalcon_db_dialectinterface_dropprimarykey, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, addForeignKey, arginfo_phalcon_db_dialectinterface_addforeignkey, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, dropForeignKey, arginfo_phalcon_db_dialectinterface_dropforeignkey, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, _getTableOptions, NULL, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, createTable, arginfo_phalcon_db_dialectinterface_createtable, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, dropTable, arginfo_phalcon_db_dialectinterface_droptable, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, createView, arginfo_phalcon_db_dialectinterface_createview, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, dropView, arginfo_phalcon_db_dialectinterface_dropview, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, tableExists, arginfo_phalcon_db_dialectinterface_tableexists, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, viewExists, arginfo_phalcon_db_dialectinterface_viewexists, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, describeColumns, arginfo_phalcon_db_dialectinterface_describecolumns, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, listTables, arginfo_phalcon_db_dialectinterface_listtables, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, listViews, arginfo_phalcon_db_dialectinterface_listtables, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, describeIndexes, arginfo_phalcon_db_dialectinterface_describeindexes, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, describeReferences, arginfo_phalcon_db_dialectinterface_describereferences, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Db_Dialect_Postgresql, tableOptions, arginfo_phalcon_db_dialectinterface_tableoptions, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Db\Dialect\Postgresql initializer
@@ -68,8 +111,8 @@ PHALCON_INIT_CLASS(Phalcon_Db_Dialect_Postgresql){
  */
 PHP_METHOD(Phalcon_Db_Dialect_Postgresql, getColumnDefinition){
 
-	zval *column, *size, *column_type, *column_sql = NULL;
-	zval *scale;
+	zval *column, *size = NULL, *column_type = NULL, *column_sql = NULL;
+	zval *scale = NULL;
 
 	PHALCON_MM_GROW();
 
@@ -80,59 +123,46 @@ PHP_METHOD(Phalcon_Db_Dialect_Postgresql, getColumnDefinition){
 		return;
 	}
 	
-	PHALCON_INIT_VAR(size);
-	phalcon_call_method(size, column, "getsize");
-	
-	PHALCON_INIT_VAR(column_type);
-	phalcon_call_method(column_type, column, "gettype");
-	
+	PHALCON_CALL_METHOD(&size, column, "getsize");
+	PHALCON_CALL_METHOD(&column_type, column, "gettype");
+
+	PHALCON_INIT_VAR(column_sql);
 	switch (phalcon_get_intval(column_type)) {
 	
 		case 0:
-			PHALCON_INIT_VAR(column_sql);
 			ZVAL_STRING(column_sql, "INT", 1);
 			break;
 	
 		case 1:
-			PHALCON_INIT_NVAR(column_sql);
 			ZVAL_STRING(column_sql, "DATE", 1);
 			break;
 	
 		case 2:
-			PHALCON_INIT_NVAR(column_sql);
 			PHALCON_CONCAT_SVS(column_sql, "CHARACTER VARYING(", size, ")");
 			break;
 	
 		case 3:
-			PHALCON_INIT_VAR(scale);
-			phalcon_call_method(scale, column, "getscale");
-	
-			PHALCON_INIT_NVAR(column_sql);
+			PHALCON_CALL_METHOD(&scale, column, "getscale");
 			PHALCON_CONCAT_SVSVS(column_sql, "NUMERIC(", size, ",", scale, ")");
 			break;
 	
 		case 4:
-			PHALCON_INIT_NVAR(column_sql);
 			ZVAL_STRING(column_sql, "TIMESTAMP", 1);
 			break;
 	
 		case 5:
-			PHALCON_INIT_NVAR(column_sql);
 			PHALCON_CONCAT_SVS(column_sql, "CHARACTER(", size, ")");
 			break;
 	
 		case 6:
-			PHALCON_INIT_NVAR(column_sql);
 			ZVAL_STRING(column_sql, "TEXT", 1);
 			break;
 	
 		case 7:
-			PHALCON_INIT_NVAR(column_sql);
 			ZVAL_STRING(column_sql, "FLOAT", 1);
 			break;
 	
 		case 8:
-			PHALCON_INIT_NVAR(column_sql);
 			ZVAL_STRING(column_sql, "SMALLINT(1)", 1);
 			break;
 	
@@ -364,13 +394,13 @@ PHP_METHOD(Phalcon_Db_Dialect_Postgresql, dropTable){
 		PHALCON_INIT_VAR(table);
 		PHALCON_CONCAT_VSV(table, schema_name, ".", table_name);
 	} else {
-		PHALCON_CPY_WRT(table, table_name);
+		table = table_name;
 	}
+
+	PHALCON_INIT_VAR(sql);
 	if (zend_is_true(if_exists)) {
-		PHALCON_INIT_VAR(sql);
 		PHALCON_CONCAT_SV(sql, "DROP TABLE IF EXISTS ", table);
 	} else {
-		PHALCON_INIT_NVAR(sql);
 		PHALCON_CONCAT_SV(sql, "DROP TABLE ", table);
 	}
 	
@@ -680,4 +710,3 @@ PHP_METHOD(Phalcon_Db_Dialect_Postgresql, tableOptions){
 	
 	RETURN_MM_EMPTY_STRING();
 }
-

@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,14 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#include "paginator/adapter/model.h"
+#include "paginator/adapterinterface.h"
+#include "paginator/exception.h"
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include <math.h>
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/object.h"
 #include "kernel/array.h"
 #include "kernel/operators.h"
@@ -43,7 +36,22 @@
  *
  * This adapter allows to paginate data using a Phalcon\Mvc\Model resultset as base
  */
+zend_class_entry *phalcon_paginator_adapter_model_ce;
 
+PHP_METHOD(Phalcon_Paginator_Adapter_Model, __construct);
+PHP_METHOD(Phalcon_Paginator_Adapter_Model, setCurrentPage);
+PHP_METHOD(Phalcon_Paginator_Adapter_Model, getPaginate);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_paginator_adapter_model___construct, 0, 0, 1)
+	ZEND_ARG_INFO(0, config)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_paginator_adapter_model_method_entry[] = {
+	PHP_ME(Phalcon_Paginator_Adapter_Model, __construct, arginfo_phalcon_paginator_adapter_model___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Paginator_Adapter_Model, setCurrentPage, arginfo_phalcon_paginator_adapterinterface_setcurrentpage, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Paginator_Adapter_Model, getPaginate, arginfo_phalcon_paginator_adapterinterface_getpaginate, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Paginator\Adapter\Model initializer
@@ -116,11 +124,11 @@ PHP_METHOD(Phalcon_Paginator_Adapter_Model, getPaginate){
 	z_one  = PHALCON_GLOBAL(z_one);
 	z_zero = PHALCON_GLOBAL(z_zero);
 	
-	show        = phalcon_fetch_nproperty_this(this_ptr, SL("_limitRows"), PH_NOISY_CC);
-	config      = phalcon_fetch_nproperty_this(this_ptr, SL("_config"), PH_NOISY_CC);
+	show        = phalcon_fetch_nproperty_this(this_ptr, SL("_limitRows"), PH_NOISY TSRMLS_CC);
+	config      = phalcon_fetch_nproperty_this(this_ptr, SL("_config"), PH_NOISY TSRMLS_CC);
 	
 	PHALCON_OBS_VAR(page_number);
-	phalcon_read_property_this(&page_number, this_ptr, SL("_page"), PH_NOISY_CC);
+	phalcon_read_property_this(&page_number, this_ptr, SL("_page"), PH_NOISY TSRMLS_CC);
 
 	i_show = (Z_TYPE_P(show) == IS_LONG) ? Z_LVAL_P(show) : phalcon_get_intval(show);
 
@@ -153,7 +161,7 @@ PHP_METHOD(Phalcon_Paginator_Adapter_Model, getPaginate){
 	}
 	
 	PHALCON_INIT_VAR(total_pages);
-	ZVAL_LONG(total_pages, ceil(Z_DVAL_P(possible_pages)));
+	ZVAL_LONG(total_pages, (long int)ceil(Z_DVAL_P(possible_pages)));
 	if (Z_TYPE_P(items) != IS_OBJECT) {
 		PHALCON_THROW_EXCEPTION_STR(phalcon_paginator_exception_ce, "Invalid data for paginator");
 		return;
@@ -167,9 +175,9 @@ PHP_METHOD(Phalcon_Paginator_Adapter_Model, getPaginate){
 		 * Seek to the desired position
 		 */
 		if (PHALCON_LT(start, rowcount)) {
-			phalcon_call_method_p1_noret(items, "seek", start);
+			PHALCON_CALL_METHOD(NULL, items, "seek", start);
 		} else {
-			phalcon_call_method_noret(items, "rewind");
+			PHALCON_CALL_METHOD(NULL, items, "rewind");
 			PHALCON_CPY_WRT_CTOR(page_number, z_one);
 			PHALCON_CPY_WRT_CTOR(last_page, z_zero);
 			PHALCON_CPY_WRT_CTOR(start, z_zero);
@@ -179,15 +187,12 @@ PHP_METHOD(Phalcon_Paginator_Adapter_Model, getPaginate){
 		 * The record must be iterable
 		 */
 		for (i=1; ; ++i) {
-	
-			PHALCON_INIT_NVAR(valid);
-			phalcon_call_method(valid, items, "valid");
+			PHALCON_CALL_METHOD(&valid, items, "valid");
 			if (!PHALCON_IS_NOT_FALSE(valid)) {
 				break;
 			}
 	
-			PHALCON_INIT_NVAR(current);
-			phalcon_call_method(current, items, "current");
+			PHALCON_CALL_METHOD(&current, items, "current");
 			phalcon_array_append(&page_items, current, 0);
 
 			if (i >= i_show) {

@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,27 +17,21 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "php_main.h"
-#include "main/php_streams.h"
-#include "ext/standard/file.h"
-#include "ext/standard/php_smart_str.h"
-#include "ext/standard/php_filestat.h"
-#include "ext/standard/php_string.h"
-
+#include "kernel/file.h"
 #include "kernel/main.h"
 #include "kernel/memory.h"
 #include "kernel/concat.h"
 #include "kernel/operators.h"
-#include "kernel/file.h"
 
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include <ctype.h>
+
+#include <main/php_streams.h>
+#include <Zend/zend_exceptions.h>
+#include <Zend/zend_interfaces.h>
+#include <ext/standard/file.h>
+#include <ext/standard/php_smart_str.h>
+#include <ext/standard/php_filestat.h>
+#include <ext/standard/php_string.h>
 
 /**
  * Checks if a file exist
@@ -128,7 +122,7 @@ void phalcon_fix_path(zval **return_value, zval *path, zval *directory_separator
  */
 void phalcon_prepare_virtual_path(zval *return_value, zval *path, zval *virtual_separator TSRMLS_DC) {
 
-	unsigned int i;
+	int i;
 	unsigned char ch;
 	smart_str virtual_str = {0};
 
@@ -146,7 +140,7 @@ void phalcon_prepare_virtual_path(zval *return_value, zval *path, zval *virtual_
 		if (ch == '\0') {
 			break;
 		}
-		if (ch == '/' || ch == '\\' || ch == ':') {
+		if (ch == '/' || ch == '\\' || ch == ':' || !isprint(ch)) {
 			smart_str_appendl(&virtual_str, Z_STRVAL_P(virtual_separator), Z_STRLEN_P(virtual_separator));
 		}
 		else {
@@ -164,6 +158,28 @@ void phalcon_prepare_virtual_path(zval *return_value, zval *path, zval *virtual_
 }
 
 /**
+ * Faster version of phalcon_prepare_virtual_path()
+ */
+void phalcon_prepare_virtual_path_ex(zval *return_value, const char *path, size_t path_len, char virtual_separator TSRMLS_DC)
+{
+	char *copy = ecalloc(path_len+1, 1);
+	size_t i;
+
+	for (i=0; i<path_len; ++i) {
+		char c = path[i];
+
+		if (c == '/' || c == '\\' || c == ':' || !isprint(c)) {
+			copy[i] = virtual_separator;
+		}
+		else {
+			copy[i] = tolower(c);
+		}
+	}
+
+	ZVAL_STRINGL(return_value, copy, path_len, 0);
+}
+
+/**
  * Generates a unique id for a path
  */
 void phalcon_unique_path_key(zval *return_value, zval *path TSRMLS_DC) {
@@ -178,7 +194,7 @@ void phalcon_unique_path_key(zval *return_value, zval *path TSRMLS_DC) {
 	h = zend_hash_func(Z_STRVAL_P(path), Z_STRLEN_P(path) + 1);
 
 	strKey = emalloc(24);
-	sprintf(strKey, "v%lu", h);
+	snprintf(strKey, 23, "v%lu", h);    
 
 	RETURN_STRING(strKey, 0);
 }
@@ -195,7 +211,7 @@ void phalcon_realpath(zval *return_value, zval *filename TSRMLS_DC) {
 		RETURN_FALSE;
 	}
 
-	if (strlen(Z_STRVAL_P(filename)) != Z_STRLEN_P(filename)) {
+	if (strlen(Z_STRVAL_P(filename)) != (size_t)(Z_STRLEN_P(filename))) {
 		RETURN_FALSE;
 	}
 
@@ -211,7 +227,7 @@ void phalcon_realpath(zval *return_value, zval *filename TSRMLS_DC) {
  */
 void phalcon_possible_autoload_filepath(zval *return_value, zval *prefix, zval *class_name, zval *virtual_separator, zval *separator TSRMLS_DC) {
 
-	unsigned int i, length;
+	int i, length;
 	unsigned char ch;
 	smart_str virtual_str = {0};
 
@@ -421,7 +437,7 @@ void phalcon_unlink(zval *return_value, zval *path TSRMLS_DC)
 		php_stream_wrapper *wrapper;
 		zval *zctx = NULL;
 
-		if (unlikely(strlen(Z_STRVAL_P(path)) != Z_STRLEN_P(path))) {
+		if (unlikely(strlen(Z_STRVAL_P(path)) != (size_t)(Z_STRLEN_P(path)))) {
 			ZVAL_FALSE(return_value);
 			return;
 		}

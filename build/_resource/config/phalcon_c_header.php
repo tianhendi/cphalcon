@@ -3,12 +3,20 @@
 
 return <<<HEADER
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <math.h>
+#include <ctype.h>
+#include <stdlib.h>
+
 #include <main/php.h>
+
+#define PHALCON_RELEASE 1
 
 #include "php_phalcon.h"
 #include "phalcon.h"
@@ -56,7 +64,10 @@ return <<<HEADER
 #include <ext/session/php_session.h>
 #endif
 
-#include <ext/pdo/php_pdo_driver.h>
+#ifdef PHALCON_USE_PHP_MBSTRING
+#include <ext/mbstring/mbstring.h>
+#include <ext/mbstring/php_unicode.h>
+#endif
 
 #include <Zend/zend_API.h>
 #include <Zend/zend_operators.h>
@@ -65,4 +76,5 @@ return <<<HEADER
 #include <Zend/zend_execute.h>
 #include <Zend/zend_extensions.h>
 #include <Zend/zend_builtin_functions.h>
+#include <Zend/zend_closures.h>
 HEADER;

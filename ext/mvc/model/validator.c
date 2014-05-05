@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,14 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "mvc/model/validator.h"
+#include "mvc/model/validatorinterface.h"
+#include "mvc/model/exception.h"
+#include "mvc/model/message.h"
+#include "internal/arginfo.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/exception.h"
 #include "kernel/object.h"
 #include "kernel/fcall.h"
@@ -43,7 +36,24 @@
  *
  * This is a base class for Phalcon\Mvc\Model validators
  */
+zend_class_entry *phalcon_mvc_model_validator_ce;
 
+PHP_METHOD(Phalcon_Mvc_Model_Validator, __construct);
+PHP_METHOD(Phalcon_Mvc_Model_Validator, appendMessage);
+PHP_METHOD(Phalcon_Mvc_Model_Validator, getMessages);
+PHP_METHOD(Phalcon_Mvc_Model_Validator, getOptions);
+PHP_METHOD(Phalcon_Mvc_Model_Validator, getOption);
+PHP_METHOD(Phalcon_Mvc_Model_Validator, isSetOption);
+
+static const zend_function_entry phalcon_mvc_model_validator_method_entry[] = {
+	PHP_ME(Phalcon_Mvc_Model_Validator, __construct, arginfo_phalcon_mvc_model_validator___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Mvc_Model_Validator, appendMessage, NULL, ZEND_ACC_PROTECTED)
+	PHP_ME(Phalcon_Mvc_Model_Validator, getMessages, arginfo_empty, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Mvc_Model_Validator, getOptions, arginfo_empty, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Mvc_Model_Validator, getOption, arginfo_empty, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Mvc_Model_Validator, isSetOption, arginfo_empty, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Mvc\Model\Validator initializer
@@ -54,6 +64,8 @@ PHALCON_INIT_CLASS(Phalcon_Mvc_Model_Validator){
 
 	zend_declare_property_null(phalcon_mvc_model_validator_ce, SL("_options"), ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(phalcon_mvc_model_validator_ce, SL("_messages"), ZEND_ACC_PROTECTED TSRMLS_CC);
+
+	zend_class_implements(phalcon_mvc_model_validator_ce TSRMLS_CC, 1, phalcon_mvc_model_validatorinterface_ce);
 
 	return SUCCESS;
 }
@@ -86,8 +98,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator, __construct){
  */
 PHP_METHOD(Phalcon_Mvc_Model_Validator, appendMessage){
 
-	zval *message, *field = NULL, *type = NULL, *code = NULL, *class_name, *suffix;
-	zval *empty_string, *model_message, *t;
+	zval *message, *field = NULL, *type = NULL, *code = NULL;
+	zval *model_message, *t;
 
 	PHALCON_MM_GROW();
 
@@ -106,17 +118,21 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator, appendMessage){
 	}
 	
 	if (!zend_is_true(type)) {
-		PHALCON_INIT_VAR(class_name);
-		phalcon_get_class(class_name, this_ptr, 0 TSRMLS_CC);
-	
-		PHALCON_INIT_VAR(suffix);
-		ZVAL_STRING(suffix, "Validator", 1);
-	
-		PHALCON_INIT_VAR(empty_string);
-		ZVAL_EMPTY_STRING(empty_string);
-	
+		char *c;
+		int len;
+
 		PHALCON_INIT_VAR(t);
-		phalcon_fast_str_replace(t, suffix, empty_string, class_name);
+		phalcon_get_class(t, this_ptr, 0 TSRMLS_CC);
+
+		assert(Z_TYPE_P(t) == IS_STRING);
+
+		c   = Z_STRVAL_P(t);
+		len = Z_STRLEN_P(t);
+
+		if (len > 9 && !memcmp(c + len - 9, "Validator", 9)) {
+			Z_STRLEN_P(t) -= 9;
+			c[len-9]       = 0;
+		}
 	}
 	else {
 		t = type;
@@ -124,7 +140,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator, appendMessage){
 	
 	PHALCON_INIT_VAR(model_message);
 	object_init_ex(model_message, phalcon_mvc_model_message_ce);
-	phalcon_call_method_p4_noret(model_message, "__construct", message, field, t, code);
+	PHALCON_CALL_METHOD(NULL, model_message, "__construct", message, field, t, code);
 	
 	phalcon_update_property_array_append(this_ptr, SL("_messages"), model_message TSRMLS_CC);
 	
@@ -165,7 +181,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator, getOption){
 
 	phalcon_fetch_params(0, 1, 0, &option);
 	
-	options = phalcon_fetch_nproperty_this(this_ptr, SL("_options"), PH_NOISY_CC);
+	options = phalcon_fetch_nproperty_this(this_ptr, SL("_options"), PH_NOISY TSRMLS_CC);
 	if (phalcon_array_isset_fetch(&value, options, option)) {
 		RETURN_ZVAL(value, 1, 0);
 	}
@@ -185,7 +201,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator, isSetOption){
 
 	phalcon_fetch_params(0, 1, 0, &option);
 	
-	options = phalcon_fetch_nproperty_this(this_ptr, SL("_options"), PH_NOISY_CC);
+	options = phalcon_fetch_nproperty_this(this_ptr, SL("_options"), PH_NOISY TSRMLS_CC);
 	
 	RETURN_BOOL(phalcon_array_isset(options, option));
 }

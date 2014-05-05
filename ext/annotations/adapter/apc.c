@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,12 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "annotations/adapter/apc.h"
+#include "annotations/adapter.h"
+#include "annotations/adapterinterface.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/concat.h"
 #include "kernel/fcall.h"
 #include "kernel/string.h"
@@ -45,7 +36,25 @@
  * $annotations = new \Phalcon\Annotations\Adapter\Apc();
  *</code>
  */
+zend_class_entry *phalcon_annotations_adapter_apc_ce;
 
+PHP_METHOD(Phalcon_Annotations_Adapter_Apc, read);
+PHP_METHOD(Phalcon_Annotations_Adapter_Apc, write);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_annotations_adapter_apc_read, 0, 0, 1)
+	ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_annotations_adapter_apc_write, 0, 0, 2)
+	ZEND_ARG_INFO(0, key)
+	ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_annotations_adapter_apc_method_entry[] = {
+	PHP_ME(Phalcon_Annotations_Adapter_Apc, read, arginfo_phalcon_annotations_adapter_apc_read, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Adapter_Apc, write, arginfo_phalcon_annotations_adapter_apc_write, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Annotations\Adapter\Apc initializer
@@ -78,14 +87,14 @@ PHP_METHOD(Phalcon_Annotations_Adapter_Apc, read){
 	
 	phalcon_strtolower_inplace(prefixed_key);
 	
-	if (unlikely(!return_value_ptr)) {
-		return_value_ptr = &return_value;
+	PHALCON_RETURN_CALL_FUNCTION("apc_fetch", prefixed_key);
+	if (return_value_ptr) {
+		return_value = *return_value_ptr;
 	}
 
-	phalcon_return_call_func_p1("apc_fetch", prefixed_key);
-	if (Z_TYPE_PP(return_value_ptr) != IS_OBJECT) {
-		zval_dtor(*return_value_ptr);
-		ZVAL_NULL(*return_value_ptr);
+	if (Z_TYPE_P(return_value) != IS_OBJECT) {
+		zval_dtor(return_value);
+		ZVAL_NULL(return_value);
 	}
 	
 	PHALCON_MM_RESTORE();
@@ -109,7 +118,7 @@ PHP_METHOD(Phalcon_Annotations_Adapter_Apc, write){
 	PHALCON_CONCAT_SV(prefixed_key, "_PHAN", key);
 	
 	phalcon_strtolower_inplace(prefixed_key);
-	phalcon_call_func_p2_noret("apc_store", prefixed_key, data);
+	PHALCON_CALL_FUNCTION(NULL, "apc_store", prefixed_key, data);
 	
 	PHALCON_MM_RESTORE();
 }

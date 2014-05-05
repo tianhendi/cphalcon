@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,14 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "logger/multiple.h"
+#include "logger/adapterinterface.h"
+#include "logger/exception.h"
+#include "logger.h"
+#include "psr/log/invalidargumentexception.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/exception.h"
 #include "kernel/object.h"
 #include "kernel/fcall.h"
@@ -41,7 +34,42 @@
  *
  * Handles multiples logger handlers
  */
+zend_class_entry *phalcon_logger_multiple_ce;
 
+PHP_METHOD(Phalcon_Logger_Multiple, push);
+PHP_METHOD(Phalcon_Logger_Multiple, getLoggers);
+PHP_METHOD(Phalcon_Logger_Multiple, setFormatter);
+PHP_METHOD(Phalcon_Logger_Multiple, getFormatter);
+PHP_METHOD(Phalcon_Logger_Multiple, log);
+PHP_METHOD(Phalcon_Logger_Multiple, emergency);
+PHP_METHOD(Phalcon_Logger_Multiple, debug);
+PHP_METHOD(Phalcon_Logger_Multiple, error);
+PHP_METHOD(Phalcon_Logger_Multiple, info);
+PHP_METHOD(Phalcon_Logger_Multiple, notice);
+PHP_METHOD(Phalcon_Logger_Multiple, warning);
+PHP_METHOD(Phalcon_Logger_Multiple, alert);
+PHP_METHOD(Phalcon_Logger_Multiple, critical); 
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_logger_multiple_push, 0, 0, 1)
+	ZEND_ARG_INFO(0, logger)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_logger_multiple_method_entry[] = {
+	PHP_ME(Phalcon_Logger_Multiple, push, arginfo_phalcon_logger_multiple_push, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, getLoggers, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, setFormatter, arginfo_phalcon_logger_adapterinterface_setformatter, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, getFormatter, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, log, arginfo_phalcon_logger_adapterinterface_log, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, emergency, arginfo_phalcon_logger_adapterinterface_emergency, ZEND_ACC_PUBLIC)
+	PHP_MALIAS(Phalcon_Logger_Multiple, emergence, emergency, arginfo_phalcon_logger_adapterinterface_emergency, ZEND_ACC_PUBLIC | ZEND_ACC_DEPRECATED)
+	PHP_ME(Phalcon_Logger_Multiple, debug, arginfo_phalcon_logger_adapterinterface_debug, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, error, arginfo_phalcon_logger_adapterinterface_error, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, info, arginfo_phalcon_logger_adapterinterface_info, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, notice, arginfo_phalcon_logger_adapterinterface_notice, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, warning, arginfo_phalcon_logger_adapterinterface_warning, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Logger_Multiple, alert, arginfo_phalcon_logger_adapterinterface_alert, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Logger\Multiple initializer
@@ -64,15 +92,12 @@ PHALCON_INIT_CLASS(Phalcon_Logger_Multiple){
 PHP_METHOD(Phalcon_Logger_Multiple, push){
 
 	zval *logger;
+	zend_class_entry *exception = PHALCON_GLOBAL(register_psr3_classes) ? psr_log_invalidargumentexception_ce : phalcon_logger_exception_ce;
 
 	phalcon_fetch_params(0, 1, 0, &logger);
 	
-	if (Z_TYPE_P(logger) != IS_OBJECT) {
-		PHALCON_THROW_EXCEPTION_STRW(phalcon_logger_exception_ce, "The logger is invalid");
-		return;
-	}
+	PHALCON_VERIFY_INTERFACE_EX(logger, phalcon_logger_adapterinterface_ce, exception, 0)
 	phalcon_update_property_array_append(this_ptr, SL("_loggers"), logger TSRMLS_CC);
-	
 }
 
 /**
@@ -103,7 +128,7 @@ PHP_METHOD(Phalcon_Logger_Multiple, setFormatter){
 	phalcon_fetch_params(1, 1, 0, &formatter);
 	
 	PHALCON_OBS_VAR(loggers);
-	phalcon_read_property_this(&loggers, this_ptr, SL("_loggers"), PH_NOISY_CC);
+	phalcon_read_property_this(&loggers, this_ptr, SL("_loggers"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(loggers) == IS_ARRAY) { 
 	
 		phalcon_is_iterable(loggers, &ah0, &hp0, 0, 0);
@@ -112,7 +137,7 @@ PHP_METHOD(Phalcon_Logger_Multiple, setFormatter){
 	
 			PHALCON_GET_HVALUE(logger);
 	
-			phalcon_call_method_p1_noret(logger, "setformatter", formatter);
+			PHALCON_CALL_METHOD(NULL, logger, "setformatter", formatter);
 	
 			zend_hash_move_forward_ex(ah0, &hp0);
 		}
@@ -154,11 +179,11 @@ PHP_METHOD(Phalcon_Logger_Multiple, log){
 	
 	if (!type) {
 		PHALCON_INIT_VAR(type);
-		ZVAL_LONG(type, 7);
+		ZVAL_LONG(type, PHALCON_LOGGER_DEBUG);
 	}
 	
 	PHALCON_OBS_VAR(loggers);
-	phalcon_read_property_this(&loggers, this_ptr, SL("_loggers"), PH_NOISY_CC);
+	phalcon_read_property_this(&loggers, this_ptr, SL("_loggers"), PH_NOISY TSRMLS_CC);
 	if (Z_TYPE_P(loggers) == IS_ARRAY) { 
 	
 		phalcon_is_iterable(loggers, &ah0, &hp0, 0, 0);
@@ -167,7 +192,7 @@ PHP_METHOD(Phalcon_Logger_Multiple, log){
 	
 			PHALCON_GET_HVALUE(logger);
 	
-			phalcon_call_method_p2_noret(logger, "log", message, type);
+			PHALCON_CALL_METHOD(NULL, logger, "log", message, type);
 	
 			zend_hash_move_forward_ex(ah0, &hp0);
 		}
@@ -190,9 +215,9 @@ PHP_METHOD(Phalcon_Logger_Multiple, emergency){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "EMERGENCY");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_EMERGENCY);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -211,9 +236,9 @@ PHP_METHOD(Phalcon_Logger_Multiple, debug){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "DEBUG");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_DEBUG);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -231,9 +256,9 @@ PHP_METHOD(Phalcon_Logger_Multiple, error){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "ERROR");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_ERROR);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -251,9 +276,9 @@ PHP_METHOD(Phalcon_Logger_Multiple, info){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "INFO");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_INFO);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -271,9 +296,9 @@ PHP_METHOD(Phalcon_Logger_Multiple, notice){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "NOTICE");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_NOTICE);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -291,9 +316,9 @@ PHP_METHOD(Phalcon_Logger_Multiple, warning){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "WARNING");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_WARNING);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
@@ -311,10 +336,29 @@ PHP_METHOD(Phalcon_Logger_Multiple, alert){
 
 	phalcon_fetch_params(1, 1, 0, &message);
 	
-	PHALCON_INIT_VAR(type);
-	PHALCON_GET_CLASS_CONSTANT(type, phalcon_logger_ce, "ALERT");
-	phalcon_call_method_p2_noret(this_ptr, "log", message, type);
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_ALERT);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
 	
 	PHALCON_MM_RESTORE();
 }
 
+/**
+ * Sends/Writes an critical message to the log
+ *
+ * @param string $message
+ */
+PHP_METHOD(Phalcon_Logger_Multiple, critical){
+
+	zval *message, *type;
+
+	PHALCON_MM_GROW();
+
+	phalcon_fetch_params(1, 1, 0, &message);
+	
+	PHALCON_ALLOC_GHOST_ZVAL(type);
+	ZVAL_LONG(type, PHALCON_LOGGER_CRITICAL);
+	PHALCON_CALL_METHOD(NULL, this_ptr, "log", message, type);
+	
+	PHALCON_MM_RESTORE();
+}

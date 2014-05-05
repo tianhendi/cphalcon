@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -16,6 +16,11 @@
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
   +------------------------------------------------------------------------+
 */
+
+#ifndef PHALCON_KERNEL_OPERATORS_H
+#define PHALCON_KERNEL_OPERATORS_H
+
+#include "php_phalcon.h"
 
 /** Strict comparing */
 #define PHALCON_IS_LONG(op1, op2)   phalcon_compare_strict_long(op1, op2 TSRMLS_CC)
@@ -63,31 +68,33 @@
 #endif
 
 /** Operator functions */
-extern int phalcon_add_function(zval *result, zval *op1, zval *op2 TSRMLS_DC);
-extern int phalcon_and_function(zval *result, zval *left, zval *right);
+int phalcon_add_function(zval *result, zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_and_function(zval *result, zval *left, zval *right);
 
-extern void phalcon_concat_self(zval **left, zval *right TSRMLS_DC);
-extern void phalcon_concat_self_str(zval **left, const char *right, int right_length TSRMLS_DC);
+void phalcon_concat_self(zval **left, zval *right TSRMLS_DC);
+void phalcon_concat_self_str(zval **left, const char *right, int right_length TSRMLS_DC);
 
 /** Strict comparing */
-extern int phalcon_compare_strict_string(zval *op1, const char *op2, int op2_length);
-extern int phalcon_compare_strict_long(zval *op1, long op2 TSRMLS_DC);
+int phalcon_compare_strict_string(zval *op1, const char *op2, int op2_length);
+int phalcon_compare_strict_long(zval *op1, long op2 TSRMLS_DC);
 
-extern void phalcon_cast(zval *result, zval *var, zend_uint type);
-extern long phalcon_get_intval(const zval *op);
-extern int phalcon_is_numeric(const zval *op);
+void phalcon_cast(zval *result, zval *var, zend_uint type);
+long phalcon_get_intval(const zval *op);
+int phalcon_is_numeric(const zval *op);
 
-extern int phalcon_is_equal(zval *op1, zval *op2 TSRMLS_DC);
-extern int phalcon_is_identical(zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_is_equal(zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_is_identical(zval *op1, zval *op2 TSRMLS_DC);
 
-extern int phalcon_less(zval *op1, zval *op2 TSRMLS_DC);
-extern int phalcon_less_long(zval *op1, long op2 TSRMLS_DC);
+int phalcon_less(zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_less_long(zval *op1, long op2 TSRMLS_DC);
 
-extern int phalcon_greater(zval *op1, zval *op2 TSRMLS_DC);
-extern int phalcon_greater_long(zval *op1, long op2 TSRMLS_DC);
+int phalcon_greater(zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_greater_long(zval *op1, long op2 TSRMLS_DC);
 
-extern int phalcon_less_equal(zval *op1, zval *op2 TSRMLS_DC);
-extern int phalcon_less_equal_long(zval *op1, long op2 TSRMLS_DC);
+int phalcon_less_equal(zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_less_equal_long(zval *op1, long op2 TSRMLS_DC);
 
-extern int phalcon_greater_equal(zval *op1, zval *op2 TSRMLS_DC);
-extern int phalcon_greater_equal_long(zval *op1, long op2 TSRMLS_DC);
+int phalcon_greater_equal(zval *op1, zval *op2 TSRMLS_DC);
+int phalcon_greater_equal_long(zval *op1, long op2 TSRMLS_DC);
+
+#endif /* PHALCON_KERNEL_OPERATORS_H */

@@ -19,6 +19,7 @@ unit-tests/annotations/cache/*
 *.loT
 *.in
 *.log
+*.d
 .libs
 .coverage
 parser.out
@@ -43,3 +44,4 @@ build/install2
 /ext/modules
 /ext/run-tests.php
 /ext/coverage
+/unit-tests/nbproject/private/

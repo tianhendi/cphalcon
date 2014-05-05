@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -17,21 +17,12 @@
   +------------------------------------------------------------------------+
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "annotations/annotation.h"
+#include "annotations/exception.h"
+#include "annotations/scanner.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/exception.h"
 #include "kernel/array.h"
 #include "kernel/object.h"
@@ -39,14 +30,53 @@
 #include "kernel/operators.h"
 #include "kernel/concat.h"
 
-#include "annotations/scanner.h"
 
 /**
  * Phalcon\Annotations\Annotation
  *
  * Represents a single annotation in an annotations collection
  */
+zend_class_entry *phalcon_annotations_annotation_ce;
 
+PHP_METHOD(Phalcon_Annotations_Annotation, __construct);
+PHP_METHOD(Phalcon_Annotations_Annotation, getName);
+PHP_METHOD(Phalcon_Annotations_Annotation, getExpression);
+PHP_METHOD(Phalcon_Annotations_Annotation, getExprArguments);
+PHP_METHOD(Phalcon_Annotations_Annotation, getArguments);
+PHP_METHOD(Phalcon_Annotations_Annotation, numberArguments);
+PHP_METHOD(Phalcon_Annotations_Annotation, getArgument);
+PHP_METHOD(Phalcon_Annotations_Annotation, hasArgument);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_annotations_annotation___construct, 0, 0, 1)
+	ZEND_ARG_INFO(0, reflectionData)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_annotations_annotation_getexpression, 0, 0, 1)
+	ZEND_ARG_INFO(0, expr)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_annotations_annotation_getargument, 0, 0, 1)
+	ZEND_ARG_INFO(0, position)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_annotations_annotation_hasargument, 0, 0, 1)
+	ZEND_ARG_INFO(0, position)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry phalcon_annotations_annotation_method_entry[] = {
+	PHP_ME(Phalcon_Annotations_Annotation, __construct, arginfo_phalcon_annotations_annotation___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Annotations_Annotation, getName, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Annotation, getExpression, arginfo_phalcon_annotations_annotation_getexpression, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Annotation, getExprArguments, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Annotation, getArguments, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Annotation, numberArguments, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Annotation, getArgument, arginfo_phalcon_annotations_annotation_getargument, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Annotations_Annotation, hasArgument, arginfo_phalcon_annotations_annotation_hasargument, ZEND_ACC_PUBLIC)
+	PHP_MALIAS(Phalcon_Annotations_Annotation, getNamedArgument, getArgument, arginfo_phalcon_annotations_annotation_getargument, ZEND_ACC_PUBLIC)
+	PHP_MALIAS(Phalcon_Annotations_Annotation, getNamedParameter, getArgument, arginfo_phalcon_annotations_annotation_getargument, ZEND_ACC_PUBLIC | ZEND_ACC_DEPRECATED)
+	PHP_MALIAS(Phalcon_Annotations_Annotation, hasNamedArgument, hasArgument, arginfo_phalcon_annotations_annotation_hasargument, ZEND_ACC_PUBLIC)
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Annotations\Annotation initializer
@@ -106,10 +136,9 @@ PHP_METHOD(Phalcon_Annotations_Annotation, __construct){
 			PHALCON_OBS_NVAR(expr);
 			phalcon_array_fetch_string(&expr, argument, SL("expr"), PH_NOISY);
 	
-			PHALCON_INIT_NVAR(resolved_argument);
-			phalcon_call_method_p1(resolved_argument, this_ptr, "getexpression", expr);
+			PHALCON_CALL_METHOD(&resolved_argument, this_ptr, "getexpression", expr);
 			if (phalcon_array_isset_string_fetch(&n, argument, SS("name"))) {
-				phalcon_array_update_zval(&arguments, n, &resolved_argument, PH_COPY);
+				phalcon_array_update_zval(&arguments, n, resolved_argument, PH_COPY);
 			} else {
 				phalcon_array_append(&arguments, resolved_argument, 0);
 			}
@@ -206,10 +235,9 @@ PHP_METHOD(Phalcon_Annotations_Annotation, getExpression){
 				PHALCON_OBS_NVAR(expr);
 				phalcon_array_fetch_string(&expr, item, SL("expr"), PH_NOISY);
 	
-				PHALCON_INIT_NVAR(resolved_item);
-				phalcon_call_method_p1(resolved_item, this_ptr, "getexpression", expr);
+				PHALCON_CALL_METHOD(&resolved_item, this_ptr, "getexpression", expr);
 				if (phalcon_array_isset_string_fetch(&name, item, SS("name"))) {
-					phalcon_array_update_zval(&return_value, name, &resolved_item, PH_COPY);
+					phalcon_array_update_zval(&return_value, name, resolved_item, PH_COPY);
 				} else {
 					phalcon_array_append(&return_value, resolved_item, 0);
 				}
@@ -222,7 +250,7 @@ PHP_METHOD(Phalcon_Annotations_Annotation, getExpression){
 	
 		case PHANNOT_T_ANNOTATION:
 			object_init_ex(return_value, phalcon_annotations_annotation_ce);
-			phalcon_call_method_p1_noret(return_value, "__construct", expr);
+			PHALCON_CALL_METHOD(NULL, return_value, "__construct", expr);
 			RETURN_MM();
 			/* no break because of implicit return */
 	
@@ -268,7 +296,7 @@ PHP_METHOD(Phalcon_Annotations_Annotation, numberArguments){
 
 	zval *arguments;
 
-	arguments = phalcon_fetch_nproperty_this(this_ptr, SL("_arguments"), PH_NOISY_CC);
+	arguments = phalcon_fetch_nproperty_this(this_ptr, SL("_arguments"), PH_NOISY TSRMLS_CC);
 	phalcon_fast_count(return_value, arguments TSRMLS_CC);
 }
 
@@ -283,7 +311,7 @@ PHP_METHOD(Phalcon_Annotations_Annotation, getArgument){
 
 	phalcon_fetch_params(0, 1, 0, &position);
 	
-	arguments = phalcon_fetch_nproperty_this(this_ptr, SL("_arguments"), PH_NOISY_CC);
+	arguments = phalcon_fetch_nproperty_this(this_ptr, SL("_arguments"), PH_NOISY TSRMLS_CC);
 	if (phalcon_array_isset_fetch(&tmp, arguments, position)) {
 		RETURN_ZVAL(tmp, 1, 0);
 	}
@@ -300,7 +328,7 @@ PHP_METHOD(Phalcon_Annotations_Annotation, hasArgument){
 
 	phalcon_fetch_params(0, 1, 0, &position);
 	
-	arguments = phalcon_fetch_nproperty_this(this_ptr, SL("_arguments"), PH_NOISY_CC);
+	arguments = phalcon_fetch_nproperty_this(this_ptr, SL("_arguments"), PH_NOISY TSRMLS_CC);
 	RETURN_BOOL(phalcon_array_isset(arguments, position));
 }
 

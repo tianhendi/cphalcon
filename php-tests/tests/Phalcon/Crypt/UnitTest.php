@@ -7,7 +7,7 @@
  *
  * PhalconPHP Framework
  *
- * @copyright (c) 2011-2013 Phalcon Team
+ * @copyright (c) 2011-2014 Phalcon Team
  * @link      http://www.phalconphp.com
  * @author    Andres Gutierrez <andres@phalconphp.com>
  * @author    Nikolaos Dimopoulos <nikos@phalconphp.com>
@@ -23,14 +23,11 @@
 
 namespace Phalcon\Test\Crypt;
 
+/**
+ * @requires extension mcrypt
+ */
 class UnitTest extends \Phalcon\Test\UnitTestCase
 {
-	protected function setUp()
-	{
-		$this->checkExtension('mcrypt');
-		parent::setUp();
-	}
-
 	public function testEncryption()
 	{
 		$tests = array(

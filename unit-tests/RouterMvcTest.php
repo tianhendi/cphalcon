@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -356,6 +356,8 @@ class RouterMvcTest extends PHPUnit_Framework_TestCase
 		$usersFind = $router->add('/api/users/find')->setHttpMethods('GET')->setName('usersFind');
 		$usersAdd = $router->add('/api/users/add')->setHttpMethods('POST')->setName('usersAdd');
 
+		$this->assertEquals($usersAdd, $router->getRouteByName('usersAdd'));
+		//second check when the same route goes from name lookup
 		$this->assertEquals($usersAdd, $router->getRouteByName('usersAdd'));
 		$this->assertEquals($usersFind, $router->getRouteById(0));
 
