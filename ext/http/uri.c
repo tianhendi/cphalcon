@@ -210,7 +210,7 @@ PHP_METHOD(Phalcon_Http_Uri, __set){
  */
 PHP_METHOD(Phalcon_Http_Uri, __get){
 
-	zval *key, *parts = NULL, *value = NULL;
+	zval *key, *parts, *value = NULL;
 
 	phalcon_fetch_params(0, 1, 0, &key);
 

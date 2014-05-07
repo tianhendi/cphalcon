@@ -36,14 +36,6 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_adapterinterface_setheaders, 
 	ZEND_ARG_INFO(0, headers)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_adapterinterface_setcookies, 0, 0, 1)
-	ZEND_ARG_INFO(0, cookies)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_adapterinterface_setcontenttype, 0, 0, 1)
-	ZEND_ARG_INFO(0, content_type)
-ZEND_END_ARG_INFO()
-
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_adapterinterface_setdata, 0, 0, 1)
 	ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
@@ -84,8 +76,6 @@ static const zend_function_entry phalcon_http_client_adapterinterface_method_ent
 	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setUserAgent, arginfo_phalcon_http_client_adapterinterface_setuseragent)
 	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setAuthentication, arginfo_phalcon_http_client_adapterinterface_setauthentication)
 	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setHeaders, arginfo_phalcon_http_client_adapterinterface_setheaders)
-	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setCookies, arginfo_phalcon_http_client_adapterinterface_setcookies)
-	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setContentType, arginfo_phalcon_http_client_adapterinterface_setcontenttype)
 	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setData, arginfo_phalcon_http_client_adapterinterface_setdata)
 	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, setFile, arginfo_phalcon_http_client_adapterinterface_setfile)
 	PHP_ABSTRACT_ME(Phalcon_Http_Client_Adapterinterface, get, arginfo_phalcon_http_client_adapterinterface_get)
@@ -113,8 +103,6 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapterinterface){
 PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setUserAgent);
 PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setAuthentication);
 PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setHeaders);
-PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setCookies);
-PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setContentType);
 PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setData);
 PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, setFile);
 PHALCON_DOC_METHOD(Phalcon_Http_Client_Adapterinterface, get);
