@@ -25,10 +25,6 @@
 #include "php_phalcon.h"
 #include "phalcon.h"
 
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
-
 #include "kernel/main.h"
 #include "kernel/memory.h"
 
@@ -67,14 +63,15 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Request){
 
 PHP_METHOD(Phalcon_Http_Client_Request, __construct){
 
-	zval *header;
+	zval *uri, *header;
 
 	PHALCON_MM_GROW();
 
-	//PHALCON_INIT_VAR(uri);
-	//object_init_ex(uri, phalcon_http_uri_ce);
+	PHALCON_INIT_VAR(uri);
+	object_init_ex(uri, phalcon_http_uri_ce);
+	PHALCON_CALL_METHOD(NULL, uri, "__construct");
 
-	//phalcon_update_property_this(this_ptr, SL("_uri"), uri TSRMLS_CC);
+	phalcon_update_property_this(this_ptr, SL("_base_uri"), uri TSRMLS_CC);
 
 	PHALCON_INIT_VAR(header);
 	object_init_ex(header, phalcon_http_client_header_ce);
