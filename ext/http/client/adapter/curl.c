@@ -17,17 +17,11 @@
   |          ZhuZongXin <dreamsxin@qq.com>                                 |
   +------------------------------------------------------------------------+
 */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
+#include "http/client/adapter/curl.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/operators.h"
 #include "kernel/object.h"
 #include "kernel/array.h"
@@ -38,25 +32,49 @@
 #include "kernel/hash.h"
 #include "kernel/string.h"
 
-#include "header.h"
-#include "adapter_curl.h"
-
 /**
  * Phalcon\Http\Client\Adapter\Curl
  */
+zend_class_entry *phalcon_http_client_adapter_curl_ce;
 
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, __construct);
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, getProvider);
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, getHeader);
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, setBaseUri);
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, getBaseUri);
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, resolveUri);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_adapter_curl_setbaseuri, 0, 0, 1)
+	ZEND_ARG_INFO(0, uri)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_adapter_curl_resolveuri, 0, 0, 1)
+	ZEND_ARG_INFO(0, uri)
+ZEND_END_ARG_INFO()
+
+PHALCON_INIT_FUNCS(phalcon_http_client_adapter_curl_method_entry){
+	PHP_ME(Phalcon_Http_Client_Adapter_Curl, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR) 
+	PHP_ME(Phalcon_Http_Client_Adapter_Curl, getProvider, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC) 
+	PHP_ME(Phalcon_Http_Client_Adapter_Curl, getHeader, NULL, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Adapter_Curl, setBaseUri, arginfo_phalcon_http_client_adapter_curl_setbaseuri, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Adapter_Curl, getBaseUri, NULL, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Adapter_Curl, resolveUri, arginfo_phalcon_http_client_adapter_curl_resolveuri, ZEND_ACC_PUBLIC) 
+	PHP_FE_END
+};
 
 /**
  * Phalcon\Http\Client\Adapter\Curl initializer
  */
 PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapter_Curl){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_adapter_curl_method_entry, 0);
+	PHALCON_REGISTER_CLASS_EX(Phalcon\\Http\\Client\\Adapter, Curl, http_client_adapter_gd, phalcon_http_client_adapter_ce,  phalcon_http_client_adapter_curl_method_entry, 0);
 
 	zend_declare_property_null(phalcon_http_client_adapter_curl_ce, SL("_base_uri") ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(phalcon_http_client_adapter_curl_ce, SL("_header") ZEND_ACC_PROTECTED TSRMLS_CC);
 
 	zend_declare_class_constant_stringl(phalcon_http_client_adapter_curl_ce, SL("VERSION"), SL("0.0.1") TSRMLS_CC);
+
+	zend_class_implements(phalcon_http_client_adapter_curl_ce TSRMLS_CC, 1, phalcon_http_client_adapterinterface_ce);
 
 	return SUCCESS;
 }
