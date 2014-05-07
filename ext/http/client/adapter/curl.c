@@ -39,29 +39,29 @@
 #include "kernel/string.h"
 
 #include "header.h"
-#include "request.h"
+#include "adapter_curl.h"
 
 /**
- * Phalcon\Http\Client\Request
+ * Phalcon\Http\Client\Adapter\Curl
  */
 
 
 /**
- * Phalcon\Http\Client\Header initializer
+ * Phalcon\Http\Client\Adapter\Curl initializer
  */
-PHALCON_INIT_CLASS(Phalcon_Http_Client_Request){
+PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapter_Curl){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_request_method_entry, 0);
+	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_adapter_curl_method_entry, 0);
 
-	zend_declare_property_null(phalcon_http_client_request_ce, SL("_base_uri") ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_request_ce, SL("_header") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_adapter_curl_ce, SL("_base_uri") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_adapter_curl_ce, SL("_header") ZEND_ACC_PROTECTED TSRMLS_CC);
 
-	zend_declare_class_constant_stringl(phalcon_http_client_request_ce, SL("VERSION"), SL("0.0.1") TSRMLS_CC);
+	zend_declare_class_constant_stringl(phalcon_http_client_adapter_curl_ce, SL("VERSION"), SL("0.0.1") TSRMLS_CC);
 
 	return SUCCESS;
 }
 
-PHP_METHOD(Phalcon_Http_Client_Request, __construct){
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, __construct){
 
 	zval *uri, *header;
 
@@ -81,24 +81,24 @@ PHP_METHOD(Phalcon_Http_Client_Request, __construct){
 	PHALCON_MM_RESTORE();
 }
 
-PHP_METHOD(Phalcon_Http_Client_Request, getProvider){
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, getProvider){
 
 }
 
-PHP_METHOD(Phalcon_Http_Client_Request, getHeader){
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, getHeader){
 
 	RETURN_MEMBER(this_ptr, "_header");
 }
 
-PHP_METHOD(Phalcon_Http_Client_Request, setBaseUri){
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, setBaseUri){
 
 }
 
-PHP_METHOD(Phalcon_Http_Client_Request, getBaseUri){
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, getBaseUri){
 
 }
 
-PHP_METHOD(Phalcon_Http_Client_Request, resolveUri){
+PHP_METHOD(Phalcon_Http_Client_Adapter_Curl, resolveUri){
 
 }
 

@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -14,16 +14,17 @@
   +------------------------------------------------------------------------+
   | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
+  |          ZhuZongXin <dreamsxin@qq.com>                                 |
   +------------------------------------------------------------------------+
 */
-
-#ifndef PHALCON_HTTP_CLIENT_PROVIDER_EXCEPTION_H
-#define PHALCON_HTTP_CLIENT_PROVIDER_EXCEPTION_H
+#ifndef PHALCON_HTTP_CLIENT_ADAPTER_H
+#define PHALCON_HTTP_CLIENT_ADAPTER_H
 
 #include "php_phalcon.h"
 
-extern zend_class_entry *phalcon_http_client_provider_exception_ce;
+extern zend_class_entry *phalcon_http_client_adapter_ce;
 
-PHALCON_INIT_CLASS(Phalcon_Http_Client_Provider_Exception);
+PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapter);
 
-#endif /* PHALCON_HTTP_CLIENT_PROVIDER_EXCEPTION_H */
+#endif /* PHALCON_HTTP_CLIENT_ADAPTER_H */
+

@@ -17,25 +17,13 @@
   +------------------------------------------------------------------------+
 */
 
-#include "http/client/provider/exception.h"
-#include "http/../exception.h"
-#include "kernel/main.h"
-#include "kernel/memory.h"
+#ifndef PHALCON_HTTP_CLIENT_ADAPTER_EXCEPTION_H
+#define PHALCON_HTTP_CLIENT_ADAPTER_EXCEPTION_H
 
-/**
- * Phalcon\Http\Client\Provider\Exception
- *
- * Exceptions thrown in Phalcon\Http\Client\Provider will use this class
- *
- */
-zend_class_entry *phalcon_http_client_provider_exception_ce;
+#include "php_phalcon.h"
 
-/**
- * Phalcon\Http\Client\Provider\Exception initializer
- */
-PHALCON_INIT_CLASS(Phalcon_Http_Client_Provider_Exception){
+extern zend_class_entry *phalcon_http_client_adapter_exception_ce;
 
-	PHALCON_REGISTER_CLASS_EX(Phalcon\\Http\\Client\\Provider, Exception, http_client_provider_exception, phalcon_exception_ce, NULL, 0);
+PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapter_Exception);
 
-	return SUCCESS;
-}
+#endif /* PHALCON_HTTP_CLIENT_ADAPTER_EXCEPTION_H */

@@ -38,6 +38,7 @@
  * Exceptions thrown in Phalcon\Http\Client will use this class
  *
  */
+ zend_class_entry *phalcon_http_client_exception_ce;
 
 
 /**

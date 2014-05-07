@@ -3,7 +3,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2013 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -14,17 +14,28 @@
   +------------------------------------------------------------------------+
   | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
   |          Eduar Carvajal <eduar@phalconphp.com>                         |
-  |          ZhuZongXin <dreamsxin@qq.com>                                 |
   +------------------------------------------------------------------------+
 */
-#ifndef PHALCON_HTTP_CLIENT_RESPONSE_H
-#define PHALCON_HTTP_CLIENT_RESPONSE_H
 
-#include "php_phalcon.h"
+#include "http/client/adapter/exception.h"
+#include "http/../exception.h"
+#include "kernel/main.h"
+#include "kernel/memory.h"
 
-extern zend_class_entry *phalcon_http_client_response_ce;
+/**
+ * Phalcon\Http\Client\Adapter\Exception
+ *
+ * Exceptions thrown in Phalcon\Http\Client\Adapter will use this class
+ *
+ */
+zend_class_entry *phalcon_http_client_adapter_exception_ce;
 
-PHALCON_INIT_CLASS(Phalcon_Http_Client_Response);
+/**
+ * Phalcon\Http\Client\Adapter\Exception initializer
+ */
+PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapter_Exception){
 
-#endif /* PHALCON_HTTP_CLIENT_RESPONSE_H */
+	PHALCON_REGISTER_CLASS_EX(Phalcon\\Http\\Client\\Adapter, Exception, http_client_adapter_exception, phalcon_exception_ce, NULL, 0);
 
+	return SUCCESS;
+}

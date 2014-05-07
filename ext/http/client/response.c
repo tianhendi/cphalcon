@@ -48,10 +48,27 @@
 /**
  * Phalcon\Http\Client\Response
  */
+zend_class_entry *phalcon_http_client_response_ce;
 
+PHP_METHOD(Phalcon_Http_Client_Response, __construct);
+PHP_METHOD(Phalcon_Http_Client_Response, getHeader);
+PHP_METHOD(Phalcon_Http_Client_Response, setBody);
+PHP_METHOD(Phalcon_Http_Client_Response, getBody);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_response_setbody, 0, 0, 1)
+	ZEND_ARG_INFO(0, body)
+ZEND_END_ARG_INFO()
+
+PHALCON_INIT_FUNCS(phalcon_http_client_response_method_entry){
+	PHP_ME(Phalcon_Http_Client_Response, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR) 
+	PHP_ME(Phalcon_Http_Client_Response, getHeader, NULL, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Response, setBody, arginfo_phalcon_http_client_response_setbody, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Response, getBody, NULL, ZEND_ACC_PUBLIC) 
+	PHP_FE_END
+};
 
 /**
- * Phalcon\Http\Client\Header initializer
+ * Phalcon\Http\Client\Request initializer
  */
 PHALCON_INIT_CLASS(Phalcon_Http_Client_Response){
 
