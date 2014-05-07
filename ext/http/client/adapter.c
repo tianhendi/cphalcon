@@ -55,7 +55,7 @@ PHP_METHOD(Phalcon_Http_Client_Adapter, setMethod)
 PHP_METHOD(Phalcon_Http_Client_Adapter, send);
 
 PHALCON_INIT_FUNCS(phalcon_http_client_adapter_method_entry){
-	PHP_ME(Phalcon_Http_Client_Adapter, setUserAgent, arginfo_phalcon_http_client_adapterinterface_setuseragent, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Adapter, setUserAgent, arginfo_phalcon_http_client_adapterinterface_setuseragent, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Client_Adapter, setAuthentication, arginfo_phalcon_http_client_adapterinterface_setauthentication, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Client_Adapter, setHeaders, arginfo_phalcon_http_client_adapterinterface_setheaders, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Client_Adapter, setCookies, arginfo_phalcon_http_client_adapterinterface_setcookies, ZEND_ACC_PUBLIC)
