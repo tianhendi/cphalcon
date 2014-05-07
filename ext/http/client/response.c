@@ -51,19 +51,30 @@
 zend_class_entry *phalcon_http_client_response_ce;
 
 PHP_METHOD(Phalcon_Http_Client_Response, __construct);
+PHP_METHOD(Phalcon_Http_Client_Response, setHeader);
 PHP_METHOD(Phalcon_Http_Client_Response, getHeader);
 PHP_METHOD(Phalcon_Http_Client_Response, setBody);
 PHP_METHOD(Phalcon_Http_Client_Response, getBody);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_response___construct, 0, 0, 0)
+	ZEND_ARG_INFO(0, header)
+	ZEND_ARG_INFO(0, body)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_response_setheader, 0, 0, 1)
+	ZEND_ARG_INFO(0, header)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_response_setbody, 0, 0, 1)
 	ZEND_ARG_INFO(0, body)
 ZEND_END_ARG_INFO()
 
 PHALCON_INIT_FUNCS(phalcon_http_client_response_method_entry){
-	PHP_ME(Phalcon_Http_Client_Response, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR) 
-	PHP_ME(Phalcon_Http_Client_Response, getHeader, NULL, ZEND_ACC_PUBLIC) 
-	PHP_ME(Phalcon_Http_Client_Response, setBody, arginfo_phalcon_http_client_response_setbody, ZEND_ACC_PUBLIC) 
-	PHP_ME(Phalcon_Http_Client_Response, getBody, NULL, ZEND_ACC_PUBLIC) 
+	PHP_ME(Phalcon_Http_Client_Response, __construct, arginfo_phalcon_http_client_response___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Phalcon_Http_Client_Response, setHeader, arginfo_phalcon_http_client_response_setheader, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Http_Client_Response, getHeader, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Http_Client_Response, setBody, arginfo_phalcon_http_client_response_setbody, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Http_Client_Response, getBody, NULL, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 
@@ -82,16 +93,39 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Response){
 
 PHP_METHOD(Phalcon_Http_Client_Response, __construct){
 
-	zval *header;
+	zval *header, *headers = NULL, *body = NULL;
 
 	PHALCON_MM_GROW();
 
+	phalcon_fetch_params(1, 0, 2, &headers, &body);
+
 	PHALCON_INIT_VAR(header);
 	object_init_ex(header, phalcon_http_client_header_ce);
+	PHALCON_CALL_METHOD(NULL, header, "__construct");
 
 	phalcon_update_property_this(this_ptr, SL("_header"), header TSRMLS_CC);
 
+	if (headers) {
+		PHALCON_CALL_SELF(NULL, "setheader", headers);
+	}
+
+	if (header) {
+		PHALCON_CALL_SELF(NULL, "setbody", body);
+	}
+
 	PHALCON_MM_RESTORE();
+}
+
+PHP_METHOD(Phalcon_Http_Client_Response, setHeader){
+
+	zval *header;
+
+	phalcon_fetch_params(0, 1, 0, &header);
+
+	header = phalcon_fetch_nproperty_this(this_ptr, SL("_header"), PH_NOISY TSRMLS_CC);
+	PHALCON_CALL_METHODW(NULL, header, "parse", header);
+
+	RETURN_THISW();
 }
 
 PHP_METHOD(Phalcon_Http_Client_Response, getHeader){
@@ -106,6 +140,8 @@ PHP_METHOD(Phalcon_Http_Client_Response, setBody){
 	phalcon_fetch_params(0, 1, 0, &body);
 
 	phalcon_update_property_this(this_ptr, SL("_body"), body TSRMLS_CC);
+
+	RETURN_THIS();
 }
 
 PHP_METHOD(Phalcon_Http_Client_Response, getBody){

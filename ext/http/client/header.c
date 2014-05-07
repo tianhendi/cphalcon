@@ -92,8 +92,8 @@ ZEND_END_ARG_INFO()
 
 
 PHALCON_INIT_FUNCS(phalcon_http_client_header_method_entry){
+	PHP_ME(Phalcon_Http_Client_Header, __construct, arginfo_phalcon_http_client_header___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(Phalcon_Http_Client_Header, set, arginfo_phalcon_http_client_header_set, ZEND_ACC_PUBLIC) 
-	//PHP_ME(Phalcon_Http_Client_Header, set, arginfo_phalcon_http_client_header_set, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC) 
 	PHP_ME(Phalcon_Http_Client_Header, setMultiple, arginfo_phalcon_http_client_header_setmultiple, ZEND_ACC_PUBLIC) 
 	PHP_ME(Phalcon_Http_Client_Header, addMultiple, arginfo_phalcon_http_client_header_addmultiple, ZEND_ACC_PUBLIC) 
 	PHP_ME(Phalcon_Http_Client_Header, get, arginfo_phalcon_http_client_header_get, ZEND_ACC_PUBLIC) 
@@ -112,8 +112,31 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Header){
 
 	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_header_method_entry, 0);
 
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_messages") ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_fields") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_long(phalcon_http_client_header_ce, SL("_version"), 1, ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_long(phalcon_http_client_header_ce, SL("_status_code"), 0, ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status_message") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status") ZEND_ACC_PROTECTED TSRMLS_CC);
+
+	zend_declare_class_constant_long(phalcon_image_ce, SL("BUILD_STATUS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_image_ce, SL("BUILD_FIELDS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_FIELDS TSRMLS_CC);
+
+	zend_class_implements(phalcon_http_client_header_ce TSRMLS_CC, 1, spl_ce_Countable);
+
+	return SUCCESS;
+}
+
+/**
+ * Phalcon\Http\Client\Header constructor
+ */
+PHP_METHOD(Phalcon_Http_Client_Header, __construct){
+
 	zval *messages;
-	MAKE_STD_ZVAL(messages);
+
+	PHALCON_MM_GROW();
+
+	PHALCON_INIT_VAR(messages);
 	array_init(messages);
 
 	phalcon_array_update_long_string(&messages, 100, SL("Continue"), PH_SEPARATE);
@@ -163,29 +186,10 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Header){
 	phalcon_array_update_long_string(&messages, 505, SL("HTTP Version Not Supported"), PH_SEPARATE);
 	phalcon_array_update_long_string(&messages, 506, SL("Bandwidth Limit Exceeded"), PH_SEPARATE);
 
-	zend_declare_property(phalcon_http_client_header_ce, SL("_messages"), messages, ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
+	phalcon_update_property_this(this_ptr, SL("_messages"), messages TSRMLS_CC);
+	phalcon_update_property_empty_array(this_ptr, SL("_fields") TSRMLS_CC);
 
-	zval_ptr_dtor(&messages);
-
-	zval *fields;
-	MAKE_STD_ZVAL(fields);
-	array_init(fields);
-
-	zend_declare_property(phalcon_http_client_header_ce, SL("_fields"), fields, ZEND_ACC_PROTECTED TSRMLS_CC);
-
-	zval_ptr_dtor(&fields);
-
-	zend_declare_property_long(phalcon_http_client_header_ce, SL("_version"), 1, ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_long(phalcon_http_client_header_ce, SL("_status_code"), 0, ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status_message") ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status") ZEND_ACC_PROTECTED TSRMLS_CC);
-
-	zend_declare_class_constant_long(phalcon_image_ce, SL("BUILD_STATUS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS TSRMLS_CC);
-	zend_declare_class_constant_long(phalcon_image_ce, SL("BUILD_FIELDS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_FIELDS TSRMLS_CC);
-
-	zend_class_implements(phalcon_http_client_header_ce TSRMLS_CC, 1, spl_ce_Countable);
-
-	return SUCCESS;
+	PHALCON_MM_RESTORE();
 }
 
 PHP_METHOD(Phalcon_Http_Client_Header, set){

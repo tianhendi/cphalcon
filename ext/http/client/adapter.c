@@ -87,6 +87,8 @@ PHALCON_INIT_CLASS(Phalcon_Http_Client_Adapter){
 	zend_declare_property_null(phalcon_http_client_adapter_ce, SL("_username") ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_null(phalcon_http_client_adapter_ce, SL("_password") ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_string(phalcon_http_client_adapter_ce, SL("_authtype"), "any", ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_adapter_ce, SL("_data") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_adapter_ce, SL("_file") ZEND_ACC_PROTECTED TSRMLS_CC);
 
 	zend_declare_class_constant_stringl(phalcon_http_client_adapter_ce, SL("VERSION"), SL("0.0.1") TSRMLS_CC);
 	zend_declare_class_constant_stringl(phalcon_http_client_adapter_ce, SL("AUTH_TYPE_ANY"), SL("any") TSRMLS_CC);
@@ -140,10 +142,20 @@ PHP_METHOD(Phalcon_Http_Client_Adapter, setHeaders){
 
 PHP_METHOD(Phalcon_Http_Client_Adapter, setData){
 
+	zval *data;
+
+	phalcon_fetch_params(0, 1, 0, &data);
+
+	phalcon_update_property_this(this_ptr, SL("_data"), data TSRMLS_CC);
 }
 
 PHP_METHOD(Phalcon_Http_Client_Adapter, setFile){
 
+	zval *file;
+
+	phalcon_fetch_params(0, 1, 0, &file);
+
+	phalcon_update_property_this(this_ptr, SL("_file"), file TSRMLS_CC);
 }
 
 PHP_METHOD(Phalcon_Http_Client_Adapter, get){
@@ -211,5 +223,6 @@ PHP_METHOD(Phalcon_Http_Client_Adapter, setMethod){
 
 PHP_METHOD(Phalcon_Http_Client_Adapter, send){
 
+	PHALCON_CALL_METHOD(NULL, this_ptr, "sendinternal");
 }
 
