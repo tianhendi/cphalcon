@@ -136,7 +136,7 @@ PHALCON_INIT_CLASS(Phalcon_Http_Uri){
  */
 PHP_METHOD(Phalcon_Http_Uri, __construct){
 
-	zval *uri = NULL, *parts = NULL, *query, *params = NULL;
+	zval *uri = NULL, *parts = NULL, *query, *params;
 
 	PHALCON_MM_GROW();
 
@@ -147,14 +147,17 @@ PHP_METHOD(Phalcon_Http_Uri, __construct){
 	} else if (Z_TYPE_P(uri) == IS_STRING) {
 		PHALCON_CALL_FUNCTION(&parts, "parse_url", uri);
 		if (phalcon_array_isset_string_fetch(&query, parts, SS("query"))) {
-			PHALCON_CALL_FUNCTION(&params, "parse_str", query);
+			PHALCON_INIT_VAR(params);
+			Z_SET_ISREF_P(params);
+			PHALCON_CALL_FUNCTION(NULL, "parse_str", query, params);
+			Z_UNSET_ISREF_P(params);
 			phalcon_array_update_string(&parts, SL("query"), params, PH_COPY);
 		}
 
 		phalcon_update_property_this(this_ptr, SL("_parts"), parts TSRMLS_CC);
 	} else if (Z_TYPE_P(uri) == IS_ARRAY) {
 		phalcon_update_property_this(this_ptr, SL("_parts"), uri TSRMLS_CC);
-	} else if (Z_TYPE_P(uri) == IS_OBJECT && instanceof_function_ex(Z_OBJCE_P(uri), phalcon_http_uri_ce, 1 TSRMLS_CC)) {
+	} else if (Z_TYPE_P(uri) == IS_OBJECT && Z_OBJCE_P(uri) == phalcon_http_uri_ce) {
 		phalcon_read_property(&parts, uri, SL("_parts"), PH_NOISY TSRMLS_CC);
 		phalcon_update_property_this(this_ptr, SL("_parts"), parts TSRMLS_CC);
 	} else {
@@ -231,7 +234,7 @@ PHP_METHOD(Phalcon_Http_Uri, __get){
  */
 PHP_METHOD(Phalcon_Http_Uri, __isset){
 
-	zval *key;
+	zval *key, *parts;
 
 	phalcon_fetch_params(0, 1, 0, &key);
 
@@ -257,7 +260,7 @@ PHP_METHOD(Phalcon_Http_Uri, getParts){
  */
 PHP_METHOD(Phalcon_Http_Uri, build){
 
-	zval *uri, *scheme, *host, *user, *pass, *port, *path, *query, *fragment, *tmp = NULL;
+	zval *parts, *uri, *scheme, *host, *user, *pass, *port, *path, *query, *fragment, *tmp = NULL;
 
 	PHALCON_MM_GROW();
 
@@ -286,23 +289,26 @@ PHP_METHOD(Phalcon_Http_Uri, build){
 	}
 
 	if (phalcon_array_isset_string_fetch(&path, parts, SS("path")) && PHALCON_IS_NOT_EMPTY(path)) {
-		PHALCON_INIT_NVAR(tmp);
-		PHALCON_CONCAT_SV(tmp, uri, path);
-		PHALCON_CPY_WRT(uri, tmp)
+		if (!phalcon_start_with_str(path, SL("/"))) {
+			PHALCON_SCONCAT_SV(uri, "/", path);
+		} else {
+			PHALCON_INIT_NVAR(tmp);
+			PHALCON_CONCAT_VV(tmp, uri, path);
+			PHALCON_CPY_WRT(uri, tmp);
+		}
 	}
 
 	if (phalcon_array_isset_string_fetch(&query, parts, SS("query")) && PHALCON_IS_NOT_EMPTY(query)) {
 		PHALCON_INIT_NVAR(tmp);
 		phalcon_http_build_query(tmp, query, "&" TSRMLS_CC);
-		PHALCON_CONCAT_SV(uri, "?", tmp);
+		PHALCON_SCONCAT_SV(uri, "?", tmp);
 	}
 
 	if (phalcon_array_isset_string_fetch(&fragment, parts, SS("fragment")) && PHALCON_IS_NOT_EMPTY(fragment)) {
-		PHALCON_CONCAT_SV(uri, "#", fragment);
+		PHALCON_SCONCAT_SV(uri, "#", fragment);
 	}
 
-	RETURN_ZVAL(uri, 1, 0);
-	PHALCON_MM_RESTORE();
+	RETURN_CTOR(uri);
 }
 
 PHP_METHOD(Phalcon_Http_Uri, resolve){
@@ -331,7 +337,7 @@ PHP_METHOD(Phalcon_Http_Uri, extend){
 
 	PHALCON_CALL_SELF(&parts, "getParts");
 
-	if (Z_TYPE_P(uri) != IS_OBJECT || !instanceof_function_ex(Z_OBJCE_P(uri), phalcon_http_uri_ce, 1 TSRMLS_CC)) {
+	if (Z_TYPE_P(uri) != IS_OBJECT || Z_OBJCE_P(uri) != phalcon_http_uri_ce) {
 		PHALCON_INIT_VAR(self);
 		object_init_ex(self, phalcon_http_uri_ce);
 		PHALCON_CALL_METHOD(NULL, self, "__construct", uri);
@@ -342,6 +348,8 @@ PHP_METHOD(Phalcon_Http_Uri, extend){
 	}
 
 	phalcon_array_merge_recursive_n(&parts, parts2);
+
+	phalcon_update_property_this(this_ptr, SL("_parts"), parts TSRMLS_CC);
 
 	RETURN_THIS();
 }

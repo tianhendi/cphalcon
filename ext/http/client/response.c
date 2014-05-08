@@ -17,21 +17,12 @@
   |          ZhuZongXin <dreamsxin@qq.com>                                 |
   +------------------------------------------------------------------------+
 */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "http/client/response.h"
+#include "http/client/header.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/operators.h"
 #include "kernel/object.h"
 #include "kernel/array.h"
@@ -41,9 +32,6 @@
 #include "kernel/file.h"
 #include "kernel/hash.h"
 #include "kernel/string.h"
-
-#include "header.h"
-#include "response.h"
 
 /**
  * Phalcon\Http\Client\Response
@@ -69,7 +57,7 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_response_setbody, 0, 0, 1)
 	ZEND_ARG_INFO(0, body)
 ZEND_END_ARG_INFO()
 
-PHALCON_INIT_FUNCS(phalcon_http_client_response_method_entry){
+static const zend_function_entry phalcon_http_client_response_method_entry[] = {
 	PHP_ME(Phalcon_Http_Client_Response, __construct, arginfo_phalcon_http_client_response___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(Phalcon_Http_Client_Response, setHeader, arginfo_phalcon_http_client_response_setheader, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Client_Response, getHeader, NULL, ZEND_ACC_PUBLIC)
@@ -83,10 +71,10 @@ PHALCON_INIT_FUNCS(phalcon_http_client_response_method_entry){
  */
 PHALCON_INIT_CLASS(Phalcon_Http_Client_Response){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_response_method_entry, 0);
+	PHALCON_REGISTER_CLASS(Phalcon\\Http\\Client, Response, http_client_response, phalcon_http_client_response_method_entry, 0);
 
-	zend_declare_property_null(phalcon_http_client_response_ce, SL("_header") ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_response_ce, SL("_body") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_response_ce, SL("_header"), ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_response_ce, SL("_body"), ZEND_ACC_PROTECTED TSRMLS_CC);
 
 	return SUCCESS;
 }
@@ -141,7 +129,7 @@ PHP_METHOD(Phalcon_Http_Client_Response, setBody){
 
 	phalcon_update_property_this(this_ptr, SL("_body"), body TSRMLS_CC);
 
-	RETURN_THIS();
+	RETURN_THISW();
 }
 
 PHP_METHOD(Phalcon_Http_Client_Response, getBody){

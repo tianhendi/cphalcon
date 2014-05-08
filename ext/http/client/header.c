@@ -17,23 +17,13 @@
   |          ZhuZongXin <dreamsxin@qq.com>                                 |
   +------------------------------------------------------------------------+
 */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include "php.h"
-#include "php_phalcon.h"
-#include "phalcon.h"
-
-#include "Zend/zend_operators.h"
-#include "Zend/zend_exceptions.h"
-#include "Zend/zend_interfaces.h"
+#include "http/client/header.h"
 
 #include "ext/spl/spl_iterators.h"
 
 #include "kernel/main.h"
 #include "kernel/memory.h"
-
 #include "kernel/operators.h"
 #include "kernel/object.h"
 #include "kernel/array.h"
@@ -44,13 +34,12 @@
 #include "kernel/hash.h"
 #include "kernel/string.h"
 
-#include "header.h"
-
 /**
  * Phalcon\Http\Client\Header
  */
 zend_class_entry *phalcon_http_client_header_ce;
 
+PHP_METHOD(Phalcon_Http_Client_Header, __construct);
 PHP_METHOD(Phalcon_Http_Client_Header, set);
 PHP_METHOD(Phalcon_Http_Client_Header, setMultiple);
 PHP_METHOD(Phalcon_Http_Client_Header, addMultiple);
@@ -91,8 +80,8 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_client_header_build, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
 
-PHALCON_INIT_FUNCS(phalcon_http_client_header_method_entry){
-	PHP_ME(Phalcon_Http_Client_Header, __construct, arginfo_phalcon_http_client_header___construct, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+static const zend_function_entry phalcon_http_client_header_method_entry[] = {
+	PHP_ME(Phalcon_Http_Client_Header, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(Phalcon_Http_Client_Header, set, arginfo_phalcon_http_client_header_set, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Client_Header, setMultiple, arginfo_phalcon_http_client_header_setmultiple, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Client_Header, addMultiple, arginfo_phalcon_http_client_header_addmultiple, ZEND_ACC_PUBLIC)
@@ -110,17 +99,17 @@ PHALCON_INIT_FUNCS(phalcon_http_client_header_method_entry){
  */
 PHALCON_INIT_CLASS(Phalcon_Http_Client_Header){
 
-	PHALCON_REGISTER_CLASS(Phalcon\\Http, Client, http_client, phalcon_http_client_header_method_entry, 0);
+	PHALCON_REGISTER_CLASS(Phalcon\\Http\\Client, Header, http_client_header, phalcon_http_client_header_method_entry, 0);
 
-	zend_declare_property_null(phalcon_http_client_header_ce, SL("_messages") ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_header_ce, SL("_fields") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_messages"), ZEND_ACC_PROTECTED|ZEND_ACC_STATIC TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_fields"), ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_long(phalcon_http_client_header_ce, SL("_version"), 1, ZEND_ACC_PROTECTED TSRMLS_CC);
 	zend_declare_property_long(phalcon_http_client_header_ce, SL("_status_code"), 0, ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status_message") ZEND_ACC_PROTECTED TSRMLS_CC);
-	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status") ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status_message"), ZEND_ACC_PROTECTED TSRMLS_CC);
+	zend_declare_property_null(phalcon_http_client_header_ce, SL("_status"), ZEND_ACC_PROTECTED TSRMLS_CC);
 
-	zend_declare_class_constant_long(phalcon_image_ce, SL("BUILD_STATUS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS TSRMLS_CC);
-	zend_declare_class_constant_long(phalcon_image_ce, SL("BUILD_FIELDS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_FIELDS TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_http_client_header_ce, SL("BUILD_STATUS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS TSRMLS_CC);
+	zend_declare_class_constant_long(phalcon_http_client_header_ce, SL("BUILD_FIELDS"), PHALCON_HTTP_CLIENT_HEADER_BUILD_FIELDS TSRMLS_CC);
 
 	zend_class_implements(phalcon_http_client_header_ce TSRMLS_CC, 1, spl_ce_Countable);
 
@@ -220,7 +209,7 @@ PHP_METHOD(Phalcon_Http_Client_Header, addMultiple){
 	phalcon_fetch_params(1, 1, 0, &values);
 
 	PHALCON_OBS_VAR(fields);
-	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY_CC);
+	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY);
 
 	phalcon_array_merge_recursive_n(&fields, values);
 
@@ -231,14 +220,14 @@ PHP_METHOD(Phalcon_Http_Client_Header, addMultiple){
 
 PHP_METHOD(Phalcon_Http_Client_Header, get){
 
-	zval *name, *field;
+	zval *name, *fields, *field;
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 1, 0, &name);
 
 	PHALCON_OBS_VAR(fields);
-	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY_CC);
+	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY);
 
 	PHALCON_OBS_VAR(field);
 	phalcon_array_fetch(&field, fields, name, PH_NOISY);
@@ -253,14 +242,14 @@ PHP_METHOD(Phalcon_Http_Client_Header, getAll){
 
 PHP_METHOD(Phalcon_Http_Client_Header, remove){
 
-	zval *name, *field;
+	zval *name, *fields, *field;
 
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 1, 0, &name);
 
 	PHALCON_OBS_VAR(fields);
-	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY_CC);
+	phalcon_read_property_this(&fields, this_ptr, SL("_fields"), PH_NOISY);
 	
 	phalcon_array_unset(&fields, name, 0);
 
@@ -271,7 +260,7 @@ PHP_METHOD(Phalcon_Http_Client_Header, remove){
 
 PHP_METHOD(Phalcon_Http_Client_Header, parse){
 
-	zval *content, *content_parts, *header = NULL, *header_parts = NULL, *name = NULL, *value = NULL;
+	zval *content, *content_parts, *key = NULL, *header = NULL, *header_parts = NULL, *name = NULL, *value = NULL, *trimmed = NULL;
 	HashTable *ah0;
 	HashPosition hp0;
 	zval **hd;
@@ -288,7 +277,7 @@ PHP_METHOD(Phalcon_Http_Client_Header, parse){
 		PHALCON_INIT_VAR(content_parts);
 		phalcon_fast_explode_str(content_parts, SL("\r\n"), content);
 	} else if (Z_TYPE_P(content) == IS_ARRAY) {
-		PHALCON_CPY_WRT_CTOR(fields, content);
+		PHALCON_CPY_WRT_CTOR(content_parts, content);
 	} else {
 		RETURN_MM_FALSE;
 	}	
@@ -316,7 +305,7 @@ PHP_METHOD(Phalcon_Http_Client_Header, parse){
 				PHALCON_INIT_NVAR(trimmed);
 				phalcon_fast_trim(trimmed, value, PHALCON_TRIM_BOTH TSRMLS_CC);
 
-				phalcon_call_method_p2_noret(this_ptr, "set", name, trimmed);
+				PHALCON_CALL_METHOD(NULL, this_ptr, "set", name, trimmed);
 		}
 
 		zend_hash_move_forward_ex(ah0, &hp0);
@@ -345,14 +334,13 @@ PHP_METHOD(Phalcon_Http_Client_Header, build){
 	PHALCON_INIT_VAR(lines);
 	array_init(lines);
 
-	//messages = phalcon_fetch_nproperty_this(this_ptr, SL("_messages"), PH_NOISY_CC);
 	PHALCON_OBS_VAR(messages);
-	phalcon_read_static_property(&messages, phalcon_http_client_header_ce, SL("_messages") TSRMLS_CC);
+	phalcon_read_static_property_ce(&messages, phalcon_http_client_header_ce, SL("_messages") TSRMLS_CC);
 
-	status_code = phalcon_fetch_nproperty_this(this_ptr, SL("_status_code"), PH_NOISY_CC);
+	status_code = phalcon_fetch_nproperty_this(this_ptr, SL("_status_code"), PH_NOISY);
 	
 	if ((f & PHALCON_HTTP_CLIENT_HEADER_BUILD_STATUS) && phalcon_array_isset_fetch(&message, messages, status_code)) {
-		version  = phalcon_fetch_nproperty_this(this_ptr, SL("_version "), PH_NOISY_CC);
+		version  = phalcon_fetch_nproperty_this(this_ptr, SL("_version "), PH_NOISY);
 
 		PHALCON_INIT_NVAR(line);
 		PHALCON_CONCAT_SVS(line, "HTTP/", version, " ");
@@ -362,7 +350,7 @@ PHP_METHOD(Phalcon_Http_Client_Header, build){
 
 	}
 
-	fields = phalcon_fetch_nproperty_this(this_ptr, SL("_fields"), PH_NOISY_CC);
+	fields = phalcon_fetch_nproperty_this(this_ptr, SL("_fields"), PH_NOISY);
 
 	phalcon_is_iterable(fields, &ah0, &hp0, 0, 0);	
 	while (zend_hash_get_current_data_ex(ah0, (void**) &hd, &hp0) == SUCCESS) {
@@ -392,7 +380,7 @@ PHP_METHOD(Phalcon_Http_Client_Header, count){
 
 	zval *fields;
 
-	fields = phalcon_fetch_nproperty_this(this_ptr, SL("_fields"), PH_NOISY_CC)
+	fields = phalcon_fetch_nproperty_this(this_ptr, SL("_fields"), PH_NOISY);
 	phalcon_fast_count(return_value, fields TSRMLS_CC);
 }
 
