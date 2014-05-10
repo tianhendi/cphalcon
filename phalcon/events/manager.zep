@@ -27,7 +27,7 @@ namespace Phalcon\Events;
  * plugins that will offer monitoring of data, manipulation, conditional execution and much more.
  *
  */
-class Manager implements \Phalcon\Events\ManagerInterface
+class Manager implements ManagerInterface
 {
 
 	protected _events = null;
@@ -50,15 +50,10 @@ class Manager implements \Phalcon\Events\ManagerInterface
 		var priorityQueue, events;
 
 		if typeof handler != "object" {
-			throw new \Phalcon\Events\Exception("Event handler must be an Object");
+			throw new Exception("Event handler must be an Object");
 		}
 
-		let events = this->_events;
-		if typeof events != "array" {
-			let events = [];
-		}
-
-		if fetch priorityQueue, events[eventType] {
+		if fetch priorityQueue, this->_events[eventType] {
 
 			if this->_enablePriorities {
 
@@ -76,8 +71,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 				/**
 				 * Append the events to the queue
 				 */
-				let events[eventType] = priorityQueue,
-					this->_events = events;
+				let this->_events[eventType] = priorityQueue;
 
 			} else {
 				let priorityQueue = [];
@@ -97,9 +91,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 			/**
 			 * Append the events to the queue
 			 */
-			let priorityQueue[] = handler,
-				events[eventType] = priorityQueue,
-				this->_events = events;
+			let this->_events[eventType][] = handler;
 		}
 
 	}
@@ -186,11 +178,11 @@ class Manager implements \Phalcon\Events\ManagerInterface
 		boolean collect, cancelable;
 
 		if typeof queue != "array" && typeof queue != "object" {
-			throw new \Phalcon\Events\Exception("The queue is not valid");
+			throw new Exception("The queue is not valid");
 		}
 
 		if typeof event != "object" {
-			throw new \Phalcon\Events\Exception("The event is not valid");
+			throw new Exception("The event is not valid");
 		}
 
 		let status = null, arguments = null;
@@ -200,7 +192,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 		 */
 		let eventName = event->getType();
 		if typeof eventName != "string" {
-			throw new \Phalcon\Events\Exception("The event type not valid");
+			throw new Exception("The event type not valid");
 		}
 
 		/**
@@ -425,7 +417,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 		 * All valid events must have a colon separator
 		 */
 		if !memstr(eventType, ":") {
-			throw new \Phalcon\Events\Exception("Invalid event type " . eventType);
+			throw new Exception("Invalid event type " . eventType);
 		}
 
 		let eventParts = explode(":", eventType),
@@ -453,7 +445,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 				/**
 				 * Create the event context
 				 */
-				let event = new \Phalcon\Events\Event(eventName, source, data, cancelable);
+				let event = new Event(eventName, source, data, cancelable);
 
 				/**
 				 * Call the events queue
@@ -474,7 +466,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 				 * Create the event if it wasn't created before
 				 */
 				if event === null {
-					let event = new \Phalcon\Events\Event(eventName, source, data, cancelable);
+					let event = new Event(eventName, source, data, cancelable);
 				}
 
 				/**
@@ -494,7 +486,7 @@ class Manager implements \Phalcon\Events\ManagerInterface
 	 * @param string type
 	 * @return boolean
 	 */
-	public function hasListeners(string! type)
+	public function hasListeners(string! type) -> boolean
 	{
 		return isset this->_events[type];
 	}

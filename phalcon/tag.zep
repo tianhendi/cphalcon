@@ -20,6 +20,8 @@
 
 namespace Phalcon;
 
+use Phalcon\Tag\Exception;
+
 /**
  * Phalcon\Tag
  *
@@ -137,7 +139,7 @@ class Tag
 	public static function setDI(<\Phalcon\DiInterface> dependencyInjector)
 	{
 		if typeof dependencyInjector != "object" {
-			throw new \Phalcon\Tag\Exception("Parameter dependencyInjector must be an Object");
+			throw new Exception("Parameter dependencyInjector must be an Object");
 		}
 		let self::_dependencyInjector = dependencyInjector;
 	}
@@ -154,7 +156,7 @@ class Tag
 
 	/**
 	 * Return a URL service from the default DI
-     *
+	 *
 	 * @return Phalcon\Mvc\UrlInterface
 	 */
 	public static function getUrlService() -> <\Phalcon\Mvc\UrlInterface>
@@ -164,14 +166,13 @@ class Tag
 		let url = self::_urlService;
 		if typeof url != "object" {
 
-			//let dependencyInjector = <\Phalcon\DiInterface> self::_dependencyInjector;
-			let dependencyInjector = self::_dependencyInjector;
+			let dependencyInjector = <\Phalcon\DiInterface> self::_dependencyInjector;
 			if typeof dependencyInjector != "object" {
 				let dependencyInjector = \Phalcon\Di::getDefault();
 			}
 
 			if typeof dependencyInjector != "object" {
-				throw new \Phalcon\Tag\Exception("A dependency injector container is required to obtain the \"url\" service");
+				throw new Exception("A dependency injector container is required to obtain the 'url' service");
 			}
 
 			let url = <\Phalcon\Mvc\UrlInterface> dependencyInjector->getShared("url"),
@@ -199,7 +200,7 @@ class Tag
 			}
 
 			if typeof dependencyInjector != "object" {
-				throw new \Phalcon\Tag\Exception("A dependency injector container is required to obtain the \"escaper\" service");
+				throw new Exception("A dependency injector container is required to obtain the 'escaper' service");
 			}
 
 			let escaper = <\Phalcon\EscaperInterface> dependencyInjector->getShared("escaper"),
@@ -236,7 +237,7 @@ class Tag
 	{
 		if value !== null {
 			if typeof value == "array" || typeof value == "object" {
-				throw new \Phalcon\Tag\Exception("Only scalar values can be assigned to UI components");
+				throw new Exception("Only scalar values can be assigned to UI components");
 			}
 		}
 		let self::_displayValues[id] = value;
@@ -258,7 +259,7 @@ class Tag
 	public static function setDefaults(values)
 	{
 		if typeof values != "array" {
-			throw new \Phalcon\Tag\Exception("An array is required as default values");
+			throw new Exception("An array is required as default values");
 		}
 		let self::_displayValues = values;
 	}
@@ -280,7 +281,7 @@ class Tag
 	 * @param string name
 	 * @return boolean
 	 */
-	public static function hasValue(name)
+	public static function hasValue(name) -> boolean
 	{
 		/**
 		 * Check if there is a predefined value for it
@@ -591,11 +592,11 @@ class Tag
 	}
 
 	/**
-	* Builds a HTML input[type="color"] tag
-	*
-	* @param array parameters
-	* @return string
-	*/
+	 * Builds a HTML input[type="color"] tag
+	 *
+	 * @param array parameters
+	 * @return string
+	 */
 	static public function colorField(parameters) -> string
 	{
 		return self::_inputField("color", parameters);
@@ -907,7 +908,7 @@ class Tag
 	 *		"using" => array("id", "name")
 	 * 	));
 	 *</code>
-     *
+	 *
 	 * Volt syntax:
 	 *<code>
 	 * {{ select("robotId", robots, "using": ["id", "name"]) }}
@@ -928,7 +929,7 @@ class Tag
 	 *<code>
 	 * echo Phalcon\Tag::textArea(array("comments", "cols" => 10, "rows" => 4))
 	 *</code>
-     *
+	 *
 	 * Volt syntax:
 	 *<code>
 	 * {{ text_area("comments", "cols": 10, "rows": 4) }}
@@ -1248,7 +1249,7 @@ class Tag
 	 */
 	public static function javascriptInclude(parameters=null, local=true)
 	{
- 		var params, code, key, value;
+		var params, code, key, value;
 
 		if typeof parameters != "array" {
 			let params = [parameters, local];
@@ -1404,24 +1405,24 @@ class Tag
 		switch self::_documentType
 		{
 			case 1:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" . PHP_EOL;
-            /* no break */
-            case 2:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/strict.dtd\">" . PHP_EOL;
-            /* no break */
-            case 3:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/loose.dtd\">" . PHP_EOL;
-            /* no break */
-            case 4:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/frameset.dtd\">" . PHP_EOL;
-            /* no break */
-            case 5:  return "<!DOCTYPE html>" . PHP_EOL;
-            /* no break */
-            case 6:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" . PHP_EOL;
-            /* no break */
-            case 7:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"" . PHP_EOL."\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" . PHP_EOL;
-            /* no break */
-            case 8:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">" . PHP_EOL;
-            /* no break */
-            case 9:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">" . PHP_EOL;
-            /* no break */
-            case 10: return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 2.0//EN\"" . PHP_EOL . "\t\"http://www.w3.org/MarkUp/DTD/xhtml2.dtd\">" . PHP_EOL;
+			/* no break */
+			case 2:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/strict.dtd\">" . PHP_EOL;
+			/* no break */
+			case 3:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/loose.dtd\">" . PHP_EOL;
+			/* no break */
+			case 4:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/frameset.dtd\">" . PHP_EOL;
+			/* no break */
+			case 5:  return "<!DOCTYPE html>" . PHP_EOL;
+			/* no break */
+			case 6:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" . PHP_EOL;
+			/* no break */
+			case 7:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"" . PHP_EOL."\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" . PHP_EOL;
+			/* no break */
+			case 8:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">" . PHP_EOL;
+			/* no break */
+			case 9:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">" . PHP_EOL;
+			/* no break */
+			case 10: return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 2.0//EN\"" . PHP_EOL . "\t\"http://www.w3.org/MarkUp/DTD/xhtml2.dtd\">" . PHP_EOL;
 		}
 
 		return "";
@@ -1443,7 +1444,7 @@ class Tag
 	 */
 	public static function tagHtml(tagName, parameters=null, selfClose=false, onlyStart=false, useEol=false) -> string
 	{
- 		var params, localCode, key, value;
+		var params, localCode, key, value;
 
 		if typeof parameters != "array" {
 			let params = [parameters];

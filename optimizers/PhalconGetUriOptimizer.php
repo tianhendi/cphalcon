@@ -25,8 +25,9 @@ use Zephir\CompilationContext;
 use Zephir\CompilerException;
 use Zephir\CompiledExpression;
 use Zephir\Optimizers\OptimizerAbstract;
+use Zephir\HeadersManager;
 
-class PhalconFilterAlphanumOptimizer extends OptimizerAbstract
+class PhalconGetUriOptimizer extends OptimizerAbstract
 {
 
 	/**
@@ -43,7 +44,7 @@ class PhalconFilterAlphanumOptimizer extends OptimizerAbstract
 		}
 
 		if (count($expression['parameters']) != 1) {
-			throw new CompilerException("phalcon_filter_alphanum only accepts one parameter", $expression);
+			throw new CompilerException("phalcon_get_uri only accepts three parameter", $expression);
 		}
 
 		/**
@@ -60,10 +61,10 @@ class PhalconFilterAlphanumOptimizer extends OptimizerAbstract
 			$symbolVariable->initVariant($context);
 		}
 
-		$context->headersManager->add('kernel/filter');
+		$context->headersManager->add('phalcon/mvc/url/utils', HeadersManager::POSITION_LAST);
 
 		$resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
-		$context->codePrinter->output('zephir_filter_alphanum(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ');');
+		$context->codePrinter->output('phalcon_get_uri(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ');');
 		return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
 	}
 

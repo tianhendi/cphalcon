@@ -84,9 +84,15 @@ abstract class Adapter implements \Phalcon\Events\EventsAwareInterface
 	 */
 	protected _sqlBindTypes;
 
+	/**
+	 * Current transaction level
+	 */
 	protected _transactionLevel = 0;
 
-	protected _transactionsWithSavepoints = 0;
+	/**
+	 * Whether the database supports transactions with save points
+	 */
+	protected _transactionsWithSavepoints = false;
 
 	/**
 	 * Connection ID
@@ -98,7 +104,7 @@ abstract class Adapter implements \Phalcon\Events\EventsAwareInterface
 	 *
 	 * @param array descriptor
 	 */
-	public function __construct(descriptor)
+	public function __construct(array! descriptor)
 	{
 		var dialectClass;
 
@@ -985,7 +991,7 @@ abstract class Adapter implements \Phalcon\Events\EventsAwareInterface
 			throw new \Phalcon\Db\Exception("Savepoints are not supported by this database adapter");
 		}
 
-		if dialect->supportsReleaseSavePoints() {
+		if !dialect->supportsReleaseSavePoints() {
 			return false;
 		}
 

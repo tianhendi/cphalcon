@@ -120,22 +120,22 @@ abstract class Select
 			 * The options is a resultset
 			 */
 			if !fetch using, params["using"] {
-				throw new Exception("The \"using\" parameter is required");
+				throw new Exception("The 'using' parameter is required");
 			} else {
 				if typeof using != "array" && typeof using != "object" {
-					throw new Exception("The \"using\" parameter should be an Array");
+					throw new Exception("The 'using' parameter should be an Array");
 				}
 			}
 
 			/**
-			 * Create the SELECT"s option from a resultset
+			 * Create the SELECT's option from a resultset
 			 */
 			let code .= self::_optionsFromResultset(options, using, value, closeOption);
 		} else {
 			if typeof options == "array" {
 
 				/**
-				 * Create the SELECT"s option from an array
+				 * Create the SELECT's option from an array
 				 */
 				let code .= self::_optionsFromArray(options, value, closeOption);
 			} else {
@@ -231,8 +231,7 @@ abstract class Select
 	/**
 	 * Generate the OPTION tags based on an array
 	 *
-	 * @param Phalcon\Mvc\ModelInterface resultset
-	 * @param array using
+	 * @param array data
 	 * @param mixed value
 	 * @param string closeOption
 	 */

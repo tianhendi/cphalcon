@@ -294,9 +294,9 @@ PHP_METHOD(Phalcon_Cache_Backend_Memory, exists) {
 /**
  * Increment of given $keyName by $value
  *
- * @param  string $keyName
- * @param  long $lifetime
- * @return boolean
+ * @param  string keyName
+ * @param  long lifetime
+ * @return long
  */
 PHP_METHOD(Phalcon_Cache_Backend_Memory, increment) {
 
@@ -345,8 +345,8 @@ PHP_METHOD(Phalcon_Cache_Backend_Memory, increment) {
 /**
  * Decrement of $keyName by given $value
  *
- * @param  string $keyName
- * @param  long $value
+ * @param  string keyName
+ * @param  long value
  * @return long
  */
 PHP_METHOD(Phalcon_Cache_Backend_Memory, decrement) {
@@ -387,7 +387,7 @@ PHP_METHOD(Phalcon_Cache_Backend_Memory, decrement) {
 		ZVAL_LONG(value, 1);
 	}
 	ZEPHIR_INIT_VAR(result);
-	sub_function(result, cachedContent, value TSRMLS_CC);
+	zephir_sub_function(result, cachedContent, value TSRMLS_CC);
 	zephir_update_property_array(this_ptr, SL("_data"), lastKey, result TSRMLS_CC);
 	RETURN_CCTOR(result);
 

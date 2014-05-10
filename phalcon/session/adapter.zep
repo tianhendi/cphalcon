@@ -76,7 +76,7 @@ abstract class Adapter
 		var uniqueId;
 
 		if typeof options != "array" {
-			throw new \Phalcon\Session\Exception("Options must be an Array");
+			throw new Exception("Options must be an Array");
 		}
 
 		if fetch uniqueId, options["uniqueId"] {
@@ -101,13 +101,19 @@ abstract class Adapter
 	 *
 	 * @param string index
 	 * @param mixed defaultValue
+	 * @param boolean remove
 	 * @return mixed
 	 */
-	public function get(string index, defaultValue=null)
+	public function get(string index, defaultValue=null, remove=false)
 	{
-		var value;
-		if fetch value, _SESSION[this->_uniqueId . index] {
+		var value, key;
+
+		let key = this->_uniqueId . index;
+		if fetch value, _SESSION[key] {
 			if !empty value {
+				if remove {
+					unset _SESSION[key];
+				}
 				return value;
 			}
 		}

@@ -44,8 +44,9 @@ namespace Phalcon\Session\Adapter;
 class Memcache extends \Phalcon\Session\Adapter implements \Phalcon\Session\AdapterInterface
 {
 
-	protected _memcache = NULL {get};
-	protected _lifetime = 8600 {get};
+	protected _memcache = NULL { get };
+
+	protected _lifetime = 8600 { get };
 
 	/**
 	 * Phalcon\Session\Adapter\Memcache constructor
@@ -54,6 +55,8 @@ class Memcache extends \Phalcon\Session\Adapter implements \Phalcon\Session\Adap
 	 */
 	public function __construct(options=null)
 	{
+		var lifetime;
+
 		if typeof options != "array" {
 			let options = [];
 		}
@@ -63,15 +66,15 @@ class Memcache extends \Phalcon\Session\Adapter implements \Phalcon\Session\Adap
 		}
 
 		if !isset options["port"] {
-			let options["port"] = "11211";
+			let options["port"] = 11211;
 		}
 
 		if !isset options["persistent"] {
-			let options["persistent"] = "0";
+			let options["persistent"] = 0;
 		}
 
-		if isset options["lifetime"] {
-			let this->_lifetime = options["lifetime"];
+		if fetch lifetime, options["lifetime"] {
+			let this->_lifetime = lifetime;
 		}
 
 		let this->_memcache = new \Phalcon\Cache\Backend\Memcache(
@@ -131,10 +134,9 @@ class Memcache extends \Phalcon\Session\Adapter implements \Phalcon\Session\Adap
      */
     public function destroy(session_id = null)
     {
-        if (is_null(session_id)) {
+        if session_id === null {
             let session_id = this->getId();
         }
-        
         return this->_memcache->delete(session_id);
     }
 
