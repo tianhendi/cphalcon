@@ -101,7 +101,18 @@ PHP_METHOD(Phalcon_Mvc_Model_MetaData_Strategy_Introspection, getMetaData){
 	/** 
 	 * Check if the mapped table exists on the database
 	 */
-	PHALCON_CALL_METHOD(&read_connection, model, "getreadconnection");
+	if (phalcon_method_exists_ex(model, SS("selectreadconnection") TSRMLS_CC) == SUCCESS) {
+		PHALCON_CALL_METHOD(&read_connection, model, "selectreadconnection", PHALCON_GLOBAL(z_null), PHALCON_GLOBAL(z_null), PHALCON_GLOBAL(z_null));
+		if (Z_TYPE_P(read_connection) != IS_OBJECT) {
+			PHALCON_THROW_EXCEPTION_STR(phalcon_mvc_model_exception_ce, "'selectReadConnection' didn't returned a valid connection");
+			return;
+		}
+	} else {
+		/** 
+		 * Get the current connection to the model
+		 */
+		PHALCON_CALL_METHOD(&read_connection, model, "getreadconnection");
+	}
 	PHALCON_CALL_METHOD(&exists, read_connection, "tableexists", table, schema);
 	if (!zend_is_true(exists)) {
 		if (zend_is_true(schema)) {
