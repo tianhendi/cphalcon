@@ -217,6 +217,7 @@ jsonrpc/client/response.c \
 config/adapter/ini.c \
 config/adapter/json.c \
 config/adapter/php.c \
+config/adapter/yaml.c \
 config/exception.c \
 filterinterface.c \
 logger/multiple.c \
@@ -338,6 +339,7 @@ translate/adapter/nativearray.c \
 translate/exception.c \
 translate/adapterinterface.c \
 translate/adapter.c \
+translate/adapter/gettext.c \
 validation/validatorinterface.c \
 validation/message/group.c \
 validation/exception.c \

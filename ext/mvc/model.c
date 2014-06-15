@@ -173,6 +173,7 @@ PHP_METHOD(Phalcon_Mvc_Model, dump);
 PHP_METHOD(Phalcon_Mvc_Model, toArray);
 PHP_METHOD(Phalcon_Mvc_Model, setup);
 PHP_METHOD(Phalcon_Mvc_Model, remove);
+PHP_METHOD(Phalcon_Mvc_Model, reset);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_mvc_model___construct, 0, 0, 0)
 	ZEND_ARG_INFO(0, dependencyInjector)
@@ -390,6 +391,7 @@ static const zend_function_entry phalcon_mvc_model_method_entry[] = {
 	PHP_ME(Phalcon_Mvc_Model, toArray, arginfo_phalcon_mvc_model_toarray, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Mvc_Model, setup, arginfo_phalcon_mvc_model_setup, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME(Phalcon_Mvc_Model, remove, arginfo_phalcon_mvc_modelinterface_remove, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+	PHP_ME(Phalcon_Mvc_Model, reset, NULL, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 
@@ -6420,8 +6422,9 @@ PHP_METHOD(Phalcon_Mvc_Model, __callStatic){
 PHP_METHOD(Phalcon_Mvc_Model, __set){
 
 	zval *property, *value, *lower_property = NULL;
+	zval *meta_data = NULL, *column_map = NULL, *attributes = NULL;
 	zval *related, *key = NULL, *lower_key = NULL, *item = NULL, *model_name, *manager = NULL;
-	zval *relation = NULL, *new_instance, *referenced_model_name = NULL, *referenced_model = NULL;
+	zval *relation = NULL, *referenced_model_name = NULL, *referenced_model = NULL;
 	HashTable *ah0;
 	HashPosition hp0;
 	zval **hd;
@@ -6430,6 +6433,24 @@ PHP_METHOD(Phalcon_Mvc_Model, __set){
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 2, 0, &property, &value);
+
+	if (Z_TYPE_P(property) == IS_STRING) {
+		PHALCON_CALL_METHOD(&meta_data, this_ptr, "getmodelsmetadata");
+		PHALCON_CALL_METHOD(&column_map, meta_data, "getreversecolumnmap", this_ptr);
+		if (Z_TYPE_P(column_map) != IS_ARRAY) {
+			PHALCON_CALL_METHOD(&attributes, meta_data, "getdatatypes", this_ptr);
+
+			if (phalcon_array_isset(attributes, property)) {
+				phalcon_update_property_zval_zval(this_ptr, property, value TSRMLS_CC);
+				RETURN_CTOR(value);
+			}
+		} else {
+			if (phalcon_array_isset(column_map, property)) {
+				phalcon_update_property_zval_zval(this_ptr, property, value TSRMLS_CC);
+				RETURN_CTOR(value);
+			}
+		}
+	}
 	
 	/** 
 	 * Values are probably relationships if they are objects
@@ -6473,19 +6494,16 @@ PHP_METHOD(Phalcon_Mvc_Model, __set){
 					i++;
 					phalcon_array_append(&related, item, 0);
 				}
-			} else {
+			} else if (Z_TYPE_P(key) == IS_STRING) {
 				PHALCON_INIT_NVAR(lower_key);
 				phalcon_fast_strtolower(lower_key, key);
 
 				phalcon_update_property_zval_zval(this_ptr, lower_key, item TSRMLS_CC);
 
 				PHALCON_CALL_METHOD(&relation, manager, "getrelationbyalias", model_name, lower_property);
-				if (Z_TYPE_P(relation) == IS_OBJECT) {					
-					PHALCON_INIT_VAR(new_instance);
-					ZVAL_FALSE(new_instance);
-
+				if (Z_TYPE_P(relation) == IS_OBJECT) {
 					PHALCON_CALL_METHOD(&referenced_model_name, relation, "getreferencedmodel");
-					PHALCON_CALL_METHOD(&referenced_model, manager, "load", referenced_model_name, new_instance);
+					PHALCON_CALL_METHOD(&referenced_model, manager, "load", referenced_model_name, PHALCON_GLOBAL(z_false));
 					PHALCON_CALL_METHOD(NULL, referenced_model, "writeattribute", lower_key, item);	
 				}
 			}
@@ -6932,6 +6950,7 @@ PHP_METHOD(Phalcon_Mvc_Model, setup){
 }
 
 /**
+<<<<<<< HEAD
  * Allows to delete a set of records that match the specified conditions
  *
  * <code>
@@ -7055,4 +7074,18 @@ PHP_METHOD(Phalcon_Mvc_Model, remove){
 	}
 
 	RETURN_CTOR(success);
+}
+
+/*
+ * Reset the model data
+ *
+ * <code>
+ * $robot = Robots::findFirst();
+ * $robot->reset();
+ * </code>
+ */
+PHP_METHOD(Phalcon_Mvc_Model, reset){
+
+	phalcon_update_property_null(this_ptr, SL("_uniqueParams") TSRMLS_CC);
+	phalcon_update_property_null(this_ptr, SL("_snapshot") TSRMLS_CC);
 }

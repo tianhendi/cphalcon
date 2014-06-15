@@ -87,9 +87,10 @@ PHALCON_INIT_CLASS(Phalcon_Mvc_Model_Validator_Inclusionin){
  */
 PHP_METHOD(Phalcon_Mvc_Model_Validator_Inclusionin, validate){
 
-	zval *record, *option = NULL, *field_name = NULL, *allow_empty = NULL, *is_set = NULL, *domain = NULL;
-	zval *value = NULL, *message = NULL, *joined_domain, *is_set_code = NULL, *code = NULL;
+	zval *record, *field = NULL, *is_set = NULL, *domain = NULL;
+	zval *value = NULL, *option, *message = NULL, *joined_domain, *is_set_code = NULL, *code = NULL;
 	zval *type;
+	zval *allow_empty = NULL;
 
 	PHALCON_MM_GROW();
 
@@ -98,8 +99,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Inclusionin, validate){
 	PHALCON_INIT_VAR(option);
 	ZVAL_STRING(option, "field", 1);
 	
-	PHALCON_CALL_METHOD(&field_name, this_ptr, "getoption", option);
-	if (Z_TYPE_P(field_name) != IS_STRING) {
+	PHALCON_CALL_METHOD(&field, this_ptr, "getoption", option);
+	if (Z_TYPE_P(field) != IS_STRING) {
 		PHALCON_THROW_EXCEPTION_STR(phalcon_mvc_model_exception_ce, "Field name must be a string");
 		return;
 	}
@@ -125,7 +126,18 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Inclusionin, validate){
 		return;
 	}
 	
-	PHALCON_CALL_METHOD(&value, record, "readattribute", field_name);
+	PHALCON_CALL_METHOD(&value, record, "readattribute", field);
+
+	/*
+	 * Allow empty
+	 */
+	PHALCON_INIT_NVAR(option);
+	ZVAL_STRING(option, "allowEmpty", 1);
+
+	PHALCON_CALL_METHOD(&allow_empty, this_ptr, "getoption", option);
+	if (allow_empty && zend_is_true(allow_empty) && PHALCON_IS_EMPTY(value)) {
+		RETURN_MM_TRUE;
+	}
 	
 	/*
 	 * Allow empty
@@ -158,7 +170,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Inclusionin, validate){
 			phalcon_fast_join_str(joined_domain, SL(", "), domain TSRMLS_CC);
 	
 			PHALCON_INIT_NVAR(message);
-			PHALCON_CONCAT_SVSV(message, "Value of field '", field_name, "' must be part of list: ", joined_domain);
+			PHALCON_CONCAT_SVSV(message, "Value of field '", field, "' must be part of list: ", joined_domain);
 		}
 	
 		PHALCON_INIT_VAR(type);
@@ -178,7 +190,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Inclusionin, validate){
 			ZVAL_LONG(code, 0);
 		}
 
-		PHALCON_CALL_METHOD(NULL, this_ptr, "appendmessage", message, field_name, type, code);
+		PHALCON_CALL_METHOD(NULL, this_ptr, "appendmessage", message, field, type, code);
 		RETURN_MM_FALSE;
 	}
 	

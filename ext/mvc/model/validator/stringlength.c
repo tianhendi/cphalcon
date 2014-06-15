@@ -137,10 +137,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate){
 
 	PHALCON_CALL_METHOD(&allow_empty, this_ptr, "getoption", option);
 
-	if (allow_empty && zend_is_true(allow_empty)) {
-		if (PHALCON_IS_EMPTY(value)) {
-			RETURN_MM_TRUE;
-		}
+	if (allow_empty && zend_is_true(allow_empty) && PHALCON_IS_EMPTY(value)) {
+		RETURN_MM_TRUE;
 	}
 	
 	/** 

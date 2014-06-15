@@ -102,6 +102,17 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Url, validate){
 	}
 	
 	PHALCON_CALL_METHOD(&value, record, "readattribute", field);
+
+	/*
+	 * Allow empty
+	 */
+	PHALCON_INIT_NVAR(option);
+	ZVAL_STRING(option, "allowEmpty", 1);
+
+	PHALCON_CALL_METHOD(&allow_empty, this_ptr, "getoption", option);
+	if (allow_empty && zend_is_true(allow_empty) && PHALCON_IS_EMPTY(value)) {
+		RETURN_MM_TRUE;
+	}
 	
 	/*
 	 * Allow empty

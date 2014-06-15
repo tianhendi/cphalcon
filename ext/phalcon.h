@@ -73,6 +73,7 @@
 #include "config/adapter/ini.h"
 #include "config/adapter/json.h"
 #include "config/adapter/php.h"
+#include "config/adapter/yaml.h"
 #include "config/exception.h"
 
 #include "crypt.h"
@@ -369,6 +370,7 @@
 #include "translate/adapterinterface.h"
 #include "translate/adapter/nativearray.h"
 #include "translate/exception.h"
+#include "translate/adapter/gettext.h"
 
 #include "text.h"
 #include "arr.h"
