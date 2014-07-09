@@ -552,7 +552,7 @@ PHALCON_INIT_CLASS(Phalcon_DI){
 	phalcon_di_ce->serialize     = zend_class_serialize_deny;
 	phalcon_di_ce->unserialize   = zend_class_unserialize_deny;
 
-	phalcon_di_object_handlers = *zend_get_std_object_handlers();
+	memcpy(&phalcon_di_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	phalcon_di_object_handlers.read_dimension  = phalcon_di_read_dimension;
 	phalcon_di_object_handlers.has_dimension   = phalcon_di_has_dimension;
 	phalcon_di_object_handlers.write_dimension = phalcon_di_write_dimension;

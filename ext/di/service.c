@@ -236,7 +236,7 @@ PHALCON_INIT_CLASS(Phalcon_DI_Service){
 
 	phalcon_di_service_ce->create_object = phalcon_di_service_ctor;
 
-	phalcon_di_service_object_handlers = *zend_get_std_object_handlers();
+	memcpy(&phalcon_di_service_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	phalcon_di_service_object_handlers.clone_obj      = phalcon_di_service_clone_obj;
 	phalcon_di_service_object_handlers.get_debug_info = phalcon_di_service_get_debug_info;
 
