@@ -51,9 +51,7 @@ static zval* phalcon_translate_adapter_gettext_read_dimension(zval *object, zval
 	}
 
 	params[0] = offset;
-	uint32_t result = phalcon_call_func_aparams(&translation, SL("gettext"), 1, params TSRMLS_CC);
-
-	if (result) {
+	if (FAILURE == phalcon_call_func_aparams(&translation, SL("gettext"), 1, params TSRMLS_CC)) {
 		MAKE_STD_ZVAL(translation);
 		ZVAL_NULL(translation)
 	}
@@ -70,9 +68,7 @@ static int phalcon_translate_adapter_gettext_has_dimension(zval *object, zval *o
 	}
 
 	params[0] = offset;
-	uint32_t result = phalcon_call_func_aparams(&translation, SL("gettext"), 1, params TSRMLS_CC);
-
-	if (result) {
+	if (FAILURE == phalcon_call_func_aparams(&translation, SL("gettext"), 1, params TSRMLS_CC)) {
 		return 0;
 	}
 
