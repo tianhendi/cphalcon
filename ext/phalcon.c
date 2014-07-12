@@ -194,6 +194,8 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_BOOLEAN("phalcon.orm.exception_on_failed_save", "0", PHP_INI_ALL,    OnUpdateBool, orm.exception_on_failed_save, zend_phalcon_globals, phalcon_globals)
 	/* Enables/Disables literals in PHQL */
 	STD_PHP_INI_BOOLEAN("phalcon.orm.enable_literals",          "1", PHP_INI_ALL,    OnUpdateBool, orm.enable_literals,          zend_phalcon_globals, phalcon_globals)
+	/* Enables/Disables AST cache */
+	STD_PHP_INI_BOOLEAN("phalcon.orm.enable_ast_cache",         "1", PHP_INI_ALL,    OnUpdateBool, orm.enable_ast_cache,         zend_phalcon_globals, phalcon_globals)
 	/* Enables/Disables auttomatic escape */
 	STD_PHP_INI_BOOLEAN("phalcon.db.escape_identifiers",        "1", PHP_INI_ALL,    OnUpdateBool, db.escape_identifiers,        zend_phalcon_globals, phalcon_globals)
 	/* Whether to register PSR-3 classes */
@@ -304,6 +306,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	PHALCON_INIT(Phalcon_Logger_FormatterInterface);
 	PHALCON_INIT(Phalcon_Mvc_CollectionInterface);
 	PHALCON_INIT(Phalcon_Mvc_Collection_ManagerInterface);
+	PHALCON_INIT(Phalcon_Mvc_Collection_MessageInterface);
 	PHALCON_INIT(Phalcon_Mvc_ControllerInterface);
 	PHALCON_INIT(Phalcon_Mvc_DispatcherInterface);
 	PHALCON_INIT(Phalcon_Mvc_Micro_CollectionInterface);
@@ -386,6 +389,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	PHALCON_INIT(Phalcon_Cache_Backend_Mongo);
 	PHALCON_INIT(Phalcon_Cache_Backend_Memcache);
 	PHALCON_INIT(Phalcon_Cache_Backend_Libmemcached);
+	PHALCON_INIT(Phalcon_Cache_Backend_Redis);
 	PHALCON_INIT(Phalcon_Cache_Frontend_Json);
 	PHALCON_INIT(Phalcon_Cache_Frontend_Output);
 	PHALCON_INIT(Phalcon_Cache_Frontend_None);
@@ -522,6 +526,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	PHALCON_INIT(Phalcon_Mvc_Controller);
 	PHALCON_INIT(Phalcon_Mvc_Collection_Document);
 	PHALCON_INIT(Phalcon_Mvc_Collection_Manager);
+	PHALCON_INIT(Phalcon_Mvc_Collection_Message);
 	PHALCON_INIT(Phalcon_Mvc_Dispatcher);
 	PHALCON_INIT(Phalcon_Mvc_Model_Row);
 	PHALCON_INIT(Phalcon_Mvc_Model_Query);
@@ -546,6 +551,8 @@ static PHP_MINIT_FUNCTION(phalcon)
 	PHALCON_INIT(Phalcon_Mvc_Model_MetaData_Xcache);
 	PHALCON_INIT(Phalcon_Mvc_Model_Validator_Email);
 	PHALCON_INIT(Phalcon_Mvc_Model_MetaData_Session);
+	PHALCON_INIT(Phalcon_Mvc_Model_MetaData_Memcache);
+	PHALCON_INIT(Phalcon_Mvc_Model_MetaData_Libmemcached);
 	PHALCON_INIT(Phalcon_Mvc_Model_Validator_Uniqueness);
 	PHALCON_INIT(Phalcon_Mvc_Model_Validator_PresenceOf);
 	PHALCON_INIT(Phalcon_Mvc_Model_Transaction_Failed);

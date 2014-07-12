@@ -125,6 +125,8 @@ mvc/collection/managerinterface.c \
 mvc/collection/manager.c \
 mvc/collection/exception.c \
 mvc/collection/document.c \
+mvc/collection/messageinterface.c \
+mvc/collection/message.c \
 mvc/routerinterface.c \
 mvc/urlinterface.c \
 mvc/user/component.c \
@@ -162,6 +164,8 @@ mvc/model/metadata/apc.c \
 mvc/model/metadata/xcache.c \
 mvc/model/metadata/memory.c \
 mvc/model/metadata/session.c \
+mvc/model/metadata/memcache.c \
+mvc/model/metadata/libmemcached.c \
 mvc/model/transaction.c \
 mvc/model/validatorinterface.c \
 mvc/model/metadata.c \
@@ -280,6 +284,7 @@ cache/backend/mongo.c \
 cache/backend/memcache.c \
 cache/backend/libmemcached.c \
 cache/backend/memory.c \
+cache/backend/redis.c \
 cache/exception.c \
 cache/backendinterface.c \
 cache/frontendinterface.c \
