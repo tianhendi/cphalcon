@@ -30,9 +30,9 @@ namespace Phalcon\Cache\Backend;
  *		'lifetime' => 172800
  *	));
  *
- *  $cache = new \Phalcon\Cache\Backend\Xcache($frontCache, array(
- *      'prefix' => 'app-data'
- *  ));
+ *	$cache = new \Phalcon\Cache\Backend\Xcache($frontCache, array(
+ *		'prefix' => 'app-data'
+ *	));
  *
  *	//Cache arbitrary data
  *	$cache->save('my-data', array(1, 2, 3, 4, 5));
