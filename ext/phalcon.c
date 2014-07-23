@@ -413,6 +413,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	PHALCON_INIT(Phalcon_Validation_Validator_ExclusionIn);
 	PHALCON_INIT(Phalcon_Validation_Validator_Confirmation);
 	PHALCON_INIT(Phalcon_Validation_Validator_Url);
+	PHALCON_INIT(Phalcon_Validation_Validator_File);
 	PHALCON_INIT(Phalcon_Db_Index);
 	PHALCON_INIT(Phalcon_Db_Column);
 	PHALCON_INIT(Phalcon_Db_Adapter_Pdo_Sqlite);
@@ -531,6 +532,7 @@ static PHP_MINIT_FUNCTION(phalcon)
 	PHALCON_INIT(Phalcon_Mvc_Model_Row);
 	PHALCON_INIT(Phalcon_Mvc_Model_Query);
 	PHALCON_INIT(Phalcon_Mvc_Micro_Collection);
+	PHALCON_INIT(Phalcon_Mvc_Micro_Exception);
 	PHALCON_INIT(Phalcon_Mvc_Micro_LazyLoader);
 	PHALCON_INIT(Phalcon_Mvc_Model_Criteria);
 	PHALCON_INIT(Phalcon_Mvc_Model_Manager);
