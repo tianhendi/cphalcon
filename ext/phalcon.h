@@ -403,7 +403,10 @@
 #include "validation/validator/file.h"
 
 #include "chart/qrcode.h"
+#include "chart/captcha.h"
 #include "chart/exception.h"
+
+#include "scws.h"
 
 #include "version.h"
 
