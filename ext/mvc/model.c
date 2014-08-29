@@ -3480,6 +3480,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 	zval *null_value, *bind_skip, *fields, *values;
 	zval *bind_types, *attributes = NULL, *bind_data_types = NULL;
 	zval *automatic_attributes = NULL, *column_map = NULL, *field = NULL;
+	zval *manager, *use_dynamic_update = NULL;
 	zval *attribute_field = NULL, *exception_message = NULL;
 	zval *value = NULL, *bind_type = NULL, *default_value = NULL, *use_explicit_identity = NULL;
 	zval *success = NULL, *sequence_name = NULL, *support_sequences = NULL;
@@ -3489,6 +3490,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 	HashPosition hp0;
 	zval **hd;
 	int identity_field_is_not_false; /* scan-build insists on using flags */
+	int i_use_dynamic_update = 0;
 
 	PHALCON_MM_GROW();
 
@@ -3520,6 +3522,12 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 	else {
 		PHALCON_INIT_VAR(column_map);
 	}
+
+	PHALCON_OBS_VAR(manager);
+	phalcon_read_property_this(&manager, this_ptr, SL("_modelsManager"), PH_NOISY TSRMLS_CC);
+
+	PHALCON_CALL_METHOD(&use_dynamic_update, manager, "isusingdynamicupdate", this_ptr);
+	i_use_dynamic_update = zend_is_true(use_dynamic_update);
 	
 	/** 
 	 * All fields in the model makes part or the INSERT
@@ -3572,7 +3580,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 					PHALCON_OBS_NVAR(value);
 					phalcon_read_property_zval(&value, this_ptr, attribute_field, PH_NOISY TSRMLS_CC);
 
-					if (Z_TYPE_P(value) != IS_NULL || !phalcon_fast_in_array(field, not_null TSRMLS_CC) || !phalcon_array_isset(default_values, field)) {						
+					if (Z_TYPE_P(value) != IS_NULL || (!phalcon_fast_in_array(field, not_null TSRMLS_CC) && !phalcon_array_isset(default_values, field))) {						
 						phalcon_array_append(&fields, field, PH_SEPARATE);
 						phalcon_array_append(&values, value, PH_SEPARATE);
 		
@@ -3580,7 +3588,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 						phalcon_array_fetch(&bind_type, bind_data_types, field, PH_NOISY);
 						phalcon_array_append(&bind_types, bind_type, PH_SEPARATE);
 					}
-				} else if (!phalcon_fast_in_array(field, not_null TSRMLS_CC) || !phalcon_array_isset(default_values, field)) {
+				} else if (!i_use_dynamic_update || (!phalcon_fast_in_array(field, not_null TSRMLS_CC) && !phalcon_array_isset(default_values, field))) {
 					phalcon_array_append(&fields, field, PH_SEPARATE);
 					phalcon_array_append(&values, null_value, PH_SEPARATE);
 					phalcon_array_append(&bind_types, bind_skip, PH_SEPARATE);
@@ -3870,10 +3878,6 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowUpdate){
 						phalcon_array_append(&bind_types, bind_type, PH_SEPARATE);
 					}
 				}
-			} else {
-				phalcon_array_append(&fields, field, PH_SEPARATE);
-				phalcon_array_append(&values, null_value, PH_SEPARATE);
-				phalcon_array_append(&bind_types, bind_skip, PH_SEPARATE);
 			}
 		}
 	
