@@ -19,6 +19,8 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\Mvc\Model\TransactionInterface;
+
 /**
  * Phalcon\Mvc\ModelInterface
  *
@@ -28,20 +30,12 @@ interface ModelInterface
 {
 
 	/**
-	 * Phalcon\Mvc\Model constructor
-	 *
-	 * @param Phalcon\DiInterface dependencyInjector
-	 * @param Phalcon\Mvc\Model\ManagerInterface modelsManager
-	 */
-	public function __construct(dependencyInjector=null, modelsManager=null);
-
-	/**
 	 * Sets a transaction related to the Model instance
 	 *
 	 * @param Phalcon\Mvc\Model\TransactionInterface transaction
 	 * @return Phalcon\Mvc\ModelInterface
 	 */
-	public function setTransaction(<\Phalcon\Mvc\Model\TransactionInterface> transaction) -> <\Phalcon\Mvc\ModelInterface>;
+	public function setTransaction(<TransactionInterface> transaction) -> <ModelInterface>;
 
 	/**
 	 * Returns table name mapped in the model
@@ -129,7 +123,7 @@ interface ModelInterface
 	 * @param array columnMap
 	 * @return Phalcon\Mvc\Model
 	 */
-	public function assign(data, columnMap=null);
+	public function assign(data, columnMap = null);
 
 	/**
 	 * Assigns values to a model from an array returning a new model
@@ -141,7 +135,7 @@ interface ModelInterface
 	 * @param boolean keepSnapshots
 	 * @return Phalcon\Mvc\Model result
 	 */
-	public static function cloneResultMap(base, data, columnMap, dirtyState=0, keepSnapshots=null);
+	public static function cloneResultMap(base, array! data, var columnMap, dirtyState = 0, keepSnapshots = null);
 
 	/**
 	 * Assigns values to a model from an array returning a new model
@@ -151,7 +145,7 @@ interface ModelInterface
 	 * @param int dirtyState
 	 * @return Phalcon\Mvc\Model
 	 */
-	public static function cloneResult(base, data, dirtyState=0);
+	public static function cloneResult(base, data, dirtyState = 0);
 
 	/**
 	 * Returns an hydrated result based on the data and the column map
@@ -160,7 +154,7 @@ interface ModelInterface
 	 * @param array columnMap
 	 * @param int hydrationMode
 	 */
-	public static function cloneResultMapHydrate(data, columnMap, hydrationMode);
+	public static function cloneResultMapHydrate(array! data, var columnMap, int hydrationMode);
 
 	/**
 	 * Allows to query a set of records that match the specified conditions
@@ -168,7 +162,7 @@ interface ModelInterface
 	 * @param 	array parameters
 	 * @return  Phalcon\Mvc\Model\ResultsetInterface
 	 */
-	public static function find(parameters=null);
+	public static function find(parameters = null);
 
 	/**
 	 * Allows to query the first record that match the specified conditions
@@ -176,7 +170,7 @@ interface ModelInterface
 	 * @param array parameters
 	 * @return Phalcon\Mvc\ModelInterface
 	 */
-	public static function findFirst(parameters=null);
+	public static function findFirst(parameters = null);
 
 	/**
 	 * Create a criteria for a especific model
@@ -184,7 +178,7 @@ interface ModelInterface
 	 * @param Phalcon\DiInterface dependencyInjector
 	 * @return Phalcon\Mvc\Model\CriteriaInterface
 	 */
-	public static function query(dependencyInjector=null);
+	public static function query(dependencyInjector = null);
 
 	/**
 	 * Allows to count how many records match the specified conditions
@@ -192,7 +186,7 @@ interface ModelInterface
 	 * @param array parameters
 	 * @return int
 	 */
-	public static function count(parameters=null);
+	public static function count(parameters = null);
 
 	/**
 	 * Allows to calculate a summatory on a column that match the specified conditions
@@ -200,7 +194,7 @@ interface ModelInterface
 	 * @param array parameters
 	 * @return double
 	 */
-	public static function sum(parameters=null);
+	public static function sum(parameters = null);
 
 	/**
 	 * Allows to get the maximum value of a column that match the specified conditions
@@ -208,7 +202,7 @@ interface ModelInterface
 	 * @param array parameters
 	 * @return mixed
 	 */
-	public static function maximum(parameters=null);
+	public static function maximum(parameters = null);
 
 	/**
 	 * Allows to get the minimum value of a column that match the specified conditions
@@ -216,7 +210,7 @@ interface ModelInterface
 	 * @param array parameters
 	 * @return mixed
 	 */
-	public static function minimum(parameters=null);
+	public static function minimum(parameters = null);
 
 	/**
 	 * Allows to calculate the average value on a column matching the specified conditions
@@ -224,7 +218,7 @@ interface ModelInterface
 	 * @param array parameters
 	 * @return double
 	 */
-	public static function average(parameters=null);
+	public static function average(parameters = null);
 
 	/**
 	 * Fires an event, implicitly calls behaviors and listeners in the events manager are notified
@@ -271,7 +265,7 @@ interface ModelInterface
 	 * @param  array whiteList
 	 * @return boolean
 	 */
-	public function save(data=null, whiteList=null);
+	public function save(data = null, whiteList = null);
 
 	/**
 	 * Inserts a model instance. If the instance already exists in the persistance it will throw an exception
@@ -281,7 +275,7 @@ interface ModelInterface
 	 * @param  array whiteList
 	 * @return boolean
 	 */
-	public function create(data=null, whiteList=null);
+	public function create(data = null, whiteList = null);
 
 	/**
 	 * Updates a model instance. If the instance doesn't exist in the persistance it will throw an exception
@@ -291,7 +285,7 @@ interface ModelInterface
 	 * @param  array whiteList
 	 * @return boolean
 	 */
-	public function update(data=null, whiteList=null);
+	public function update(data = null, whiteList = null);
 
 	/**
 	 * Deletes a model instance. Returning true on success or false otherwise.
@@ -343,7 +337,7 @@ interface ModelInterface
 	 * @param array arguments
 	 * @return Phalcon\Mvc\Model\ResultsetInterface
 	 */
-	public function getRelated(alias, arguments=null);
+	public function getRelated(alias, arguments = null);
 
 	/**
 	 * Sets the record's snapshot data.
@@ -352,7 +346,5 @@ interface ModelInterface
 	 * @param array data
 	 * @param array columnMap
 	 */
-	public function setSnapshotData(data, columnMap=null);
-
-	public function getDI();
+	public function setSnapshotData(array! data, columnMap = null);
 }

@@ -94,7 +94,7 @@ abstract class Dialect
 	 * @param	array columnList
 	 * @return	string
 	 */
-	public final function getColumnList(columnList) -> string
+	public final function getColumnList(array! columnList) -> string
 	{
 		var strList, escapeChar, column;
 		let strList = [],
@@ -112,7 +112,7 @@ abstract class Dialect
 	 * @param string escapeChar
 	 * @return string
 	 */
-	public final function getSqlExpression(var expression, string escapeChar=null) -> string
+	public final function getSqlExpression(array! expression, var escapeChar = null) -> string
 	{
 		var type, domain, operator, left, right, name, sqlItems,
 			escapedName, sqlArguments, arguments, argument, item;
@@ -121,10 +121,6 @@ abstract class Dialect
 			if escapeChar === null{
 				let escapeChar = (string) this->_escapeChar;
 			}
-		}
-
-		if typeof expression != "array" {
-			throw new Exception("Invalid SQL expression");
 		}
 
 		if !fetch type, expression["type"] {
@@ -193,8 +189,10 @@ abstract class Dialect
 			 * ...Others uses the right operand
 			 */
 			if fetch right, expression["right"] {
-				return this->getSqlExpression(right, escapeChar) . operator;
+				return  operator . this->getSqlExpression(right, escapeChar);
 			}
+
+			throw new Exception("Invalid SQL-unary expression");
 		}
 
 		/**
@@ -222,9 +220,8 @@ abstract class Dialect
 					let sqlArguments[] = this->getSqlExpression(argument, escapeChar);
 				}
 				return name . "(" . join(", ", sqlArguments) . ")";
-			} else {
-				return name . "()";
 			}
+			return name . "()";
 		}
 
 		/**
@@ -280,7 +277,7 @@ abstract class Dialect
 	 * @param string escapeChar
 	 * @return string
 	 */
-	public final function getSqlTable(table, string escapeChar=null) -> string
+	public final function getSqlTable(var table, string escapeChar=null) -> string
 	{
 		var sqlTable, sqlSchema, aliasName, sqlTableAlias,
 			schemaName, tableName;
@@ -346,7 +343,7 @@ abstract class Dialect
 	 * @param array definition
 	 * @return string
 	 */
-	public function select(definition) -> string
+	public function select(array! definition) -> string
 	{
 		var tables, columns, escapeChar, columnItem, column,
 			selectedColumns, columnSql, columnDomainSql, columnAlias,
@@ -356,10 +353,6 @@ abstract class Dialect
 			groupFields, groupField, groupItems, havingConditions,
 			orderFields, orderItem, orderItems, orderSqlItem, sqlOrderType,
 			orderSqlItemType, limitValue, number, offset;
-
-		if typeof definition != "array" {
-			throw new Exception("Invalid SELECT definition");
-		}
 
 		if !fetch tables, definition["tables"] {
 			throw new Exception("The index 'tables' is required in the definition array");
@@ -469,11 +462,15 @@ abstract class Dialect
 				 */
 				if fetch joinConditionsArray, join["conditions"] {
 					if count(joinConditionsArray) {
-						let joinExpressions = [];
-						for joinCondition in joinConditionsArray {
-							let joinExpressions[] = this->getSqlExpression(joinCondition, escapeChar);
+						if !isset joinConditionsArray[0] {
+							let sqlJoin .= " ON " . this->getSqlExpression(joinConditionsArray, escapeChar) . " ";
+						} else {
+							let joinExpressions = [];
+							for joinCondition in joinConditionsArray {
+								let joinExpressions[] = this->getSqlExpression(joinCondition, escapeChar);
+							}
+							let sqlJoin .= " ON " . join(" AND ", joinExpressions) . " ";
 						}
-						let sqlJoin .= " ON " . join(" AND ", joinExpressions) . " ";
 					}
 				}
 				let sql .= sqlJoin;
@@ -498,7 +495,11 @@ abstract class Dialect
 
 			let groupItems = [];
 			for groupField in groupFields {
-				let groupItems[] = this->getSqlExpression(groupField, escapeChar);
+				if typeof groupField == "array" {
+					let groupItems[] = this->getSqlExpression(groupField, escapeChar);
+				} else {
+					throw new Exception("?");
+				}
 			}
 			let sql .= " GROUP BY " . join(", ", groupItems);
 
@@ -506,7 +507,11 @@ abstract class Dialect
 			 * Check for a HAVING clause
 			 */
 			if fetch havingConditions, definition["having"] {
-				let sql .= " HAVING " . this->getSqlExpression(havingConditions, escapeChar);
+				if typeof havingConditions == "array" {
+					let sql .= " HAVING " . this->getSqlExpression(havingConditions, escapeChar);
+				} else {
+					throw new Exception("?");
+				}
 			}
 		}
 
@@ -517,7 +522,11 @@ abstract class Dialect
 			let orderItems = [];
 			for orderItem in orderFields {
 
-				let orderSqlItem = this->getSqlExpression(orderItem[0], escapeChar);
+				if typeof orderItem == "array" {
+					let orderSqlItem = this->getSqlExpression(orderItem[0], escapeChar);
+				} else {
+					throw new Exception("?");
+				}
 
 				/**
 				 * In the numeric 1 position could be a ASC/DESC clause

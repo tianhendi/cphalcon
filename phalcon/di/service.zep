@@ -20,6 +20,7 @@
 namespace Phalcon\Di;
 
 use Phalcon\Di\Exception;
+use Phalcon\Di\ServiceInterface;
 
 /**
  * Phalcon\Di\Service
@@ -32,14 +33,16 @@ use Phalcon\Di\Exception;
  *<code>
  *
  */
-class Service implements \Phalcon\Di\ServiceInterface
+class Service implements ServiceInterface
 {
 
 	protected _name;
 
 	protected _definition;
 
-	protected _shared;
+	protected _shared = false;
+
+	protected _resolved = false;
 
 	protected _sharedInstance;
 
@@ -50,7 +53,7 @@ class Service implements \Phalcon\Di\ServiceInterface
 	 * @param mixed definition
 	 * @param boolean shared
 	 */
-	public function __construct(string! name, definition, boolean shared=false)
+	public final function __construct(string! name, definition, boolean shared = false)
 	{
 		let this->_name = name,
 			this->_definition = definition,
@@ -124,7 +127,7 @@ class Service implements \Phalcon\Di\ServiceInterface
 	 * @param Phalcon\DiInterface dependencyInjector
 	 * @return mixed
 	 */
-	public function resolve(parameters=null, <\Phalcon\DiInterface> dependencyInjector=null)
+	public function resolve(parameters = null, <\Phalcon\DiInterface> dependencyInjector = null)
 	{
 
 		boolean found;
@@ -206,6 +209,8 @@ class Service implements \Phalcon\Di\ServiceInterface
 			let this->_sharedInstance = instance;
 		}
 
+		let this->_resolved = true;
+
 		return instance;
 	}
 
@@ -275,12 +280,22 @@ class Service implements \Phalcon\Di\ServiceInterface
 	}
 
 	/**
+	 * Returns true if the service was resolved
+	 *
+	 * @return bool
+	 */
+	public function isResolved() -> boolean
+	{
+		return this->_resolved;
+	}
+
+	/**
 	 * Restore the internal state of a service
 	 *
 	 * @param array attributes
 	 * @return Phalcon\Di\Service
 	 */
-	public static function __set_state(array! attributes) -> <\Phalcon\Di\Service>
+	public static function __set_state(array! attributes) -> <Service>
 	{
 		var name, definition, shared;
 

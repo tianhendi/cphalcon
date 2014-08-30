@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -58,6 +58,32 @@ class SomeObject implements Iterator, Countable
 	{
 		return $this->_pointer < count($this->_data);
 	}
+}
+
+function phalcon_prepare_virtual_path($path, $separator) {
+	$virtual_str = '';
+
+	if (!is_string($path) || !is_string($separator)) {
+		if (is_string($path)) {
+			return $path;
+		} else {
+			return "";
+		}
+	}
+
+	for ($i = 0; $i < strlen($path); $i++) {
+		$ch = $path[$i];
+		if ($ch == '\0') {
+			break;
+		}
+		if ($ch == '/' || $ch == '\\' || $ch == ':') {
+			$virtual_str .= $separator;
+		} else {
+			$virtual_str .= strtolower($ch);
+		}
+	}
+
+	return $virtual_str;
 }
 
 class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
@@ -226,7 +252,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(is_array($intermediate));
 		$this->assertEquals(count($intermediate), 1);
 
-		$intermediate = $volt->parse('{{ --10 }}');
+		$intermediate = $volt->parse('{{ 10-- }}');
 		$this->assertTrue(is_array($intermediate));
 		$this->assertEquals(count($intermediate), 1);
 
@@ -549,20 +575,20 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		}
 
 		try {
-			$volt->parse('{{ v++ }}');
+			$volt->parse('{{ ++v }}');
 			$this->assertTrue(false);
 		}
 		catch(Phalcon\Mvc\View\Exception $e){
-			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token + in eval code on line 1');
+			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token ++ in eval code on line 1');
 		}
 
 		try {
 			$volt->parse('{{
-				v++ }}');
+				++v }}');
 			$this->assertTrue(false);
 		}
 		catch(Phalcon\Mvc\View\Exception $e){
-			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token + in eval code on line 2');
+			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token ++ in eval code on line 2');
 		}
 
 		try {
@@ -604,7 +630,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$this->assertTrue(false);
 		}
 		catch(Phalcon\Mvc\View\Exception $e){
-			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token + in eval code on line 8');
+			$this->assertEquals($e->getMessage(), 'Syntax error, unexpected token IDENTIFIER(y) in eval code on line 8');
 		}
 
 		try {
@@ -626,7 +652,7 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 			$this->assertTrue(false);
 		}
 		catch(Phalcon\Mvc\View\Exception $e){
-			$this->assertEquals($e->getMessage(), "Parsing error before 'album.uri, \"<img...' in eval code on line 1");
+			$this->assertEquals($e->getMessage(), "Scanning error before 'album.uri, \"<img...' in eval code on line 1");
 		}
 
 	}
@@ -864,19 +890,19 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 
 		//Phalcon\Tag helpers
 		$compilation = $volt->compileString("{{ link_to('hello', 'some-link') }}");
-		$this->assertEquals($compilation, '<?php echo Phalcon\Tag::linkTo(array(\'hello\', \'some-link\')); ?>');
+		$this->assertEquals($compilation, '<?php echo $this->tag->linkTo(array(\'hello\', \'some-link\')); ?>');
 
 		$compilation = $volt->compileString("{{ form('action': 'save/products', 'method': 'post') }}");
-		$this->assertEquals($compilation, '<?php echo Phalcon\Tag::form(array(\'action\' => \'save/products\', \'method\' => \'post\')); ?>');
+		$this->assertEquals($compilation, '<?php echo $this->tag->form(array(\'action\' => \'save/products\', \'method\' => \'post\')); ?>');
 
 		$compilation = $volt->compileString("{{ stylesheet_link(config.cdn.css.bootstrap, config.cdn.local) }}");
-		$this->assertEquals($compilation, '<?php echo Phalcon\Tag::stylesheetLink($config->cdn->css->bootstrap, $config->cdn->local); ?>');
+		$this->assertEquals($compilation, '<?php echo $this->tag->stylesheetLink($config->cdn->css->bootstrap, $config->cdn->local); ?>');
 
 		$compilation = $volt->compileString("{{ javascript_include('js/some.js') }}");
-		$this->assertEquals($compilation, '<?php echo Phalcon\Tag::javascriptInclude(\'js/some.js\'); ?>');
+		$this->assertEquals($compilation, '<?php echo $this->tag->javascriptInclude(\'js/some.js\'); ?>');
 
 		$compilation = $volt->compileString("{{ image('img/logo.png', 'width': 80) }}");
-		$this->assertEquals($compilation, "<?php echo Phalcon\Tag::image(array('img/logo.png', 'width' => 80)); ?>");
+		$this->assertEquals($compilation, "<?php echo \$this->tag->image(array('img/logo.png', 'width' => 80)); ?>");
 
 		//Filters
 		$compilation = $volt->compileString('{{ "hello"|e }}');
@@ -1012,13 +1038,13 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($compilation, '<?php foreach (array(0, 1, 3, 5, 4) as $key => $value) { ?> hello <?php } ?>');
 
 		$compilation = $volt->compileString('{% for key, value in [0, 1, 3, 5, 4] if key!=3 %} hello {% endfor %}');
-		$this->assertEquals($compilation, '<?php foreach (array(0, 1, 3, 5, 4) as $key => $value) { if ($key != 3) { ?> hello <?php } } ?>');
+		$this->assertEquals($compilation, '<?php foreach (array(0, 1, 3, 5, 4) as $key => $value) { if ($key != 3) { ?> hello <?php } ?><?php } ?>');
 
 		$compilation = $volt->compileString('{% for a in 1..10 %} hello {% endfor %}');
 		$this->assertEquals($compilation, '<?php foreach (range(1, 10) as $a) { ?> hello <?php } ?>');
 
 		$compilation = $volt->compileString('{% for a in 1..10 if a is even %} hello {% endfor %}');
-		$this->assertEquals($compilation, '<?php foreach (range(1, 10) as $a) { if (((($a) % 2) == 0)) { ?> hello <?php } } ?>');
+		$this->assertEquals($compilation, '<?php foreach (range(1, 10) as $a) { if (((($a) % 2) == 0)) { ?> hello <?php } ?><?php } ?>');
 
 		$compilation = $volt->compileString('{% for a in 1..10 %} {% for b in 1..10 %} hello {% endfor %} {% endfor %}');
 		$this->assertEquals($compilation, '<?php foreach (range(1, 10) as $a) { ?> <?php foreach (range(1, 10) as $b) { ?> hello <?php } ?> <?php } ?>');
@@ -1067,11 +1093,11 @@ class ViewEnginesVoltTest extends PHPUnit_Framework_TestCase
 		$volt = new \Phalcon\Mvc\View\Engine\Volt\Compiler();
 
 		//Single string function
-		$volt->addFunction('random', 'mt_rand()');
+		$volt->addFunction('random', 'mt_rand');
 
 		//Function with closure
 		$volt->addFunction('shuffle', function($arguments, $exprArguments){
-			return 'str_shuffle('.$arguments.')';
+			return 'str_shuffle(' . $arguments . ')';
 		});
 
 		$compilation = $volt->compileString('{{ random() }}');
@@ -1132,7 +1158,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		$compilation = file_get_contents('unit-tests/views/test10/children.volt.php');
 		$this->assertEquals($compilation, '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"><html lang="en"><html xmlns="http://www.w3.org/1999/xhtml"><head><style type="text/css">.important { color: #336699; }</style><title>Index - My Webpage</title></head><body><div id="content"><h1>Index</h1><p class="important">Welcome on my awesome homepage.</p></div><div id="footer">&copy; Copyright 2012 by <a href="http://domain.invalid/">you</a>.</div></body>');
 
-		//with blocks and two-ways blocks
+		//with blocks and two-way blocks
 		$volt->compile('unit-tests/views/test10/children2.volt');
 
 		$compilation = file_get_contents('unit-tests/views/test10/children2.volt.php');
@@ -1238,8 +1264,10 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		$volt->render('unit-tests/views/test10/index.volt', array('song' => 'Lights'), true);
 		$view->finish();
 
-		$this->assertTrue(file_exists('unit-tests/cache/unit-tests.views.test10.index.volt.compiled'));
-		$this->assertEquals(file_get_contents('unit-tests/cache/unit-tests.views.test10.index.volt.compiled'), 'Hello <?php echo $song; ?>!');
+		$path = 'unit-tests/cache/' . phalcon_prepare_virtual_path(realpath("unit-tests/"), ".") . '.views.test10.index.volt.compiled';
+
+		$this->assertTrue(file_exists($path));
+		$this->assertEquals(file_get_contents($path), 'Hello <?php echo $song; ?>!');
 		$this->assertEquals($view->getContent(), 'Hello Lights!');
 
 	}
@@ -1329,7 +1357,7 @@ Clearly, the song is: <?php echo $this->getContent(); ?>.
 		$view->render('test11', 'index');
 		$view->finish();
 
-		$this->assertEquals($view->getContent(), 'Length Array: 4Length Object: 4Length String: 5Length No String: 4Slice Array: 1,2,3,4Slice Array: 2,3Slice Array: 1,2,3Slice Object: 2,3,4Slice Object: 2,3Slice Object: 1,2Slice String: helSlice String: elSlice String: lloSlice No String: 123Slice No String: 23Slice No String: 34');
+		$this->assertEquals($view->getContent(), 'Length Array: 4Length Object: 4Length String: 5Length No String: 4Slice Array: 1,2,3,4Slice Array: 2,3Slice Array: 1,2,3Slice Object: 2,3,4Slice Object: 2Slice Object: 1Slice String: helSlice String: elSlice String: lloSlice No String: 123Slice No String: 23Slice No String: 34');
 	}
 
 }

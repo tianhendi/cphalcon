@@ -19,7 +19,12 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\Di\Injectable;
 use Phalcon\Mvc\View\Exception;
+use Phalcon\Mvc\ViewInterface;
+use Phalcon\Cache\BackendInterface;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Mvc\View\Engine\Php as PhpEngine;
 
 /**
  * Phalcon\Mvc\View
@@ -42,7 +47,7 @@ use Phalcon\Mvc\View\Exception;
  * echo $view->getContent();
  * </code>
  */
-class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
+class View extends Injectable implements ViewInterface
 {
 
 	/**
@@ -80,13 +85,22 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 */
 	const LEVEL_NO_RENDER = 0;
 
+	/**
+	 * Cache Mode
+	 *
+	 */
+	const CACHE_MODE_NONE = 0;
+	const CACHE_MODE_INVERSE = 1;
+
 	protected _options;
 
 	protected _basePath = "";
 
 	protected _content = "";
 
-	protected _renderLevel = 5;
+	protected _renderLevel = 5 { get };
+
+	protected _currentRenderLevel = 0 { get };
 
 	protected _disabledLevels;
 
@@ -106,7 +120,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 
 	protected _engines = false;
 
-	protected _registeredEngines;
+	protected _registeredEngines { get };
 
 	protected _mainView = "index";
 
@@ -131,7 +145,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @param array options
 	 */
-	public function __construct(options=null)
+	public function __construct(options = null)
 	{
 		if typeof options == "array" {
 			let this->_options = options;
@@ -144,7 +158,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string viewsDir
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setViewsDir(string viewsDir)
+	public function setViewsDir(string viewsDir) -> <View>
 	{
 		let this->_viewsDir = viewsDir;
 		return this;
@@ -170,7 +184,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string layoutsDir
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setLayoutsDir(string layoutsDir) -> <\Phalcon\Mvc\View>
+	public function setLayoutsDir(string layoutsDir) -> <View>
 	{
 		let this->_layoutsDir = layoutsDir;
 		return this;
@@ -196,7 +210,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string partialsDir
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setPartialsDir(string partialsDir) -> <\Phalcon\Mvc\View>
+	public function setPartialsDir(string partialsDir) -> <View>
 	{
 		let this->_partialsDir = partialsDir;
 		return this;
@@ -222,7 +236,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string basePath
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setBasePath(string basePath) -> <\Phalcon\Mvc\View>
+	public function setBasePath(string basePath) -> <View>
 	{
 		let this->_basePath = basePath;
 		return this;
@@ -239,10 +253,10 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param int level
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setRenderLevel(int level) -> <\Phalcon\Mvc\View>
+	public function setRenderLevel(int level) -> <View>
 	{
 		let this->_renderLevel = level;
-		return $this;
+		return this;
 	}
 
 	/**
@@ -256,7 +270,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param int|array level
 	 * @return Phalcon\Mvc\View
 	 */
-	public function disableLevel(level) -> <\Phalcon\Mvc\View>
+	public function disableLevel(var level) -> <View>
 	{
 		if typeof level == "array" {
 			let this->_disabledLevels = level;
@@ -277,7 +291,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string viewPath
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setMainView(string viewPath) -> <\Phalcon\Mvc\View>
+	public function setMainView(string viewPath) -> <View>
 	{
 		let this->_mainView = viewPath;
 		return this;
@@ -303,7 +317,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string layout
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setLayout(string layout) -> <\Phalcon\Mvc\View>
+	public function setLayout(string layout) -> <View>
 	{
 		let this->_layout = layout;
 		return this;
@@ -325,7 +339,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string|array templateBefore
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setTemplateBefore(templateBefore) -> <\Phalcon\Mvc\View>
+	public function setTemplateBefore(var templateBefore) -> <View>
 	{
 		if typeof templateBefore != "array" {
 			let this->_templatesBefore = [templateBefore];
@@ -340,7 +354,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function cleanTemplateBefore() -> <\Phalcon\Mvc\View>
+	public function cleanTemplateBefore() -> <View>
 	{
 		let this->_templatesBefore = null;
 		return this;
@@ -352,7 +366,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string|array templateAfter
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setTemplateAfter(templateAfter) -> <\Phalcon\Mvc\View>
+	public function setTemplateAfter(var templateAfter) -> <View>
 	{
 		if typeof templateAfter != "array" {
 			let this->_templatesAfter = [templateAfter];
@@ -367,7 +381,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function cleanTemplateAfter() -> <\Phalcon\Mvc\View>
+	public function cleanTemplateAfter() -> <View>
 	{
 		let this->_templatesAfter = null;
 		return this;
@@ -384,10 +398,10 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param mixed value
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setParamToView(string! key, value) -> <\Phalcon\Mvc\View>
+	public function setParamToView(string! key, value) -> <View>
 	{
 		let this->_viewParams[key] = value;
-		return $this;
+		return this;
 	}
 
 	/**
@@ -401,13 +415,9 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param boolean merge
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setVars(params, boolean merge=true) -> <\Phalcon\Mvc\View>
+	public function setVars(array! params, boolean merge = true) -> <View>
 	{
 		var viewParams;
-
-		if typeof params != "array" {
-			throw new Exception("The render parameters must be an array");
-		}
 
 		if merge {
 			let viewParams = this->_viewParams;
@@ -434,7 +444,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param mixed value
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setVar(string! key, value) -> <\Phalcon\Mvc\View>
+	public function setVar(string! key, value) -> <View>
 	{
 		let this->_viewParams[key] = value;
 		return this;
@@ -501,7 +511,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
      *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function start() -> <\Phalcon\Mvc\View>
+	public function start() -> <View>
 	{
 		ob_start();
 		let this->_content = null;
@@ -513,7 +523,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return array
 	 */
-	protected function _loadTemplateEngines()
+	protected function _loadTemplateEngines() -> array
 	{
 		var engines, dependencyInjector, registeredEngines, arguments,
 			engineService, extension;
@@ -534,7 +544,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 				/**
 				 * We use Phalcon\Mvc\View\Engine\Php as default
 				 */
-				let engines[".phtml"] = new \Phalcon\Mvc\View\Engine\Php(this, dependencyInjector);
+				let engines[".phtml"] = new PhpEngine(this, dependencyInjector);
 			} else {
 
 				if typeof dependencyInjector != "object" {
@@ -582,9 +592,9 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string viewPath
 	 * @param boolean silence
 	 * @param boolean mustClean
-	 * @param mixed cache
+	 * @param Phalcon\Cache\BackendInterface $cache
 	 */
-	protected function _engineRender(engines, string viewPath, boolean silence, boolean mustClean, cache)
+	protected function _engineRender(engines, string viewPath, boolean silence, boolean mustClean, <BackendInterface> cache = null)
 	{
 		boolean notExists;
 		int renderLevel, cacheLevel;
@@ -598,19 +608,18 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			viewsDirPath = basePath . viewsDir . viewPath;
 
 		if typeof cache == "object" {
-
 			let renderLevel = (int) this->_renderLevel,
 				cacheLevel = (int) this->_cacheLevel;
 
 			if renderLevel >= cacheLevel {
 
 				/**
-				 * Check if the cache is started, the first time a cache is started we start the cache
+				 * Check if the cache is started, the first time a cache is started we start the
+				 * cache
 				 */
-				if cache->isStarted() === false {
+				if cache->isStarted() == false {
 
-					let key = null,
-						lifetime = null;
+					let key = null, lifetime = null;
 
 					let viewOptions = this->_options;
 
@@ -653,7 +662,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 		}
 
 		let viewParams = this->_viewParams,
-			eventsManager = <\Phalcon\Events\Manager> this->_eventsManager;;
+			eventsManager = <ManagerInterface> this->_eventsManager;
 
 		/**
 		 * Views are rendered in each engine
@@ -707,22 +716,53 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 *<code>
 	 *$this->view->registerEngines(array(
-     *  ".phtml" => "Phalcon\Mvc\View\Engine\Php",
-     *  ".volt"  => "Phalcon\Mvc\View\Engine\Volt",
-     *  ".mhtml" => "MyCustomEngine"
-     *));
-     *</code>
+	 *  ".phtml" => "Phalcon\Mvc\View\Engine\Php",
+	 *  ".volt"  => "Phalcon\Mvc\View\Engine\Volt",
+	 *  ".mhtml" => "MyCustomEngine"
+	 *));
+	 *</code>
 	 *
 	 * @param array engines
 	 * @return Phalcon\Mvc\View
 	 */
-	public function registerEngines(engines) -> <\Phalcon\Mvc\View>
+	public function registerEngines(array! engines) -> <View>
 	{
-		if typeof engines != "array" {
-			throw new Exception("Engines to register must be an array");
-		}
 		let this->_registeredEngines = engines;
 		return this;
+	}
+
+	/**
+	 * Checks whether view exists
+	 *
+	 * @param string view
+	 * @return bolean
+	 */
+	public function exists(string! view) -> boolean
+	{
+		var basePath, viewsDir, engines, engine, extension;
+		boolean exists;
+
+		let basePath = this->_basePath,
+			viewsDir = this->_viewsDir,
+			engines = this->_registeredEngines;
+
+		if typeof engines != "array" {
+			let engines = [],
+				engines[".phtml"] = "Phalcon\\Mvc\\View\\Engine\\Php",
+				this->_registeredEngines = engines;
+		}
+
+		let exists = false;
+		for extension, engine in engines {
+
+			let exists = (boolean) file_exists(basePath . viewsDir . view . extension);
+
+			if exists {
+				break;
+			}
+		}
+
+		return exists;
 	}
 
 	/**
@@ -738,22 +778,23 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param array params
 	 * @return Phalcon\Mvc\View
 	 */
-	public function render(string! controllerName, string! actionName, params=null)
-		-> <\Phalcon\Mvc\View>
+	public function render(string! controllerName, string! actionName, params = null) -> <View>|boolean
 	{
 		boolean silence, mustClean;
-		int cacheLevel, renderLevel;
+		int renderLevel;
 		var layoutsDir, layout, pickView, layoutName,
-			engines, renderView, pickViewAction, cache, eventsManager,
+			engines, renderView, pickViewAction, eventsManager,
 			disabledLevels, templatesBefore, templatesAfter,
-			templateBefore, templateAfter;
+			templateBefore, templateAfter, cache;
+
+		let this->_currentRenderLevel = 0;
 
 		/**
 		 * If the view is disabled we simply update the buffer from any output produced in the controller
 		 */
-		if this->_disabled !== false {
+		if this->_disabled != false {
 			let this->_content = ob_get_contents();
-			return this;
+			return false;
 		}
 
 		let this->_controllerName = controllerName,
@@ -801,17 +842,16 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			}
 		}
 
-		let cache = null;
-
 		/**
 		 * Start the cache if there is a cache level enabled
 		 */
-		let cacheLevel = (int) this->_cacheLevel;
-		if cacheLevel {
+		if this->_cacheLevel {
 			let cache = this->getCache();
+		} else {
+			let cache = null;
 		}
 
-		let eventsManager = this->_eventsManager;
+		let eventsManager = <ManagerInterface> this->_eventsManager;
 
 		/**
 		 * Create a virtual symbol table
@@ -823,7 +863,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 		 */
 		if typeof eventsManager == "object" {
 			if eventsManager->fire("view:beforeRender", this) === false {
-				return this;
+				return false;
 			}
 		}
 
@@ -851,6 +891,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			 */
 			if renderLevel >= self::LEVEL_ACTION_VIEW {
 				if !isset disabledLevels[self::LEVEL_ACTION_VIEW] {
+					let this->_currentRenderLevel = self::LEVEL_ACTION_VIEW;
 					this->_engineRender(engines, renderView, silence, mustClean, cache);
 				}
 			}
@@ -860,8 +901,8 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			 */
 			if renderLevel >= self::LEVEL_BEFORE_TEMPLATE  {
 				if !isset disabledLevels[self::LEVEL_BEFORE_TEMPLATE] {
-
-					let templatesBefore = this->_templatesBefore;
+					let this->_currentRenderLevel = self::LEVEL_BEFORE_TEMPLATE,
+						templatesBefore = this->_templatesBefore;
 
 					/**
 					 * Templates before must be an array
@@ -881,6 +922,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			 */
 			if renderLevel >= self::LEVEL_LAYOUT {
 				if !isset disabledLevels[self::LEVEL_LAYOUT] {
+					let this->_currentRenderLevel = self::LEVEL_LAYOUT;
 					this->_engineRender(engines, layoutsDir . layoutName, silence, mustClean, cache);
 				}
 			}
@@ -890,6 +932,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			 */
 			if renderLevel >= self::LEVEL_AFTER_TEMPLATE {
 				if !isset disabledLevels[self::LEVEL_AFTER_TEMPLATE] {
+					let this->_currentRenderLevel = self::LEVEL_AFTER_TEMPLATE;
 
 					/**
 					 * Templates after must be an array
@@ -910,16 +953,19 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 			 */
 			if renderLevel >= self::LEVEL_MAIN_LAYOUT {
 				if !isset disabledLevels[self::LEVEL_MAIN_LAYOUT] {
+					let this->_currentRenderLevel = self::LEVEL_MAIN_LAYOUT;
 					this->_engineRender(engines, this->_mainView, silence, mustClean, cache);
 				}
 			}
+
+			let this->_currentRenderLevel = 0;
 
 			/**
 			 * Store the data in the cache
 			 */
 			if typeof cache == "object" {
-				if cache->isStarted() === true {
-					if cache->isFresh() === true {
+				if cache->isStarted() == true {
+					if cache->isFresh() == true {
 						cache->save();
 					} else {
 						cache->stop();
@@ -928,7 +974,6 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 					cache->stop();
 				}
 			}
-
 		}
 
 		/**
@@ -962,7 +1007,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string|array renderView
 	 * @return Phalcon\Mvc\View
 	 */
-	public function pick(var renderView) -> <\Phalcon\Mvc\View>
+	public function pick(var renderView) -> <View>
 	{
 		var pickView, layout, parts;
 
@@ -1001,7 +1046,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string partialPath
 	 * @param array params
 	 */
-	public function partial(string! partialPath, params=null)
+	public function partial(string! partialPath, params = null)
 	{
 		var viewParams;
 
@@ -1031,7 +1076,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 		 * We need to check if the engines are loaded first, this method could be called outside of 'render'
 		 * Call engine render, this checks in every registered engine for the partial
 		 */
-		this->_engineRender(this->_loadTemplateEngines(), this->_partialsDir . partialPath, false, false, false);
+		this->_engineRender(this->_loadTemplateEngines(), this->_partialsDir . partialPath, false, false);
 
 		/**
 		 * Now we need to restore the original view parameters
@@ -1111,7 +1156,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function finish()
+	public function finish() -> <View>
 	{
 		ob_end_clean();
 		return this;
@@ -1122,7 +1167,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Cache\BackendInterface
 	 */
-	protected function _createCache() -> <\Phalcon\Cache\BackendInterface>
+	protected function _createCache() -> <BackendInterface>
 	{
 		var dependencyInjector, cacheService, viewCache,
 			viewOptions, cacheOptions;
@@ -1146,7 +1191,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 		/**
 		 * The injected service must be an object
 		 */
-		let viewCache = <\Phalcon\Cache\BackendInterface> dependencyInjector->getShared(cacheService);
+		let viewCache = <BackendInterface> dependencyInjector->getShared(cacheService);
 		if typeof viewCache != "object" {
 			throw new Exception("The injected caching service is invalid");
 		}
@@ -1169,7 +1214,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Cache\BackendInterface
 	 */
-	public function getCache() -> <\Phalcon\Cache\BackendInterface>
+	public function getCache() -> <BackendInterface>
 	{
 		var cache;
 		let cache = this->_cache;
@@ -1195,7 +1240,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param boolean|array options
 	 * @return Phalcon\Mvc\View
 	 */
-	public function cache(var options=true) -> <\Phalcon\Mvc\View>
+	public function cache(var options = true) -> <View>
 	{
 		var viewOptions, cacheOptions, key, value, cacheLevel;
 
@@ -1253,7 +1298,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 * @param string content
 	 * @return Phalcon\Mvc\View
 	 */
-	public function setContent(string content) -> <\Phalcon\Mvc\View>
+	public function setContent(string content) -> <View>
 	{
 		let this->_content = content;
 		return this;
@@ -1284,7 +1329,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function disable() -> <\Phalcon\Mvc\View>
+	public function disable() -> <View>
 	{
 		let this->_disabled = true;
 		return this;
@@ -1295,7 +1340,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function enable() -> <\Phalcon\Mvc\View>
+	public function enable() -> <View>
 	{
 		let this->_disabled = false;
 		return this;
@@ -1306,7 +1351,7 @@ class View extends \Phalcon\Di\Injectable implements \Phalcon\Mvc\ViewInterface
 	 *
 	 * @return Phalcon\Mvc\View
 	 */
-	public function reset() -> <\Phalcon\Mvc\View>
+	public function reset() -> <View>
 	{
 		let this->_disabled = false,
 			this->_engines = false,

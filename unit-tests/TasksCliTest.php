@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -44,14 +44,17 @@ class TasksCliTest extends PHPUnit_Framework_TestCase
 
 		$di = new \Phalcon\DI\FactoryDefault\CLI();
 
-		$di->set('data', function(){
-			return "data";
-		});
+		$di['registry'] = function()
+		{
+			$registry = new \Phalcon\Registry;
+			$registry->data = 'data';
+			return $registry;
+		};
 
 		$task = new MainTask();
 		$task->setDI($di);
 
-		$this->assertEquals($task->requestDiAction(), 'data');
+		$this->assertEquals($task->requestRegistryAction(), 'data');
 		$this->assertEquals($task->helloAction(), 'Hello !');
 		$this->assertEquals($task->helloAction('World'), 'Hello World!');
 

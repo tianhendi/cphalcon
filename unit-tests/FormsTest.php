@@ -4,7 +4,7 @@
 	+------------------------------------------------------------------------+
 	| Phalcon Framework                                                      |
 	+------------------------------------------------------------------------+
-	| Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+	| Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
 	+------------------------------------------------------------------------+
 	| This source file is subject to the New BSD License that is bundled     |
 	| with this package in the file docs/LICENSE.txt.                        |
@@ -22,6 +22,7 @@ use
 	Phalcon\Forms\Form,
 	Phalcon\Forms\Element\Text,
 	Phalcon\Forms\Element\Select,
+	Phalcon\Forms\Element\Radio,
 	Phalcon\Validation\Validator\PresenceOf,
 	Phalcon\Validation\Validator\StringLength,
 	Phalcon\Validation\Validator\Regex;
@@ -166,8 +167,12 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$element1 = new Text("name");
 		$element1->setAttributes(array('class' => 'big-input'));
 
-		$this->assertEquals($element1->render(), '<input type="text" class="big-input" name="name" id="name" value="" />');
-		$this->assertEquals((string) $element1, '<input type="text" class="big-input" name="name" id="name" value="" />');
+		$element2 = new Radio('radio');
+		$element2->setAttributes(array('value' => 0));
+
+		$this->assertEquals('<input type="text" id="name" name="name" class="big-input" />', $element1->render());
+		$this->assertEquals('<input type="text" id="name" name="name" class="big-input" />', (string) $element1);
+		$this->assertEquals('<input type="radio" id="radio" name="radio" value="0" />', (string)$element2);
 	}
 
 	public function testForm()
@@ -190,8 +195,8 @@ class FormsTest extends PHPUnit_Framework_TestCase
 
 		$form->add(new Text("name"));
 
-		$this->assertEquals($form->render('name'), '<input type="text" name="name" id="name" value="" />');
-		$this->assertEquals($form->render('name', array('class' => 'big-input')), '<input type="text" class="big-input" name="name" id="name" value="" />');
+		$this->assertEquals($form->render('name'), '<input type="text" id="name" name="name" />');
+		$this->assertEquals($form->render('name', array('class' => 'big-input')), '<input type="text" id="name" name="name" class="big-input" />');
 	}
 
 	public function testFormLabels()
@@ -228,7 +233,7 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$telephone->addValidators(array(
 			new StringLength(array(
 				'min' => 5,
-				'minimumMessage' => 'The telephone is too short'
+				'messageMinimum' => 'The telephone is too short'
 			)),
 			new Regex(array(
 				'pattern' => '/\+44 [0-9]+ [0-9]+/',
@@ -261,21 +266,25 @@ class FormsTest extends PHPUnit_Framework_TestCase
 						'_type' => 'PresenceOf',
 						'_message' => 'The telephone is required',
 						'_field' => 'telephone',
+						'_code' => 0,
 					)),
 					1 => Phalcon\Validation\Message::__set_state(array(
 						'_type' => 'TooShort',
-						'_message' => 'Value of field \'telephone\' is less than the minimum 5 characters',
+						'_message' => 'The telephone is too short',
 						'_field' => 'telephone',
+						'_code' => 0,
 					)),
 					2 => Phalcon\Validation\Message::__set_state(array(
 						'_type' => 'Regex',
 						'_message' => 'The telephone has an invalid format',
 						'_field' => 'telephone',
+						'_code' => 0,
 					)),
 					3 => Phalcon\Validation\Message::__set_state(array(
 						'_type' => 'PresenceOf',
 						'_message' => 'The address is required',
 						'_field' => 'address',
+						'_code' => 0,
 					)),
 				),
 			)
@@ -294,6 +303,7 @@ class FormsTest extends PHPUnit_Framework_TestCase
 					'_type' => 'Regex',
 					'_message' => 'The telephone has an invalid format',
 					'_field' => 'telephone',
+					'_code' => 0,
 				)),
 			),
 		));
@@ -326,8 +336,8 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$form->add($address);
 		$form->add($telephone);
 
-		$this->assertEquals($form->render('address'), '<input type="text" value="Cr. 12 #12-82" name="address" id="address" />');
-		$this->assertEquals($form->render('telephone'), '<input type="text" value="+44 124 82122" name="telephone" id="telephone" />');
+		$this->assertEquals($form->render('address'), '<input type="text" id="address" name="address" value="Cr. 12 #12-82" />');
+		$this->assertEquals($form->render('telephone'), '<input type="text" id="telephone" name="telephone" value="+44 124 82122" />');
 	}
 
 	public function testFormRenderEntityGetters()
@@ -350,8 +360,8 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$form->add($address);
 		$form->add($telephone);
 
-		$this->assertEquals($form->render('address'), '<input type="text" value="Cr. 12 #12-82" name="address" id="address" />');
-		$this->assertEquals($form->render('telephone'), '<input type="text" value="+44 124 82122" name="telephone" id="telephone" />');
+		$this->assertEquals($form->render('address'), '<input type="text" id="address" name="address" value="Cr. 12 #12-82" />');
+		$this->assertEquals($form->render('telephone'), '<input type="text" id="telephone" name="telephone" value="+44 124 82122" />');
 	}
 
 	public function testFormValidatorEntity()
@@ -446,5 +456,65 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($entity->getAddress(), 'hello');
 	}
 
-}
+	public function testIssues1029()
+	{
+		$form = new Form();
+		$form->add(new Text("name"));
 
+		$telephone = new Text("telephone");
+		$telephone->setLabel("The Telephone");
+
+		$form->add($telephone);
+
+		$this->assertEquals($form->label('name', array('class' => 'form-control')), '<label for="name" class="form-control">name</label>');
+		$this->assertEquals($form->label('telephone', array('class' => 'form-control')), '<label for="telephone" class="form-control">The Telephone</label>');
+	}
+
+	public function testIssue1190()
+	{
+		$object = new stdClass();
+		$object->title = 'Hello "world!"';
+
+		$form = new Phalcon\Forms\Form($object);
+		$form->add(new Phalcon\Forms\Element\Text("title"));
+		$actual   = $form->render('title');
+		$expected = '<input type="text" id="title" name="title" value="Hello &quot;world!&quot;" />';
+		$this->assertEquals($actual, $expected);
+	}
+
+	public function testIssue1210()
+	{
+		$e = new \Phalcon\Forms\Element\Text('test');
+		$e->setLabel('Test');
+		$actual   = $e->label();
+		$expected = '<label for="test">Test</label>';
+		$this->assertEquals($actual, $expected);
+	}
+
+	public function testIssue706()
+	{
+		$form = new \Phalcon\Forms\Form();
+		$form->add(new \Phalcon\Forms\Element\Text('name'));
+
+		$form->add(new \Phalcon\Forms\Element\Text('before'), 'name', true);
+		$form->add(new \Phalcon\Forms\Element\Text('after'), 'name');
+
+		$data = array('before', 'name', 'after');
+		$result = array();
+
+		foreach ($form as $element) {
+			$result[] = $element->getName();
+		}
+
+		$this->assertEquals($result, $data);
+	}
+
+	public function testIssue2045()
+	{
+		$element = new \Phalcon\Forms\Element\Text("name");
+		$element->setAttributes(array('class' => 'big-input'));
+		$element->setAttribute("id", NULL);
+
+		$this->assertEquals('<input type="text" name="name" class="big-input" />', $element->render());
+	}
+}

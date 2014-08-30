@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -32,8 +32,8 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 
 	public function modelsAutoloader($className)
 	{
-		if (file_exists('unit-tests/models/'.$className.'.php')) {
-			require 'unit-tests/models/'.$className.'.php';
+		if (file_exists('unit-tests/models/' . $className . '.php')) {
+			require 'unit-tests/models/' . $className . '.php';
 		}
 	}
 
@@ -59,6 +59,9 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 		return $di;
 	}
 
+	/**
+	 * @large
+	 */
 	public function testTransactionsMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -77,6 +80,9 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 		$this->_executeTests($di);
 	}
 
+	/**
+	 * @large
+	 */
 	public function testTransactionsPostgresql()
 	{
 		require 'unit-tests/config.db.php';
@@ -95,6 +101,9 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 		$this->_executeTests($di);
 	}
 
+	/**
+	 * @large
+	 */
 	public function testTransactionsSqlite()
 	{
 		require 'unit-tests/config.db.php';
@@ -134,15 +143,15 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 			$this->assertNotEquals($transaction1->getConnection()->getConnectionId(), $connection->getConnectionId());
 
 			$p = 100;
-			for ($i=0; $i<10; $i++) {
+			for ($i = 0; $i < 10; $i++) {
 				$persona = new Personas($di);
 				$persona->setTransaction($transaction1);
-				$persona->cedula = 'T-Cx'.$i;
+				$persona->cedula            = 'T-Cx' . $i;
 				$persona->tipo_documento_id = 1;
-				$persona->nombres = 'LOST LOST';
-				$persona->telefono = '2';
-				$persona->cupo = 0;
-				$persona->estado = 'A';
+				$persona->nombres           = 'LOST LOST';
+				$persona->telefono          = '2';
+				$persona->cupo              = 0;
+				$persona->estado            = 'A';
 				$this->assertTrue($persona->save());
 				$p++;
 			}
@@ -157,7 +166,7 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 			$this->assertTrue(true);
 		}
 
-		//Now we check if the records was correctly rolledbacked
+		//Now we check if the records was correctly rolled back
 		$rollbackNumPersonas = Personas::count();
 		$this->assertEquals($numPersonas, $rollbackNumPersonas);
 
@@ -171,7 +180,7 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 			$this->assertNotEquals($transaction1->getConnection()->getConnectionId(), $transaction2->getConnection()->getConnectionId());
 
 			$p = 200;
-			for ($i=0; $i<15; $i++) {
+			for ($i = 0; $i < 15; $i++) {
 				$persona = new Personas($di);
 				$persona->setTransaction($transaction2);
 				$persona->cedula = 'T-Cx'.$p;
@@ -188,10 +197,9 @@ class ModelsTransactionsTest extends PHPUnit_Framework_TestCase {
 			$transaction2->commit();
 
 			$commitNumPersonas = Personas::count();
-			$this->assertEquals($commitNumPersonas, $numPersonas+15);
+			$this->assertEquals($commitNumPersonas, $numPersonas + 15);
 
-		}
-		catch(Phalcon\Mvc\Model\Transaction\Failed $e){
+		} catch (Phalcon\Mvc\Model\Transaction\Failed $e) {
 			$this->assertTrue(FALSE, 'oh, Why?');
 		}
 

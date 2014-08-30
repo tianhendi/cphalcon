@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -21,14 +21,14 @@
 /**
  * Adapter to use Mustache library as templating engine
  */
-class My_Mustache_Engine extends \Phalcon\Mvc\View\Engine
+class My_Mustache_Engine extends \Phalcon\Mvc\View\Engine implements \Phalcon\Mvc\View\EngineInterface
 {
 
 	protected $_mustache;
 
 	protected $_params;
 
-	public function __construct(Phalcon\Mvc\View $view, Phalcon\DI $di)
+	public function __construct($view, $di = null)
 	{
 		$this->_mustache = new Mustache_Engine();
 		parent::__construct($view, $di);
@@ -53,12 +53,12 @@ class My_Mustache_Engine extends \Phalcon\Mvc\View\Engine
 /**
  * Adapter to use Twig library as templating engine
  */
-class My_Twig_Engine extends \Phalcon\Mvc\View\Engine
+class My_Twig_Engine extends \Phalcon\Mvc\View\Engine implements \Phalcon\Mvc\View\EngineInterface
 {
 
 	protected $_twig;
 
-	public function __construct(Phalcon\Mvc\View $view, Phalcon\DI $di)
+	public function __construct($view, $di = null)
 	{
 		$loader = new Twig_Loader_Filesystem($view->getViewsDir());
 		$this->_twig = new Twig_Environment($loader);
@@ -118,6 +118,24 @@ class ViewEnginesTest extends PHPUnit_Framework_TestCase
 			}
 		}
 		return true;
+	}
+
+	public function testGetRegisteredEngines()
+	{
+		$expected = array(
+			'.mhtml' => 'My_Mustache_Engine',
+			'.phtml' => 'Phalcon\Mvc\View\Engine\Php',
+			'.twig'  => 'My_Twig_Engine',
+			'.volt'  => 'Phalcon\Mvc\View\Engine\Volt',
+		);
+
+		$di   = new Phalcon\DI();
+		$view = new Phalcon\Mvc\View();
+		$view->setDI($di);
+		$view->setViewsDir('unit-tests/views/');
+
+		$view->registerEngines($expected);
+		$this->assertEquals($expected, $view->getRegisteredEngines());
 	}
 
 	public function testMustacheEngine()

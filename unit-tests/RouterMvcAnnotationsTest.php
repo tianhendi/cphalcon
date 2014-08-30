@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -170,6 +170,7 @@ class RouterMvcAnnotationsTest extends PHPUnit_Framework_TestCase
 			$this->assertEquals($router->getControllerName(), $route['controller']);
 			$this->assertEquals($router->getActionName(), $route['action']);
 			$this->assertEquals($router->getParams(), $route['params']);
+			$this->assertEquals($router->isExactControllerName(), true);
 		}
 	}
 

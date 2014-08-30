@@ -80,9 +80,11 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	 * @param string name
 	 * @param string|array filters
 	 * @param mixed defaultValue
+	 * @param boolean notAllowEmpty
+	 * @param boolean noRecursive
 	 * @return mixed
 	 */
-	public function get(string! name=null, filters=null, defaultValue=null)
+	public function get(string! name=null, filters=null, defaultValue=null, notAllowEmpty=false, noRecursive=false)
 	{
 		var request, value, filter, dependencyInjector;
 
@@ -99,8 +101,21 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 						let filter = <\Phalcon\Filter> dependencyInjector->getShared("filter");
 						let this->_filter = filter;
 					}
-					return filter->sanitize(value, filters);
+
+					let value = filter->sanitize(value, filters, noRecursive);
+
+					if (empty(value) && notAllowEmpty === true) || value === false {
+						return defaultValue;
+					}
+
+					return value;
+
 				} else {
+
+				 	if (empty(value) && notAllowEmpty === true) {
+				 		return defaultValue;
+				 	}
+
 					return value;
 				}
 			}
@@ -124,9 +139,11 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	 * @param string name
 	 * @param string|array filters
 	 * @param mixed defaultValue
+	 * @param boolean notAllowEmpty
+	 * @param boolean noRecursive
 	 * @return mixed
 	 */
-	public function getPost(string! name=null, filters=null, defaultValue=null)
+	public function getPost(string! name=null, filters=null, defaultValue=null, notAllowEmpty=false, noRecursive=false)
 	{
 		var post, value, filter, dependencyInjector;
 
@@ -143,9 +160,23 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 						let filter = <\Phalcon\Filter> dependencyInjector->getShared("filter");
 						let this->_filter = filter;
 					}
-					return filter->sanitize(value, filters);
-				} else {
+
+					let value = filter->sanitize(value, filters, noRecursive);
+
+					if (empty(value) && notAllowEmpty === true) {
+						return defaultValue;
+					}
+
 					return value;
+
+				} else {
+
+				 	if (empty(value) && notAllowEmpty === true) {
+				 		return defaultValue;
+				 	}
+
+					return value;
+
 				}
 			}
 			return defaultValue;
@@ -171,9 +202,11 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	 * @param string name
 	 * @param string|array filters
 	 * @param mixed defaultValue
+	 * @param boolean notAllowEmpty
+	 * @param boolean noRecursive
 	 * @return mixed
 	 */
-	public function getQuery(string! name=null, filters=null, defaultValue=null)
+	public function getQuery(string! name=null, filters=null, defaultValue=null, notAllowEmpty=false, noRecursive=false)
 	{
 		var get, value, filter, dependencyInjector;
 
@@ -190,8 +223,21 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 						let filter = <\Phalcon\Filter> dependencyInjector->getShared("filter");
 						let this->_filter = filter;
 					}
-					return filter->sanitize(value, filters);
+
+					let value = filter->sanitize(value, filters, noRecursive);
+
+					if (empty(value) && notAllowEmpty === true) {
+						return defaultValue;
+					}
+
+					return value;
+
 				} else {
+
+					if (empty(value) && notAllowEmpty === true) {
+						return defaultValue;
+					}
+
 					return value;
 				}
 			}
@@ -691,49 +737,84 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	 */
 	public function getUploadedFiles(boolean notErrored=false) -> <Phalcon\Http\Request\File[]>
 	{
-		var superFiles, file, files, error, subFiles, subFile;
+		var superFiles, prefix, input, smoothInput, files, file, dataFile;
 
 		let superFiles = _FILES;
-		if count(superFiles) {
-			let files = [];
-			for file in superFiles {
-				if notErrored {
-					if typeof file["name"] == "array" {
-						let subFiles = [];
-						for subFile in file {
-							if !fetch error, subFile["error"] {
-								let error = true;
-							}
-							if !error {
-								let subFiles[] = new \Phalcon\Http\Request\File(subFile);
-							}
-						}
-						let files[] = subFiles;
-					} else {
-						if !fetch error, file["error"] {
-							let error = true;
-						}
-						if !error {
-							let files[] = new \Phalcon\Http\Request\File(file);
+
+		let files = [];
+
+		if (count(superFiles) > 0) {
+
+			for prefix, input in superFiles {
+				if (typeof input["name"] == "array") {
+					let smoothInput = this->smoothFiles(input["name"], input["type"], input["tmp_name"], input["size"], input["error"], prefix);
+
+					for file in smoothInput {
+						if (notErrored == false || file["error"] == UPLOAD_ERR_OK) {
+							let dataFile = [
+								"name": file["name"],
+								"type": file["type"],
+								"tmp_name": file["tmp_name"],
+								"size": file["size"],
+								"error": file["error"]
+							];
+
+							let files[] = new \Phalcon\Http\Request\File(dataFile, file["key"]);
 						}
 					}
 				} else {
-					if typeof file["name"] == "array" {
-						let subFiles = [];
-						for subFile in file {
-							let subFiles[] = new \Phalcon\Http\Request\File(subFile);
-						}
-						let files[] = subFiles;
-					} else {
-						let files[] = new \Phalcon\Http\Request\File(file);
+					if (notErrored == false || input["error"] == UPLOAD_ERR_OK) {
+						let files[] = new \Phalcon\Http\Request\File(input, prefix);
 					}
 				}
 			}
-			return files;
 		}
-		return [];
+
+		return files;
 	}
 
+	/**
+	 * smooth out $_FILES to have plain array with all files uploaded
+	 *
+	 * @param array names
+	 * @param array types
+	 * @param array tmp_names
+	 * @param array sizes
+	 * @param array errors
+	 * @return array
+	 */
+	protected function smoothFiles(array! names, array! types, array! tmp_names, array! sizes, array! errors, string prefix) -> array
+	{
+		var idx, name, file, files, parentFiles, p;
+
+		let files = [];
+
+		for idx, name in names {
+			let p = prefix . "." . idx;
+
+			if typeof name == "string" {
+
+				let files[] = [
+					"name": name,
+					"type": types[idx],
+					"tmp_name": tmp_names[idx],
+					"size": sizes[idx],
+					"error": errors[idx],
+					"key": p
+				];
+			}
+
+			if typeof name == "array" {
+				let parentFiles = this->smoothFiles(names[idx], types[idx], tmp_names[idx], sizes[idx], errors[idx], p);
+
+				for file in parentFiles {
+					let files[] = file;
+				}
+			}
+		}
+
+		return files;
+	}
 	/**
 	 * Returns the available headers in the request
 	 *
@@ -773,7 +854,7 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	 * @param string name
 	 * @return array
 	 */
-	protected function _getQualityHeader(string! serverIndex, string! name) -> string
+	protected function _getQualityHeader(string! serverIndex, string! name) -> array
 	{
 		double quality;
 		var returnedParts, part, headerParts, qualityPart;
@@ -791,7 +872,7 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 			let returnedParts[] = [
 				name      : headerParts[0],
 				"quality" : quality
-			];;
+			];
 		}
 		return returnedParts;
 	}
@@ -842,9 +923,9 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	/**
 	 * Gets best mime/type accepted by the browser/client from _SERVER["HTTP_ACCEPT"]
 	 *
-	 * @return array
+	 * @return string
 	 */
-	public function getBestAccept()
+	public function getBestAccept() -> string
 	{
 		return this->_getBestQuality(this->getAcceptableContent(), "accept");
 	}
@@ -874,7 +955,7 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 	 *
 	 * @return array
 	 */
-	public function getLanguages()
+	public function getLanguages() -> array
 	{
 		return this->_getQualityHeader("HTTP_ACCEPT_LANGUAGE", "language");
 	}
@@ -920,7 +1001,7 @@ class Request implements \Phalcon\Http\RequestInterface, \Phalcon\Di\InjectionAw
 		array auth;
 
 		let auth = [];
-		if fetch digest, _SERVER["PHP_AUTH_USER"] {
+		if fetch digest, _SERVER["PHP_AUTH_DIGEST"] {
 			let matches = [];
 			if !preg_match_all("#(\\w+)=(['\"]?)([^'\" ,]+)\\2#", digest, matches, 2) {
 				return auth;

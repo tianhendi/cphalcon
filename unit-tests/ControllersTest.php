@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -39,7 +39,9 @@ class ControllersTest extends PHPUnit_Framework_TestCase
 			return new Phalcon\Filter();
 		});
 
-		require 'unit-tests/controllers/Test4Controller.php';
+		if (!class_exists('Test4Controller', false)) {
+			require __DIR__ . '/controllers/Test4Controller.php';
+		}
 
 		$controller = new Test4Controller();
 		$controller->setDI($di);
@@ -51,7 +53,6 @@ class ControllersTest extends PHPUnit_Framework_TestCase
 
 		$controller->viewAction();
 		$this->assertEquals(count($view->getParamsToView()), 1);
-
 	}
 
 }

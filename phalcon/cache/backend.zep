@@ -19,6 +19,8 @@
 
 namespace Phalcon\Cache;
 
+use Phalcon\Cache\FrontendInterface;
+
 /**
  * Phalcon\Cache\Backend
  *
@@ -27,13 +29,13 @@ namespace Phalcon\Cache;
 abstract class Backend
 {
 
-	protected _frontend {get, set};
+	protected _frontend { get, set };
 
-	protected _options {get, set};
+	protected _options { get, set };
 
 	protected _prefix = "";
 
-	protected _lastKey = "" {get, set};
+	protected _lastKey = "" { get, set };
 
 	protected _lastLifetime = null;
 
@@ -47,7 +49,7 @@ abstract class Backend
 	 * @param	Phalcon\Cache\FrontendInterface frontend
 	 * @param	array options
 	 */
-	public function __construct(<\Phalcon\Cache\FrontendInterface> frontend, options=null)
+	public function __construct(<FrontendInterface> frontend, options = null)
 	{
 		var prefix;
 
@@ -65,11 +67,11 @@ abstract class Backend
 	/**
 	 * Starts a cache. The keyname allows to identify the created fragment
 	 *
-	 * @param int|string keyName
+	 * @param   int|string keyName
 	 * @param   long lifetime
 	 * @return  mixed
 	 */
-	public function start(var keyName, lifetime=null)
+	public function start(var keyName, lifetime = null)
 	{
 		var existingCache, fresh;
 
@@ -102,7 +104,7 @@ abstract class Backend
 	 *
 	 * @param boolean stopBuffer
 	 */
-	public function stop(boolean stopBuffer=true)
+	public function stop(boolean stopBuffer = true) -> void
 	{
 		if stopBuffer === true {
 			this->_frontend->stop();
@@ -115,7 +117,7 @@ abstract class Backend
 	 *
 	 * @return boolean
 	 */
-	public function isFresh()
+	public function isFresh() -> boolean
 	{
 		return this->_fresh;
 	}
@@ -125,7 +127,7 @@ abstract class Backend
 	 *
 	 * @return boolean
 	 */
-	public function isStarted()
+	public function isStarted() -> boolean
 	{
 		return this->_started;
 	}

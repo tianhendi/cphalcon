@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -76,6 +76,20 @@ class PHPUnit_Framework_TestCase
 	{
 		if (!$a) {
 			throw new Exception('Not true');
+		}
+	}
+
+	public function assertCount($cnt, $a)
+	{
+		if (count($a) != $cnt) {
+			throw new Exception('count');
+		}
+	}
+
+	public function assertEmpty($v)
+	{
+		if (!empty($v)) {
+			throw new Exception('not empty');
 		}
 	}
 
@@ -169,6 +183,7 @@ try {
 }
 catch(Exception $e){
 	echo $e->getMessage(), PHP_EOL;
+	echo $e->getFile(), ' ', $e->getLine(), PHP_EOL;
 	echo $e->getTraceAsString(), PHP_EOL;
 	//print_r($e->getTrace());
 }

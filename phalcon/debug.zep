@@ -98,7 +98,7 @@ class Debug
 	 * @param boolean lowSeverity
 	 * @return Phalcon\Debug
 	 */
-	public function listen(exceptions=true, lowSeverity=false) -> <Debug>
+	public function listen(exceptions = true, lowSeverity = false) -> <Debug>
 	{
 		if exceptions {
 			this->listenExceptions();
@@ -237,7 +237,7 @@ class Debug
 			/**
 			 * Boolean variables are represented as "true"/"false"
 			 */
-			if typeof variable == "bool" {
+			if typeof variable == "boolean" {
 				if variable {
 					return "true";
 				} else {
@@ -372,11 +372,11 @@ class Debug
 	{
 
 		var space, twoSpaces, underscore, minus, className, namespaceSeparator,
-		prepareInternalClass, preparedFunctionName, html, classReflection, prepareUriClass, 
-		functionName, functionReflection, traceArgs, arguments, argument, 
-		filez, line, showFiles, lines, numberLines, showFileFragment, 
-		beforeLine, firstLine, afterLine, lastLine, commentPattern, utf8, entCompat, tab, 
-		comment, i, linePosition, currentLine;
+			prepareInternalClass, preparedFunctionName, html, classReflection, prepareUriClass,
+			functionName, functionReflection, traceArgs, arguments, argument,
+			filez, line, showFiles, lines, numberLines, showFileFragment,
+			beforeLine, firstLine, afterLine, lastLine, commentPattern, utf8, entCompat, tab,
+			comment, i, linePosition, currentLine;
 
 		let space = " ";
 		let twoSpaces = "  ";

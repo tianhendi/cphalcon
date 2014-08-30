@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -21,7 +21,9 @@
 
 class DbTest extends PHPUnit_Framework_TestCase
 {
-
+	/**
+	 * @medium
+	 */
 	public function testDbMysql()
 	{
 		require 'unit-tests/config.db.php';
@@ -35,6 +37,9 @@ class DbTest extends PHPUnit_Framework_TestCase
 		}
 	}
 
+	/**
+	 * @medium
+	 */
 	public function testDbPostgresql()
 	{
 		require 'unit-tests/config.db.php';
@@ -48,6 +53,9 @@ class DbTest extends PHPUnit_Framework_TestCase
 		}
 	}
 
+	/**
+	 * @medium
+	 */
 	public function testDbPostgresqlSchemas()
 	{
 		require 'unit-tests/config.db.php';
@@ -85,6 +93,9 @@ class DbTest extends PHPUnit_Framework_TestCase
 
 	}
 
+	/**
+	 * @medium
+	 */
 	public function testDbSqlite()
 	{
 		require 'unit-tests/config.db.php';

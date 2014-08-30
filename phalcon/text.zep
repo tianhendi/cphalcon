@@ -109,9 +109,37 @@ abstract class Text
 	 * @param int length
 	 * @return string
 	 */
-	static public function random(string type, long length=8) -> string
+	static public function random(int type=0, long length=8) -> string
 	{
-		return random_string(type, length);
+		var pool, str = "";
+		int end;
+
+		switch type {
+			case Text::RANDOM_ALPHA:
+				let pool = array_merge(range("a", "z"), range("A", "Z"));
+				break;
+			case Text::RANDOM_HEXDEC:
+				let pool = array_merge(range(0, 9), range("a", "f"));
+				break;
+			case Text::RANDOM_NUMERIC:
+				let pool = range(0, 9);
+				break;
+			case Text::RANDOM_NOZERO:
+				let pool = range(1, 9);
+				break;
+			default:
+				// Default type \Phalcon\Text::RANDOM_ALNUM
+				let pool = array_merge(range(0, 9), range("a", "z"), range("A", "Z"));
+				break;
+		}
+
+		let end = count(pool) - 1;
+
+		while strlen(str) < length {
+			let str .= pool[mt_rand(0, end)];
+		}
+
+		return str;
 	}
 
 	/**
@@ -128,7 +156,7 @@ abstract class Text
 	 * @param boolean ignoreCase
 	 * @return boolean
 	 */
-	static public function startsWith(str, start, ignoreCase=true) -> boolean
+	static public function startsWith(str, start, ignoreCase = true) -> boolean
 	{
 		return starts_with(str, start, ignoreCase);
 	}

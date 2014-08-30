@@ -4,7 +4,7 @@
   +------------------------------------------------------------------------+
   | Phalcon Framework                                                      |
   +------------------------------------------------------------------------+
-  | Copyright (c) 2011-2012 Phalcon Team (http://www.phalconphp.com)       |
+  | Copyright (c) 2011-2014 Phalcon Team (http://www.phalconphp.com)       |
   +------------------------------------------------------------------------+
   | This source file is subject to the New BSD License that is bundled     |
   | with this package in the file docs/LICENSE.txt.                        |
@@ -57,6 +57,10 @@ class SomeComponent
 
 }
 
+class Service1242
+{
+}
+
 class DiTest extends PHPUnit_Framework_TestCase
 {
 
@@ -64,8 +68,8 @@ class DiTest extends PHPUnit_Framework_TestCase
 
 	public function setUp()
 	{
-		Phalcon\DI::reset();
-		$this->_di = new \Phalcon\DI();
+		Phalcon\Di::reset();
+		$this->_di = new \Phalcon\Di();
 	}
 
 	public function testSetString()
@@ -186,13 +190,13 @@ class DiTest extends PHPUnit_Framework_TestCase
 	{
 
 		$expectedServices = array(
-			'service1' => Phalcon\DI\Service::__set_state(array(
+			'service1' => Phalcon\Di\Service::__set_state(array(
 				'_name' => 'service1',
 				'_definition' => 'some-service',
 				'_shared' => false,
 				'_sharedInstance' => NULL,
 			)),
-			'service2' => Phalcon\DI\Service::__set_state(array(
+			'service2' => Phalcon\Di\Service::__set_state(array(
 				'_name' => 'service2',
 				'_definition' => 'some-other-service',
 				'_shared' => false,
@@ -324,7 +328,7 @@ class DiTest extends PHPUnit_Framework_TestCase
 
 	public function testFactoryDefault()
 	{
-		$factoryDefault = new Phalcon\DI\FactoryDefault();
+		$factoryDefault = new Phalcon\Di\FactoryDefault();
 
 		$request = $factoryDefault->get('request');
 		$this->assertEquals(get_class($request), 'Phalcon\Http\Request');
@@ -366,14 +370,29 @@ class DiTest extends PHPUnit_Framework_TestCase
 
 	public function testStaticDi()
 	{
-		$di = Phalcon\DI::getDefault();
+		$di = Phalcon\Di::getDefault();
 		$this->assertInstanceOf('Phalcon\Di', $di);
 	}
 
 	public function testCrash()
 	{
-		$di = new Phalcon\DI\FactoryDefault();
+		$di = new Phalcon\Di\FactoryDefault();
 		$bag = $di->get('sessionBag', array('dummy'));
 		$this->assertTrue(true);
+	}
+
+	public function testIssue1242()
+	{
+		$di = new \Phalcon\Di();
+		$di->set('resolved', function() { return new Service1242(); });
+		$di->set('notresolved', function() { return new Service1242(); });
+
+		$this->assertFalse($di->getService('resolved')->isResolved());
+		$this->assertFalse($di->getService('notresolved')->isResolved());
+
+		$di->get('resolved');
+
+		$this->assertTrue($di->getService('resolved')->isResolved());
+		$this->assertFalse($di->getService('notresolved')->isResolved());
 	}
 }

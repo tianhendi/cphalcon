@@ -77,9 +77,9 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 	 * @param   int lifetime
 	 * @return  mixed
 	 */
-	public function get(var keyName, lifetime=null)
+	public function get(var keyName, lifetime = null)
 	{
-		var prefixedKey, cacheDir, cacheFile, frontend, lastLifetime, ttl, cachedContent;
+		var prefixedKey, cacheDir, cacheFile, frontend, lastLifetime, ttl, cachedContent, ret;
 		int modifiedTime;
 
 		let prefixedKey =  this->_prefix . keyName;
@@ -131,7 +131,8 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 					/**
 					 * Use the frontend to process the content of the cache
 					 */
-					return frontend->afterRetrieve(cachedContent);
+					let ret = frontend->afterRetrieve(cachedContent);
+					return ret;
 				}
 			}
 		}
@@ -145,7 +146,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 	 * @param int lifetime
 	 * @param boolean stopBuffer
 	 */
-	public function save(var keyName=null, var content=null, lifetime=null, stopBuffer=true) -> void
+	public function save(var keyName = null, var content = null, lifetime = null, stopBuffer = true) -> void
 	{
 		var lastKey, frontend, cacheDir, isBuffering, cacheFile, cachedContent, preparedContent, status;
 
@@ -156,7 +157,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 		}
 
 		if !lastKey {
-			throw new Exception("The cache must be started first");
+			throw new Exception("Cache must be started first");
 		}
 
 		let frontend = this->_frontend;
@@ -185,12 +186,12 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 		}
 
 		if status === false {
-			throw new Exception("Cache file ". cacheFile. " could not be written");
+			throw new Exception("Cache file ". cacheFile . " could not be written");
 		}
 
 		let isBuffering = frontend->isBuffering();
 
-		if stopBuffer === true {
+		if stopBuffer == true {
 			frontend->stop();
 		}
 
@@ -229,7 +230,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 	 * @param string|int prefix
 	 * @return array
 	 */
-	public function queryKeys(var prefix=null)
+	public function queryKeys(var prefix = null) -> array
 	{
 		var item, key, ret, cacheDir;
 
@@ -265,7 +266,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 	 * @param   int lifetime
 	 * @return boolean
 	 */
-	public function exists(var keyName=null, int lifetime=null) -> boolean
+	public function exists(var keyName = null, int lifetime = null) -> boolean
 	{
 		var lastKey, prefix, cacheFile;
 		int ttl;
@@ -308,7 +309,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 	 * @param  int value
 	 * @return mixed
 	 */
-	public function increment(var keyName=null, int value=null)
+	public function increment(var keyName = null, int value = 1)
 	{
 		var prefixedKey, cacheFile, frontend, timestamp, lifetime, ttl,
 			cachedContent, result;
@@ -352,9 +353,9 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 
 				if is_numeric(cachedContent) {
 
-					let result = value + cachedContent;
+					let result = cachedContent + value;
 					if file_put_contents(cacheFile, result) === false {
-						throw new Exception("Cache directory can't be written");
+						throw new Exception("Cache directory could not be written");
 					}
 
 					return result;
@@ -370,7 +371,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 	 * @param  int value
 	 * @return mixed
 	 */
-	public function decrement(var keyName=null, int value=null)
+	public function decrement(var keyName=null, int value=1)
 	{
 		var prefixedKey, cacheFile, timestamp, lifetime, ttl, cachedContent, result;
 
@@ -411,7 +412,7 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 
 				if is_numeric(cachedContent) {
 
-					let result = value - cachedContent;
+					let result = cachedContent - value;
 					if file_put_contents(cacheFile, result) === false {
 						throw new Exception("Cache directory can't be written");
 					}
@@ -420,5 +421,37 @@ class File extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInter
 				}
 			}
 		}
+	}
+
+	/**
+	 * Immediately invalidates all existing items.
+	 *
+	 * @return boolean
+	 */
+	public function flush() -> boolean
+	{
+		var prefix, cacheDir, item, key, cacheFile;
+
+		let prefix = this->_prefix;
+
+		if !fetch cacheDir, this->_options["cacheDir"] {
+			throw new Exception("Unexpected inconsistency in options");
+		}
+
+		for item in iterator(new \DirectoryIterator(cacheDir)) {
+
+			if item->isFile() {
+				let key = item->getFileName(),
+					cacheFile = item->getPathName();
+
+				if empty prefix || starts_with(key, prefix) {
+					if  !unlink(cacheFile) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
 	}
 }

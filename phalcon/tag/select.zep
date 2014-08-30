@@ -35,10 +35,10 @@ abstract class Select
 	 * @param array parameters
 	 * @param array data
 	 */
-	public static function selectField(parameters, data=null)
+	public static function selectField(parameters, data = null)
 	{
 		var params, name, id, value, useEmpty, code, emptyValue, emptyText,
-			key, avalue, options, closeOption, using;
+			options, using;
 
 		if typeof parameters != "array" {
 			let params = [parameters, data];
@@ -50,14 +50,6 @@ abstract class Select
 			let params[0] = params["id"];
 		}
 
-		if !fetch name, params["name"] {
-			let params["name"] = id;
-		} else {
-			if !name {
-				let params["name"] = id;
-			}
-		}
-
 		/**
 		 * Automatically assign the id if the name is not an array
 		 */
@@ -67,13 +59,20 @@ abstract class Select
 			}
 		}
 
+		if !fetch name, params["name"] {
+			let params["name"] = id;
+		} else {
+			if !name {
+				let params["name"] = id;
+			}
+		}
+
 		if !fetch value, params["value"] {
 			let value = \Phalcon\Tag::getValue(id, params);
 		} else {
 			unset params["value"];
 		}
 
-		let useEmpty = false;
 		if fetch useEmpty, params["useEmpty"] {
 
 			if !fetch emptyValue, params["emptyValue"] {
@@ -89,25 +88,6 @@ abstract class Select
 			}
 
 			unset params["useEmpty"];
-		}
-
-		let code = "<select";
-		if typeof params == "array" {
-			for key, avalue in params {
-				if typeof key != "integer" && typeof avalue != "array" {
-					let code .= " " . key . "=\"" . avalue . "\"";
-				}
-			}
-		}
-		let code .= ">" . PHP_EOL;
-
-		let closeOption = "</option>" . PHP_EOL;
-
-		if useEmpty {
-			/**
-			 * Create an empty value
-			 */
-			let code .= "\t<option value=\"" . emptyValue . "\">" . emptyText . closeOption;
 		}
 
 		if !fetch options, params[1] {
@@ -127,17 +107,32 @@ abstract class Select
 				}
 			}
 
+			unset params["using"];
+		}
+
+		let code = \Phalcon\Tag::renderAttributes("<select", params) . ">" . PHP_EOL;
+
+		if useEmpty {
+			/**
+			 * Create an empty value
+			 */
+			let code .= "\t<option value=\"" . emptyValue . "\">" . emptyText . "</option>" . PHP_EOL;
+		}
+
+		if typeof options == "object" {
+
 			/**
 			 * Create the SELECT's option from a resultset
 			 */
-			let code .= self::_optionsFromResultset(options, using, value, closeOption);
+			let code .= self::_optionsFromResultset(options, using, value, "</option>" . PHP_EOL);
+
 		} else {
 			if typeof options == "array" {
 
 				/**
 				 * Create the SELECT's option from an array
 				 */
-				let code .= self::_optionsFromArray(options, value, closeOption);
+				let code .= self::_optionsFromArray(options, value, "</option>" . PHP_EOL);
 			} else {
 				throw new Exception("Invalid data provided to SELECT helper");
 			}
@@ -151,7 +146,7 @@ abstract class Select
 	/**
 	 * Generate the OPTION tags based on a resulset
 	 *
-	 * @param Phalcon\Mvc\Model resultset
+	 * @param Phalcon\Mvc\Model\Resultset resultset
 	 * @param array using
 	 * @param mixed value
 	 * @param string closeOption
@@ -163,18 +158,13 @@ abstract class Select
 		let code = "";
 		let params = null;
 
-		resultset->rewind();
+		if typeof using == "array" {
+			let usingZero = using[0], usingOne = using[1];
+		}
 
-		while resultset->valid() !== false {
-
-			/**
-			 * Get the current option
-			 */
-			let option = resultset->current();
+		for option in iterator(resultset) {
 
 			if typeof using == "array" {
-
-				let usingZero = using[0], usingOne = using[1];
 
 				if typeof option == "object" {
 					if method_exists(option, "readAttribute") {
@@ -222,9 +212,8 @@ abstract class Select
 					let code .= call_user_func_array(using, params);
 				}
 			}
-
-		    resultset->next();
 		}
+
 		return code;
 	}
 
@@ -237,21 +226,26 @@ abstract class Select
 	 */
 	private static function _optionsFromArray(data, value, closeOption)
 	{
-		var code, optionValue, optionText;
+		var code, optionValue, optionText, escaped;
 
 		let code = "";
 		for optionValue, optionText in data {
-			if typeof value == "array" {
-				if in_array(optionValue, value) {
-					let code .= "\t<option selected=\"selected\" value=\"" . optionValue . "\">" . optionText . closeOption;
-				} else {
-					let code .= "\t<option value=\"" . optionValue . "\">" . optionText . closeOption;
-				}
+			let escaped = htmlspecialchars(optionValue);
+			if typeof optionText == "array" {
+				let code .= "\t<optgroup label=\"" . escaped . "\">" . PHP_EOL . self::_optionsFromArray(optionText, value, closeOption) . "\t</optgroup>" . PHP_EOL;
 			} else {
-				if optionValue == value {
-					let code .= "\t<option selected=\"selected\" value=\"" . optionValue . "\">" . optionText . closeOption;
+				if typeof value == "array" {
+					if in_array(optionValue, value) {
+						let code .= "\t<option selected=\"selected\" value=\"" . escaped . "\">" . optionText . closeOption;
+					} else {
+						let code .= "\t<option value=\"" . escaped . "\">" . optionText . closeOption;
+					}
 				} else {
-					let code .= "\t<option value=\"" . optionValue . "\">" . optionText . closeOption;
+					if optionValue == value {
+						let code .= "\t<option selected=\"selected\" value=\"" . escaped . "\">" . optionText . closeOption;
+					} else {
+						let code .= "\t<option value=\"" . escaped . "\">" . optionText . closeOption;
+					}
 				}
 			}
 		}
