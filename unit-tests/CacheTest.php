@@ -1219,7 +1219,6 @@ class CacheTest extends PHPUnit_Framework_TestCase
 
 	protected function _prepareRedis()
 	{
-
 		if (!extension_loaded('redis')) {
 			$this->markTestSkipped('Warning: redis extension is not loaded');
 			return false;
@@ -1227,7 +1226,6 @@ class CacheTest extends PHPUnit_Framework_TestCase
 
 		$redis = new Redis();
 		$redis->connect('127.0.0.1', 6379);
-		//$redis->flushDB();
 		return $redis;
 	}
 
@@ -1320,10 +1318,12 @@ class CacheTest extends PHPUnit_Framework_TestCase
 
 		//Query keys
 		$keys = $cache->queryKeys();
+
+		sort($keys);
 		$this->assertEquals($keys, array(
-			0 => 'test-output',
-			1 => 'decrement',
-			2 => 'increment'
+			0 => 'decrement',
+			1 => 'increment',
+			2 => 'test-output'
 		));
 
 		//Delete entry from cache

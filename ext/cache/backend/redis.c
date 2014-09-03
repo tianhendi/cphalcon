@@ -136,13 +136,14 @@ PHP_METHOD(Phalcon_Cache_Backend_Redis, __construct){
 	
 	if (!options) {
 		PHALCON_INIT_VAR(options);
+		array_init(options);
 	} else {
 		PHALCON_SEPARATE_PARAM(options);
-	}
 	
-	if (Z_TYPE_P(options) != IS_ARRAY) { 
-		PHALCON_INIT_NVAR(options);
-		array_init_size(options, 4);
+		if (Z_TYPE_P(options) != IS_ARRAY) { 
+			PHALCON_INIT_NVAR(options);
+			array_init_size(options, 4);
+		}
 	}
 
 	if (!phalcon_array_isset_string(options, SS("host"))) {
