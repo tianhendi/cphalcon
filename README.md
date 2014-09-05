@@ -54,8 +54,10 @@ Follow these instructions to generate a binary extension for your platform:
 
 ```bash
 git clone git://github.com/phalcon/cphalcon.git
-cd cphalcon/build
-sudo ./install
+cd cphalcon/ext
+phpize
+./configure
+make && sudo make install
 ```
 
 Add the extension to your php.ini:
