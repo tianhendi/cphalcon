@@ -230,7 +230,7 @@ void phalcon_copy_ctor(zval *destiny, zval *origin) PHALCON_ATTR_NONNULL;
 		PHALCON_MEMORY_OBSERVE(&z);                   \
 		ALLOC_ZVAL(z);                                \
 		if (Z_TYPE_P(orig_ptr) == IS_ARRAY) {         \
-			INIT_PZVAL_COPY(z, orig_ptr);             \
+			ZVAL_COPY_VALUE(z, orig_ptr);             \
                 } else {                                      \
 			*z = *orig_ptr;                           \
 		}                                             \
