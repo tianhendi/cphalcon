@@ -17,40 +17,29 @@
  +------------------------------------------------------------------------+
  */
 
-namespace Phalcon\Validation;
+namespace Phalcon\Assets\Inline;
 
 /**
- * Phalcon\Validation\ValidatorInterface
+ * Phalcon\Assets\Inline\Css
  *
- * Interface for Phalcon\Validation\Validator
+ * Represents inline CSS
  */
-interface ValidatorInterface
+class Css extends \Phalcon\Assets\Inline
 {
 
 	/**
-	 * Checks if an option is defined
+	 * Phalcon\Assets\Inline\Css
 	 *
-	 * @param string key
-	 * @return mixed
+	 * @param string content
+	 * @param boolean filter
+	 * @param array attributes
 	 */
-	public function isSetOption(string! key) -> boolean;
-
-	/**
-	 * Returns an option in the validator's options
-	 * Returns null if the option hasn't been set
-	 *
-	 * @param string key
-	 * @return mixed
-	 */
-	public function getOption(string! key);
-
-	/**
-	 * Executes the validation
-	 *
-	 * @param Phalcon\Validation validator
-	 * @param string attribute
-	 * @return boolean
-	 */
-	public function validate(<\Phalcon\Validation> validator, string! attribute) -> boolean;
+	public function __construct(string content, boolean filter = true, attributes = null)
+	{
+		if attributes == null {
+			let attributes = ["type": "text/css"];
+		}
+		parent::__construct("css", content, filter, attributes);
+	}
 
 }
