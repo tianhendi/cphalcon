@@ -3758,7 +3758,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 					PHALCON_OBS_NVAR(value);
 					phalcon_read_property_zval(&value, this_ptr, attribute_field, PH_NOISY TSRMLS_CC);
 
-					if (Z_TYPE_P(value) != IS_NULL || !phalcon_fast_in_array(field, not_null TSRMLS_CC) || !phalcon_array_isset(default_values, field)) {						
+					if (Z_TYPE_P(value) != IS_NULL || !phalcon_fast_in_array(field, not_null TSRMLS_CC) || (phalcon_fast_in_array(field, not_null TSRMLS_CC) && !phalcon_array_isset(default_values, field))) {						
 						phalcon_array_append(&fields, field, PH_SEPARATE);
 						phalcon_array_append(&values, value, PH_SEPARATE);
 		
@@ -3766,7 +3766,7 @@ PHP_METHOD(Phalcon_Mvc_Model, _doLowInsert){
 						phalcon_array_fetch(&bind_type, bind_data_types, field, PH_NOISY);
 						phalcon_array_append(&bind_types, bind_type, PH_SEPARATE);
 					}
-				} else if (!phalcon_fast_in_array(field, not_null TSRMLS_CC) || !phalcon_array_isset(default_values, field)) {
+				} else if (!phalcon_fast_in_array(field, not_null TSRMLS_CC) || (phalcon_fast_in_array(field, not_null TSRMLS_CC) && !phalcon_array_isset(default_values, field))) {
 					phalcon_array_append(&fields, field, PH_SEPARATE);
 					phalcon_array_append(&values, null_value, PH_SEPARATE);
 					phalcon_array_append(&bind_types, bind_skip, PH_SEPARATE);
