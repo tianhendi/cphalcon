@@ -23,7 +23,11 @@ class RestHandler
 
 	protected $_access = 0;
 
-	protected $_trace = array();
+	protected $_trace;
+
+	public function  __construct () {
+		$this->_trace = array();
+	}
 
 	public function find()
 	{

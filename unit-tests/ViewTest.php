@@ -23,7 +23,11 @@ use Phalcon\Mvc\View as View;
 
 class ViewAfterRenderListener
 {
-	private $_levels = array();
+	private $_levels;
+
+	public function  __construct () {
+		$this->_levels = array();
+	}
 
 	public function afterRenderView($event, $view)
 	{

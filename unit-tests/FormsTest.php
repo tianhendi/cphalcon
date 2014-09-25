@@ -528,9 +528,8 @@ class FormsTest extends PHPUnit_Framework_TestCase
 		)));
 
 		$form->add($name);
-
-		$form->appendMessage("name", new \Phalcon\Validation\Message('Must be not empty '));
-
+		$message = new \Phalcon\Validation\Message('Must be not empty ');
+		$form->appendMessage("name", $message);exit;
 		$messages = $form->getMessages();
 		$this->assertEquals(count($messages), 1);
 

@@ -20,11 +20,11 @@
 
 class SomeObject implements Iterator, Countable
 {
-	private $_data = array();
+	private $_data;
 
 	private $_pointer = 0;
 
-	public function __construct($data)
+	public function __construct($data = array())
 	{
 		$this->_data = $data;
 	}

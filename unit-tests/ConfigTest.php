@@ -21,29 +21,33 @@
 class ConfigTest extends PHPUnit_Framework_TestCase
 {
 
-	private $_config = array(
-		"phalcon" => array(
-			"baseuri" => "/phalcon/"
-		),
-		"models" => array(
-			"metadata" => "memory"
-		),
-		"database" => array(
-			"adapter" => "mysql",
-			"host" => "localhost",
-			"username" => "user",
-			"password" => "passwd",
-			"name" => "demo"
-		),
-		"test" => array(
-			"parent" => array(
-				"property" => 1,
+	private $_config;
+
+	public function  __construct () {
+		$this->_config = array(
+			"phalcon" => array(
+				"baseuri" => "/phalcon/"
 			),
-			"parent" => array(
-				"property2" => "yeah"
+			"models" => array(
+				"metadata" => "memory"
+			),
+			"database" => array(
+				"adapter" => "mysql",
+				"host" => "localhost",
+				"username" => "user",
+				"password" => "passwd",
+				"name" => "demo"
+			),
+			"test" => array(
+				"parent" => array(
+					"property" => 1,
+				),
+				"parent" => array(
+					"property2" => "yeah"
+				)
 			)
-		)
-	);
+		);
+	}
 
 	private function _compareConfig($c, $config)
 	{

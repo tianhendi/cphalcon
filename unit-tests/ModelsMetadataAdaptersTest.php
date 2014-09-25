@@ -23,58 +23,59 @@ require_once 'helpers/xcache.php';
 class ModelsMetadataAdaptersTest extends PHPUnit_Framework_TestCase
 {
 
-	private $_data = array(
-		'meta-robots-robots' => array(
-			0 => array(
-				0 => 'id',
-				1 => 'name',
-				2 => 'type',
-				3 => 'year',
-			),
-			1 => array(
-				0 => 'id',
-			),
-			2 => array(
-				0 => 'name',
-				1 => 'type',
-				2 => 'year',
-			),
-			3 => array(
-				0 => 'id',
-				1 => 'name',
-				2 => 'type',
-				3 => 'year',
-			),
-			4 => array(
-				'id' => 0,
-				'name' => 2,
-				'type' => 2,
-				'year' => 0,
-			),
-			5 => array(
-				'id' => true,
-				'year' => true,
-			),
-			8 => 'id',
-			9 => array(
-				'id' => 1,
-				'name' => 2,
-				'type' => 2,
-				'year' => 1,
-			),
-			10 => array(),
-			11 => array(),
-			12 => array()
-		),
-		'map-robots' => array(
-			0 => null,
-			1 => null,
-		)
-	);
+	private $_data;
 
 	public function __construct()
 	{
 		spl_autoload_register(array($this, 'modelsAutoloader'));
+		$this->_data = array(
+			'meta-robots-robots' => array(
+				0 => array(
+					0 => 'id',
+					1 => 'name',
+					2 => 'type',
+					3 => 'year',
+				),
+				1 => array(
+					0 => 'id',
+				),
+				2 => array(
+					0 => 'name',
+					1 => 'type',
+					2 => 'year',
+				),
+				3 => array(
+					0 => 'id',
+					1 => 'name',
+					2 => 'type',
+					3 => 'year',
+				),
+				4 => array(
+					'id' => 0,
+					'name' => 2,
+					'type' => 2,
+					'year' => 0,
+				),
+				5 => array(
+					'id' => true,
+					'year' => true,
+				),
+				8 => 'id',
+				9 => array(
+					'id' => 1,
+					'name' => 2,
+					'type' => 2,
+					'year' => 1,
+				),
+				10 => array(),
+				11 => array(),
+				12 => array()
+			),
+			'map-robots' => array(
+				0 => null,
+				1 => null,
+			)
+		);
 	}
 
 	public function __destruct()
