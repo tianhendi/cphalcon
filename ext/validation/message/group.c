@@ -703,7 +703,7 @@ PHP_METHOD(Phalcon_Validation_Message_Group, __set_state){
 
 	if (phalcon_array_isset_string_fetch(&messages, *group, SS("_messages"))) {
 		object_init_ex(return_value, phalcon_validation_message_group_ce);
-		phalcon_validation_group_construct_helper(return_value, messages TSRMLS_CC);
+		PHALCON_CALL_METHODW(NULL, return_value, "__construct", messages);
 	}
 	else {
 		zend_throw_exception_ex(spl_ce_BadMethodCallException, 0 TSRMLS_CC, "Invalid arguments passed to %s", "Phalcon\\Mvc\\Model\\Message\\Group::__set_state()");
