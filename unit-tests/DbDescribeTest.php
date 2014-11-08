@@ -630,14 +630,17 @@ class DbDescribeTest extends PHPUnit_Framework_TestCase
 		//List tables
 		$expectedTables = array (
 			0 => 'customers',
-			1 => 'parts',
-			2 => 'personas',
-			3 => 'personnes',
-			4 => 'prueba',
-			5 => 'robots',
-			6 => 'robots_parts',
-			7 => 'subscriptores',
-			8 => 'tipo_documento',
+			1 => 'm2m_parts',
+			2 => 'm2m_robots',
+			3 => 'm2m_robots_parts',
+			4 => 'parts',
+			5 => 'personas',
+			6 => 'personnes',
+			7 => 'prueba',
+			8 => 'robots',
+			9 => 'robots_parts',
+			10 => 'subscriptores',
+			11 => 'tipo_documento',
 		);
 
 		$tables = $connection->listTables();

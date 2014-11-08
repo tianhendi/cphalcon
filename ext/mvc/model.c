@@ -536,17 +536,17 @@ PHP_METHOD(Phalcon_Mvc_Model, __construct){
 
 		PHALCON_VERIFY_INTERFACE(models_manager, phalcon_mvc_model_managerinterface_ce);
 	}
-	
+
 	/** 
 	 * Update the models-manager
 	 */
 	phalcon_update_property_this(this_ptr, SL("_modelsManager"), models_manager TSRMLS_CC);
-	
+
 	/** 
 	 * The manager always initializes the object
 	 */
 	PHALCON_CALL_METHOD(NULL, models_manager, "initialize", this_ptr);
-	
+
 	/** 
 	 * This allows the developer to execute initialization stuff every time an instance
 	 * is created
@@ -554,7 +554,7 @@ PHP_METHOD(Phalcon_Mvc_Model, __construct){
 	if (phalcon_method_exists_ex(this_ptr, SS("onconstruct") TSRMLS_CC) == SUCCESS) {
 		PHALCON_CALL_METHOD(NULL, this_ptr, "onconstruct");
 	}
-	
+
 	PHALCON_MM_RESTORE();
 }
 
@@ -1346,15 +1346,15 @@ PHP_METHOD(Phalcon_Mvc_Model, find){
 	PHALCON_MM_GROW();
 
 	phalcon_fetch_params(1, 0, 1, &parameters);
-	
+
 	if (!parameters) {
 		parameters = PHALCON_GLOBAL(z_null);
 	}
-	
+
 	PHALCON_INIT_VAR(model_name);
 	phalcon_get_called_class(model_name  TSRMLS_CC);
 	if (Z_TYPE_P(parameters) != IS_ARRAY) { 
-	
+
 		PHALCON_INIT_VAR(params);
 		array_init(params);
 		if (Z_TYPE_P(parameters) != IS_NULL) {
@@ -1363,21 +1363,21 @@ PHP_METHOD(Phalcon_Mvc_Model, find){
 	} else {
 		PHALCON_CPY_WRT(params, parameters);
 	}
-	
+
 	/** 
 	 * Builds a query with the passed parameters
 	 */
 	PHALCON_INIT_VAR(builder);
 	object_init_ex(builder, phalcon_mvc_model_query_builder_ce);
 	PHALCON_CALL_METHOD(NULL, builder, "__construct", params);
-	
+
 	PHALCON_CALL_METHOD(NULL, builder, "from", model_name);
 	PHALCON_CALL_METHOD(&query, builder, "getquery");
-	
+
 	PHALCON_INIT_VAR(bind_params);
-	
+
 	PHALCON_INIT_VAR(bind_types);
-	
+
 	/** 
 	 * Check for bind parameters
 	 */

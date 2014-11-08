@@ -57,6 +57,34 @@ CREATE INDEX customers_status_idx ON customers (status);
 
 ALTER TABLE public.customers OWNER TO postgres;
 
+-- Table: m2m_parts
+DROP TABLE IF EXISTS m2m_parts;
+CREATE TABLE m2m_parts (
+  id SERIAL,
+  name varchar(70) NOT NULL,
+  PRIMARY KEY (id)
+);
+
+ALTER TABLE public.m2m_parts OWNER TO postgres;
+
+-- Table: m2m_robots
+DROP TABLE IF EXISTS m2m_robots;
+CREATE TABLE m2m_robots (
+  id SERIAL,
+  name varchar(70) NOT NULL,
+  PRIMARY KEY (id)
+);
+
+ALTER TABLE public.m2m_robots OWNER TO postgres;
+
+-- Table: m2m_robots_parts
+DROP TABLE IF EXISTS m2m_robots_parts;
+CREATE TABLE m2m_robots_parts (
+  robots_id integer NOT NULL,
+  parts_id integer NOT NULL,
+  PRIMARY KEY (robots_id, parts_id)
+);
+
 
 --
 -- Name: parts; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
