@@ -46,6 +46,8 @@ class Postgresql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterI
 
 	protected _dialectType = "postgresql";
 
+	protected _schema = "public";
+
 	/**
 	 * This method is automatically called in Phalcon\Db\Adapter\Pdo constructor.
 	 * Call it when you need to restore a database connection.
@@ -77,6 +79,7 @@ class Postgresql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterI
 
 		if ! empty schema {
 			let sql = "SET search_path TO '" . schema . "'";
+			let this->_schema = schema;
 			this->execute(sql);
 		}
 	}
@@ -98,6 +101,10 @@ class Postgresql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterI
 			oldColumn, columnName, charSize, numericSize, numericScale;
 
 		let oldColumn = null, columns = [];
+
+		if schema === null {
+			let schema = this->_schema;
+		}
 
 		/**
 		 * We're using FETCH_NUM to fetch the columns

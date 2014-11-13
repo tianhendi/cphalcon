@@ -4451,4 +4451,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
 	}
 
+	/**
+	 * Reset the model data
+	 *
+	 */
+	public function reset() -> void
+	{
+		let this->_uniqueParams = null,
+			this->_snapshot = null;
+	}
+
 }

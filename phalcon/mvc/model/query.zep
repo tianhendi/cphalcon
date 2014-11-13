@@ -2520,6 +2520,8 @@ class Query implements QueryInterface, InjectionAwareInterface
 
 				let resultObject = model;
 
+				resultObject->reset();
+
 				/**
 				 * Get the column map
 				 */
