@@ -97,20 +97,22 @@ class Postgresql extends \Phalcon\Db\Adapter\Pdo implements \Phalcon\Db\AdapterI
 	 */
 	public function describeColumns(string table, string schema=null)
 	{
-		var columns, columnType, field, definition,
+		var new_schema, columns, columnType, field, definition,
 			oldColumn, columnName, charSize, numericSize, numericScale;
 
 		let oldColumn = null, columns = [];
 
 		if schema === null {
-			let schema = this->_schema;
+			let new_schema = this->_schema;
+		} else {
+			let new_schema = schema;
 		}
 
 		/**
 		 * We're using FETCH_NUM to fetch the columns
 		 * 0:name, 1:type, 2:size, 3:numericsize, 4: numericscale, 5: null, 6: key, 7: extra, 8: position, 9 default
 		 */
-		for field in this->fetchAll(this->_dialect->describeColumns(table, schema), \Phalcon\Db::FETCH_NUM) {
+		for field in this->fetchAll(this->_dialect->describeColumns(table, new_schema), \Phalcon\Db::FETCH_NUM) {
 
 			/**
 			 * By default the bind types is two
