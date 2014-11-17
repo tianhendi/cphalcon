@@ -20,9 +20,11 @@
 
 namespace Phalcon;
 
+use Phalcon\DiInterface;
 use Phalcon\Tag\Select;
 use Phalcon\Tag\Exception;
 use Phalcon\Mvc\UrlInterface;
+use Phalcon\EscaperInterface;
 
 /**
  * Phalcon\Tag
@@ -34,7 +36,7 @@ use Phalcon\Mvc\UrlInterface;
 class Tag
 {
 	/**
-	 * Pre-asigned values for components
+	 * Pre-assigned values for components
 	 */
 	protected static _displayValues;
 
@@ -105,22 +107,47 @@ class Tag
 	}
 
 	/**
-	 * Renders parameters keeping order in html attributes
+	 * Renders parameters keeping order in their HTML attributes
 	 *
 	 * @param string code
 	 * @param array attributes
+	 * @return string
 	 */
 	public static function renderAttributes(string! code, array! attributes) -> string
 	{
-		var order, keys, escaper, attrs, value, escaped, key;
+		var order, escaper, attrs, attribute, value, escaped, key, newCode;
 
-		let order = ["rel", "type", "for", "src", "href", "action", "id", "name", "value", "class"],
-			escaper = <\Phalcon\EscaperInterface> self::getEscaper(attributes),
-			keys = array_intersect_key(array_flip(order), attributes),
-        	attrs = array_merge(keys, attributes);
+		let order = [
+			"rel"    : null,
+			"type"   : null,
+			"for"    : null,
+			"src"    : null,
+			"href"   : null,
+			"action" : null,
+			"id"     : null,
+			"name"   : null,
+			"value"  : null,
+			"class"  : null
+		];
+
+		let attrs = [];
+		for key, value in order {
+			if fetch attribute, attributes[key] {
+				let attrs[key] = attribute;
+			}
+		}
+
+		for key, value in attributes {
+			if !isset attrs[key] {
+				let attrs[key] = value;
+			}
+		}
+
+		let escaper = <EscaperInterface> self::getEscaper(attributes);
 
 		unset attrs["escape"];
 
+		let newCode = code;
 		for key, value in attrs {
 			if typeof key == "string" && value !== null {
 				if escaper {
@@ -128,11 +155,11 @@ class Tag
 				} else {
 					let escaped = value;
 				}
-				let code .= " " . key . "=\"" . escaped . "\"";
+				let newCode .= " " . key . "=\"" . escaped . "\"";
 			}
 		}
 
-		return code;
+		return newCode;
 	}
 
 	/**
@@ -140,7 +167,7 @@ class Tag
 	 *
 	 * @param Phalcon\DiInterface dependencyInjector
 	 */
-	public static function setDI(<\Phalcon\DiInterface> dependencyInjector)
+	public static function setDI(<DiInterface> dependencyInjector)
 	{
 		let self::_dependencyInjector = dependencyInjector;
 	}
@@ -150,13 +177,15 @@ class Tag
 	 *
 	 * @return Phalcon\DiInterface
 	 */
-	public static function getDI() -> <\Phalcon\DiInterface>
+	public static function getDI() -> <DiInterface>
 	{
-		return self::_dependencyInjector;
+		var di;
+		let di = self::_dependencyInjector;
+		return di;
 	}
 
 	/**
-	 * Return a URL service from the default DI
+	 * Returns a URL service from the default DI
 	 *
 	 * @return Phalcon\Mvc\UrlInterface
 	 */
@@ -167,7 +196,7 @@ class Tag
 		let url = self::_urlService;
 		if typeof url != "object" {
 
-			let dependencyInjector = <\Phalcon\DiInterface> self::_dependencyInjector;
+			let dependencyInjector = <DiInterface> self::_dependencyInjector;
 			if typeof dependencyInjector != "object" {
 				let dependencyInjector = \Phalcon\Di::getDefault();
 			}
@@ -187,15 +216,14 @@ class Tag
 	 *
 	 * @return Phalcon\EscaperInterface
 	 */
-	public static function getEscaperService() -> <\Phalcon\EscaperInterface>
+	public static function getEscaperService() -> <EscaperInterface>
 	{
 		var escaper, dependencyInjector;
 
 		let escaper = self::_escaperService;
 		if typeof escaper != "object" {
 
-			//let dependencyInjector = <\Phalcon\DiInterface> self::_dependencyInjector;
-			let dependencyInjector = self::_dependencyInjector;
+			let dependencyInjector = <DiInterface> self::_dependencyInjector;
 			if typeof dependencyInjector != "object" {
 				let dependencyInjector = \Phalcon\Di::getDefault();
 			}
@@ -204,7 +232,7 @@ class Tag
 				throw new Exception("A dependency injector container is required to obtain the 'escaper' service");
 			}
 
-			let escaper = <\Phalcon\EscaperInterface> dependencyInjector->getShared("escaper"),
+			let escaper = <EscaperInterface> dependencyInjector->getShared("escaper"),
 				self::_escaperService = escaper;
 		}
 		return escaper;
@@ -258,13 +286,9 @@ class Tag
 	 * @param array values
 	 * @param boolean merge
 	 */
-	public static function setDefaults(values, boolean merge = false) -> void
+	public static function setDefaults(array! values, boolean merge = false) -> void
 	{
 		var displayValues;
-
-		if typeof values != "array" {
-			throw new Exception("An array is required as default values");
-		}
 
 		if merge {
 			let displayValues = self::_displayValues;
@@ -420,7 +444,7 @@ class Tag
 	 * @param 	boolean asValue
 	 * @return	string
 	 */
-	static protected function _inputField(string type, parameters, boolean asValue = false) -> string
+	static protected final function _inputField(string type, parameters, boolean asValue = false) -> string
 	{
 		var params, id, value, code, name;
 
@@ -447,10 +471,10 @@ class Tag
 			}
 
 			/**
-			* Automatically assign the id if the name is not an array
-			*/
-			if !memstr(id, "[") {
-				if !isset params["id"] {
+			 * Automatically assign the id if the name is not an array
+			 */
+			if typeof id == "string" {
+				if !memstr(id, "[") && !isset params["id"] {
 					let params["id"] = id;
 				}
 			}
@@ -459,7 +483,7 @@ class Tag
 
 		} else {
 			/**
-			 * Use the "id" as value if the user hadn"t set it
+			 * Use the "id" as value if the user hadn't set it
 			 */
 			if !isset params["value"] {
 				if fetch value, params[0] {
@@ -490,7 +514,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static protected function _inputFieldChecked(string type, parameters) -> string
+	static protected final function _inputFieldChecked(string type, var parameters) -> string
 	{
 		var params, value, id, code, name, currentValue;
 
@@ -569,7 +593,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function colorField(parameters) -> string
+	public static function colorField(var parameters) -> string
 	{
 		return self::_inputField("color", parameters);
 	}
@@ -584,7 +608,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function textField(parameters) -> string
+	public static function textField(var parameters) -> string
 	{
 		return self::_inputField("text", parameters);
 	}
@@ -599,7 +623,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function numericField(parameters) -> string
+	public static function numericField(var parameters) -> string
 	{
 		return self::_inputField("number", parameters);
 	}
@@ -611,7 +635,7 @@ class Tag
 	* @param array parameters
 	* @return string
 	*/
-	static public function rangeField(parameters) -> string
+	public static function rangeField(var parameters) -> string
 	{
 		return self::_inputField("range", parameters);
 	}
@@ -626,7 +650,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function emailField(parameters) -> string
+	public static function emailField(var parameters) -> string
 	{
 		return self::_inputField("email", parameters);
 	}
@@ -641,7 +665,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function dateField(parameters) -> string
+	public static function dateField(var parameters) -> string
 	{
 		return self::_inputField("date", parameters);
 	}
@@ -652,7 +676,7 @@ class Tag
 	* @param array parameters
 	* @return string
 	*/
-	static public function dateTimeField(parameters) -> string
+	public static function dateTimeField(var parameters) -> string
 	{
 		return self::_inputField("datetime", parameters);
 	}
@@ -663,7 +687,7 @@ class Tag
 	* @param array parameters
 	* @return string
 	*/
-	static public function dateTimeLocalField(parameters) -> string
+	public static function dateTimeLocalField(var parameters) -> string
 	{
 		return self::_inputField("datetime-local", parameters);
 	}
@@ -674,7 +698,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function monthField(parameters) -> string
+	public static function monthField(var parameters) -> string
 	{
 		return self::_inputField("month", parameters);
 	}
@@ -685,7 +709,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function timeField(parameters) -> string
+	public static function timeField(var parameters) -> string
 	{
 		return self::_inputField("time", parameters);
 	}
@@ -696,7 +720,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function weekField(parameters) -> string
+	public static function weekField(var parameters) -> string
 	{
 		return self::_inputField("week", parameters);
 	}
@@ -711,7 +735,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function passwordField(parameters) -> string
+	public static function passwordField(var parameters) -> string
 	{
 		return self::_inputField("password", parameters);
 	}
@@ -726,7 +750,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function hiddenField(parameters) -> string
+	public static function hiddenField(var parameters) -> string
 	{
 		return self::_inputField("hidden", parameters);
 	}
@@ -741,7 +765,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function fileField(parameters) -> string
+	public static function fileField(var parameters) -> string
 	{
 		return self::_inputField("file", parameters);
 	}
@@ -752,7 +776,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function searchField(parameters) -> string
+	public static function searchField(var parameters) -> string
 	{
 		return self::_inputField("search", parameters);
 	}
@@ -763,7 +787,7 @@ class Tag
 	* @param array parameters
 	* @return string
 	*/
-	static public function telField(parameters) -> string
+	public static function telField(var parameters) -> string
 	{
 		return self::_inputField("tel", parameters);
 	}
@@ -774,7 +798,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function urlField(parameters) -> string
+	public static function urlField(var parameters) -> string
 	{
 		return self::_inputField("url", parameters);
 	}
@@ -789,7 +813,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function checkField(parameters) -> string
+	public static function checkField(var parameters) -> string
 	{
 		return self::_inputFieldChecked("checkbox", parameters);
 	}
@@ -798,7 +822,7 @@ class Tag
 	 * Builds a HTML input[type="radio"] tag
 	 *
 	 *<code>
-	 * echo Phalcon\Tag::radioField(array("wheather", "value" => "hot"))
+	 * echo Phalcon\Tag::radioField(array("weather", "value" => "hot"))
 	 *</code>
 	 *
 	 * Volt syntax:
@@ -809,7 +833,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function radioField(parameters) -> string
+	public static function radioField(var parameters) -> string
 	{
 		return self::_inputFieldChecked("radio", parameters);
 	}
@@ -829,7 +853,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function imageInput(parameters) -> string
+	public static function imageInput(var parameters) -> string
 	{
 		return self::_inputField("image", parameters, true);
 	}
@@ -849,7 +873,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function submitButton(parameters) -> string
+	public static function submitButton(var parameters) -> string
 	{
 		return self::_inputField("submit", parameters, true);
 	}
@@ -890,7 +914,7 @@ class Tag
 	 * @param   array data
 	 * @return	string
 	 */
-	public static function select(parameters, data = null) -> string
+	public static function select(var parameters, data = null) -> string
 	{
 		return Select::selectField(parameters, data);
 	}
@@ -910,7 +934,7 @@ class Tag
 	 * @param	array parameters
 	 * @return	string
 	 */
-	static public function textArea(parameters) -> string
+	public static function textArea(var parameters) -> string
 	{
 		var params, id, name, content, code;
 
@@ -948,7 +972,7 @@ class Tag
 		}
 
 		let code = self::renderAttributes("<textarea", params),
-			code .= ">".content."</textarea>";
+			code .= ">" . content . "</textarea>";
 
 		return code;
 	}
@@ -970,7 +994,7 @@ class Tag
 	 * @param array parameters
 	 * @return string
 	 */
-	static public function form(parameters) -> string
+	public static function form(var parameters) -> string
 	{
 		var params, paramsAction, action, code;
 
@@ -1019,7 +1043,7 @@ class Tag
 	 *
 	 * @return	string
 	 */
-	public static function endForm()
+	public static function endForm() -> string
 	{
 		return "</form>";
 	}
@@ -1033,7 +1057,7 @@ class Tag
 	 *
 	 * @param string title
 	 */
-	public static function setTitle(string title)
+	public static function setTitle(string title) -> void
 	{
 		let self::_documentTitle = title;
 	}
@@ -1047,7 +1071,7 @@ class Tag
 	 *
 	 * @param string titleSeparator
 	 */
-	static public function setTitleSeparator(string titleSeparator)
+	public static function setTitleSeparator(string titleSeparator) -> void
 	{
 		let self::_documentTitleSeparator = titleSeparator;
 	}
@@ -1057,7 +1081,7 @@ class Tag
 	 *
 	 * @param string title
 	 */
-	public static function appendTitle(string title)
+	public static function appendTitle(string title) -> void
 	{
 		let self::_documentTitle = self::_documentTitle . self::_documentTitleSeparator . title;
 	}
@@ -1067,7 +1091,7 @@ class Tag
 	 *
 	 * @param string title
 	 */
-	public static function prependTitle(string title)
+	public static function prependTitle(string title) -> void
 	{
 		let self::_documentTitle = title . self::_documentTitleSeparator . self::_documentTitle;
 	}
@@ -1085,7 +1109,7 @@ class Tag
 	 *
 	 * @return string
 	 */
-	public static function getTitle(boolean tags=true) -> string
+	public static function getTitle(boolean tags = true) -> string
 	{
 		var documentTitle;
 		let documentTitle = self::_documentTitle;
@@ -1096,19 +1120,19 @@ class Tag
 	}
 
 	/**
-	* Gets the current document title separator
-	*
-	* <code>
-	*         echo Phalcon\Tag::getTitleSeparator();
-	* </code>
-	*
-	* <code>
-	*         {{ get_title_separator() }}
-	* </code>
-	*
-	* @return string
-	*/
-	public static function getTitleSeparator()
+	 * Gets the current document title separator
+	 *
+	 * <code>
+	 *         echo Phalcon\Tag::getTitleSeparator();
+	 * </code>
+	 *
+	 * <code>
+	 *         {{ get_title_separator() }}
+	 * </code>
+	 *
+	 * @return string
+	 */
+	public static function getTitleSeparator() -> string
 	{
 		return self::_documentTitleSeparator;
 	}
@@ -1131,7 +1155,7 @@ class Tag
 	 * @param   boolean local
 	 * @return	string
 	 */
-	public static function stylesheetLink(parameters=null, local=true)
+	public static function stylesheetLink(var parameters = null, boolean local = true) -> string
 	{
 		var params, code;
 
@@ -1141,15 +1165,11 @@ class Tag
 			let params = parameters;
 		}
 
-		if typeof local != "boolean" {
-			let local = true;
-		}
-
 		if isset params[1] {
-			let local = params[1];
+			let local = (boolean) params[1];
 		} else {
 			if isset params["local"] {
-				let local = params["local"];
+				let local = (boolean) params["local"];
 				unset params["local"];
 			}
 		}
@@ -1209,7 +1229,7 @@ class Tag
 	 * @param   boolean local
 	 * @return string
 	 */
-	public static function javascriptInclude(parameters = null, local = true) -> string
+	public static function javascriptInclude(var parameters = null, boolean local = true) -> string
 	{
 		var params, code;
 
@@ -1219,15 +1239,11 @@ class Tag
 			let params = parameters;
 		}
 
-		if typeof local != "boolean" {
-			let local = true;
-		}
-
 		if isset params[1] {
-			let local = params[1];
+			let local = (boolean) params[1];
 		} else {
 			if isset params["local"] {
-				let local = params["local"];
+				let local = (boolean) params["local"];
 				unset params["local"];
 			}
 		}
@@ -1276,7 +1292,7 @@ class Tag
 	 * @param  boolean local
 	 * @return string
 	 */
-	public static function image(parameters=null, local=true)
+	public static function image(var parameters = null, boolean local = true) -> string
 	{
 		var params, code, src;
 
@@ -1341,6 +1357,7 @@ class Tag
 		}
 
 		if replace {
+
 			if typeof replace != "array" && typeof replace != "string"{
 				throw new Exception("Parameter replace must be an array or a string");
 			}
@@ -1373,11 +1390,15 @@ class Tag
 	/**
 	 * Set the document type of content
 	 *
-	 * @param string doctype
+	 * @param integer doctype
 	 */
-	public static function setDocType(doctype) -> void
+	public static function setDocType(int doctype) -> void
 	{
-		let self::_documentType = doctype;
+	    if (doctype < self::HTML32 || doctype > self::XHTML5) {
+	        let self::_documentType = self::HTML5;
+	    } else {
+		    let self::_documentType = doctype;
+        }
 	}
 
 	/**
@@ -1387,28 +1408,38 @@ class Tag
 	 */
 	public static function getDocType() -> string
 	{
-
 		switch self::_documentType
 		{
 			case 1:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" . PHP_EOL;
 			/* no break */
+
 			case 2:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/strict.dtd\">" . PHP_EOL;
 			/* no break */
+
 			case 3:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/loose.dtd\">" . PHP_EOL;
 			/* no break */
+
 			case 4:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/html4/frameset.dtd\">" . PHP_EOL;
 			/* no break */
-			case 5:  return "<!DOCTYPE html>" . PHP_EOL;
-			/* no break */
+
 			case 6:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" . PHP_EOL;
 			/* no break */
+
 			case 7:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"" . PHP_EOL."\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" . PHP_EOL;
 			/* no break */
+
 			case 8:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">" . PHP_EOL;
 			/* no break */
+
 			case 9:  return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"" . PHP_EOL . "\t\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">" . PHP_EOL;
 			/* no break */
+
 			case 10: return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 2.0//EN\"" . PHP_EOL . "\t\"http://www.w3.org/MarkUp/DTD/xhtml2.dtd\">" . PHP_EOL;
+			/* no break */
+
+			case 5:
+			case 11: return "<!DOCTYPE html>" . PHP_EOL;
+			/* no break */
 		}
 
 		return "";
@@ -1428,7 +1459,8 @@ class Tag
 	 * @param boolean useEol
 	 * @return string
 	 */
-	public static function tagHtml(tagName, parameters=null, selfClose=false, onlyStart=false, useEol=false) -> string
+	public static function tagHtml(string tagName, var parameters = null, boolean selfClose = false,
+		boolean onlyStart = false, boolean useEol = false) -> string
 	{
 		var params, localCode;
 
@@ -1475,7 +1507,7 @@ class Tag
 	 * @param boolean useEol
 	 * @return string
 	 */
-	public static function tagHtmlClose(tagName, useEol=false)
+	public static function tagHtmlClose(string tagName, useEol = false) -> string
 	{
 		if useEol {
 			return "</" . tagName . ">" . PHP_EOL;

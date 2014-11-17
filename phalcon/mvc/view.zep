@@ -739,7 +739,7 @@ class View extends Injectable implements ViewInterface
 	 */
 	public function exists(string! view) -> boolean
 	{
-		var basePath, viewsDir, engines, engine, extension;
+		var basePath, viewsDir, engines, extension;
 		boolean exists;
 
 		let basePath = this->_basePath,
@@ -753,10 +753,8 @@ class View extends Injectable implements ViewInterface
 		}
 
 		let exists = false;
-		for extension, engine in engines {
-
+		for extension, _ in engines {
 			let exists = (boolean) file_exists(basePath . viewsDir . view . extension);
-
 			if exists {
 				break;
 			}
@@ -1028,6 +1026,32 @@ class View extends Injectable implements ViewInterface
 
 		let this->_pickView = pickView;
 		return this;
+	}
+
+	/**
+	 * Renders a partial view
+	 *
+	 * <code>
+	 * 	//Retrieve the contents of a partial
+	 * 	echo $this->getPartial('shared/footer');
+	 * </code>
+	 *
+	 * <code>
+	 * 	//Retrieve the contents of a partial with arguments
+	 * 	echo $this->getPartial('shared/footer', array('content' => $html));
+	 * </code>
+	 *
+	 * @param string partialPath
+	 * @param array params
+	 * @return string
+	 */
+	public function getPartial(string! partialPath, params = null) -> string
+	{
+		// not liking the ob_* functions here, but it will greatly reduce the
+		// amount of double code.
+		ob_start();
+		this->partial(partialPath, params);
+		return ob_get_clean();
 	}
 
 	/**

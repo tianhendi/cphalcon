@@ -46,7 +46,7 @@ class NativeArray extends Adapter implements AdapterInterface, \ArrayAccess
 			throw new Exception("Translation content was not provided");
 		}
 
-		if typeof data != "array" {
+		if typeof data !== "array" {
 			throw new Exception("Translation data must be an array");
 		}
 
@@ -62,17 +62,17 @@ class NativeArray extends Adapter implements AdapterInterface, \ArrayAccess
 	 */
 	public function query(string! index, placeholders = null) -> string
 	{
-		var traslation, key, value;
+		var translation, key, value;
 
-		if fetch traslation, this->_translate[index] {
-			if typeof placeholders == "array" {
+		if fetch translation, this->_translate[index] {
+			if typeof placeholders === "array" {
 				if count(placeholders) {
 					for key, value in placeholders {
-						let traslation = str_replace("%" . key . "%", value, traslation);
+						let translation = str_replace("%" . key . "%", value, translation);
 					}
 				}
 			}
-			return traslation;
+			return translation;
 		}
 		return index;
 	}

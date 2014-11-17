@@ -20,6 +20,8 @@
 namespace Phalcon\Cache\Backend;
 
 use Phalcon\Cache\Exception;
+use Phalcon\Cache\Backend;
+use Phalcon\Cache\BackendInterface;
 
 /**
  * Phalcon\Cache\Backend\Apc
@@ -44,7 +46,7 @@ use Phalcon\Cache\Exception;
  *
  *</code>
  */
-class Apc extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterface
+class Apc extends Backend implements BackendInterface
 {
 
 	/**
@@ -88,7 +90,7 @@ class Apc extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterf
 		}
 
 		if !lastKey {
-			throw new Exception("The cache must be started first");
+			throw new Exception("Cache must be started first");
 		}
 
 		let frontend = this->_frontend;
@@ -169,7 +171,7 @@ class Apc extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterf
 	 * @param  long value
 	 * @return mixed
 	 */
-	public function decrement(keyName=null, int value=1)
+	public function decrement(keyName = null, int value = 1)
 	{
 		var lastKey, cachedContent, result;
 
@@ -208,9 +210,9 @@ class Apc extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterf
 	 * @param string prefix
 	 * @return array
 	 */
-	public function queryKeys(string prefix=null)
+	public function queryKeys(string prefix = null) -> array
 	{
-		var prefixPattern, apc, keys, key, item;
+		var prefixPattern, apc, keys, key;
 
 		if !prefix {
 			let prefixPattern = "/^_PHCA/";
@@ -221,7 +223,7 @@ class Apc extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterf
 		let keys = [],
 			apc = new \APCIterator("user", prefixPattern);
 
-		for key, item in iterator(apc) {
+		for key, _ in iterator(apc) {
 			let keys[] = substr(key, 5);
 		}
 

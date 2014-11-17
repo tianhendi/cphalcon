@@ -136,7 +136,7 @@ class Security implements InjectionAwareInterface
 	 * @param int workFactor
 	 * @return string
 	 */
-	public function hash(string password, int workFactor) -> string
+	public function hash(string password, int workFactor = 0) -> string
 	{
 		if !workFactor {
 			let workFactor = (int) this->_workFactor;
@@ -154,13 +154,29 @@ class Security implements InjectionAwareInterface
 	 */
 	public function checkHash(string password, string passwordHash, int maxPassLength = 0) -> boolean
 	{
+		char ch;
+		string cryptedHash;
+		int i, sum, cryptedLength, passwordLength;
+
 		if maxPassLength {
 			if maxPassLength > 0 && strlen(password) > maxPassLength {
 				return false;
 			}
 		}
 
-		return crypt(password, passwordHash) == passwordHash;
+		let cryptedHash = (string) crypt(password, passwordHash);
+
+		let cryptedLength = strlen(cryptedHash),
+        	passwordLength = strlen(passwordHash);
+
+        let cryptedHash .= passwordHash;
+
+        let sum = cryptedLength - passwordLength;
+        for i, ch in passwordHash {
+        	let sum = sum | (cryptedHash[i] ^ ch);
+        }
+
+		return 0 === sum;
 	}
 
 	/**
@@ -224,6 +240,9 @@ class Security implements InjectionAwareInterface
 		}
 
 		let token = openssl_random_pseudo_bytes(numberBytes);
+		let token = base64_encode(token);
+		let token = phalcon_filter_alphanum(token);
+
 		let dependencyInjector = <DiInterface> this->_dependencyInjector;
 
 		if typeof dependencyInjector != "object" {
@@ -263,20 +282,20 @@ class Security implements InjectionAwareInterface
 			let request = dependencyInjector->getShared("request");
 
 			/**
-            * We always check if the value is correct in post
-            */
-            let token = request->getPost(tokenKey);
+			 * We always check if the value is correct in post
+			 */
+			let token = request->getPost(tokenKey);
 		} else {
 			let token = tokenValue;
 		}
 
 		/**
-        * The value is the same?
-        */
-        return token == session->get("$PHALCON/CSRF$");
-    }
+		 * The value is the same?
+		 */
+		return token == session->get("$PHALCON/CSRF$");
+	}
 
-    /**
+	/**
 	 * Returns the value of the CSRF token in session
 	 *
 	 * @return string
@@ -315,6 +334,5 @@ class Security implements InjectionAwareInterface
 
 		return ops;
 	}
-
 
 }

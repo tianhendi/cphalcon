@@ -62,7 +62,7 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 
 	public function testExecuteMysql()
 	{
-		require 'unit-tests/config.db.php';
+		require __DIR__ . '/config.db.php';
 		if (empty($configMysql)) {
 			$this->markTestSkipped("Skipped");
 			return;
@@ -71,7 +71,7 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 		$di = $this->_getDI();
 
 		$di->set('db', function() {
-			require 'unit-tests/config.db.php';
+			require __DIR__ . '/config.db.php';
 			return new Phalcon\Db\Adapter\Pdo\Mysql($configMysql);
 		}, true);
 
@@ -88,7 +88,7 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 
 	public function testExecutePostgresql()
 	{
-		require 'unit-tests/config.db.php';
+		require __DIR__ . '/config.db.php';
 		if (empty($configPostgresql)) {
 			$this->markTestSkipped("Skipped");
 			return;
@@ -97,7 +97,7 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 		$di = $this->_getDI();
 
 		$di->set('db', function() {
-			require 'unit-tests/config.db.php';
+			require __DIR__ . '/config.db.php';
 			return new Phalcon\Db\Adapter\Pdo\Postgresql($configPostgresql);
 		}, true);
 
@@ -114,7 +114,7 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 
 	public function testExecuteSqlite()
 	{
-		require 'unit-tests/config.db.php';
+		require __DIR__ . '/config.db.php';
 		if (empty($configSqlite)) {
 			$this->markTestSkipped("Skipped");
 			return;
@@ -123,7 +123,7 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 		$di = $this->_getDI();
 
 		$di->set('db', function() {
-			require 'unit-tests/config.db.php';
+			require __DIR__ . '/config.db.php';
 			return new Phalcon\Db\Adapter\Pdo\Sqlite($configSqlite);
 		}, true);
 
@@ -408,7 +408,10 @@ class ModelsQueryExecuteTest extends PHPUnit_Framework_TestCase
 		$this->assertInstanceOf('Phalcon\Mvc\Model\Row', $result[0]);
 
 		// Issue 1011
-		$result = $manager->executeQuery('SELECT r.name le_name FROM Robots r ORDER BY r.name ASC LIMIT ?1,?2', array(1 => 1, 2 => 2), array(1 => \Phalcon\Db\Column::BIND_PARAM_INT, 2 => \Phalcon\Db\Column::BIND_PARAM_INT));
+		$result = $manager->executeQuery('SELECT r.name le_name FROM Robots r ORDER BY r.name ASC LIMIT ?1,?2', 
+			array(1 => 1, 2 => 2), 
+			array(1 => \Phalcon\Db\Column::BIND_PARAM_INT, 2 => \Phalcon\Db\Column::BIND_PARAM_INT
+		));
 		$this->assertInstanceOf('Phalcon\Mvc\Model\Resultset\Simple', $result);
 		$this->assertEquals(count($result), 2);
 		$this->assertInstanceOf('Phalcon\Mvc\Model\Row', $result[0]);

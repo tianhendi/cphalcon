@@ -138,7 +138,7 @@ PHP_METHOD(Phalcon_Http_Request_File, __construct) {
 	if (zephir_array_isset_string_fetch(&name, file, SS("name"), 0 TSRMLS_CC)) {
 		zephir_update_property_this(this_ptr, SL("_name"), name TSRMLS_CC);
 		ZEPHIR_SINIT_VAR(_0);
-		ZVAL_LONG(&_0, 4);
+		ZVAL_STRING(&_0, "PATHINFO_EXTENSION", 0);
 		ZEPHIR_CALL_FUNCTION(&_1, "defined", &_2, &_0);
 		zephir_check_call_status();
 		if (zephir_is_true(_1)) {
@@ -259,7 +259,7 @@ PHP_METHOD(Phalcon_Http_Request_File, isUploadedFile) {
 
 	ZEPHIR_MM_GROW();
 
-	ZEPHIR_CALL_METHOD(&tmp, this_ptr, "gettempname",  NULL);
+	ZEPHIR_CALL_METHOD(&tmp, this_ptr, "gettempname", NULL);
 	zephir_check_call_status();
 	_0 = Z_TYPE_P(tmp) == IS_STRING;
 	if (_0) {
@@ -267,11 +267,7 @@ PHP_METHOD(Phalcon_Http_Request_File, isUploadedFile) {
 		zephir_check_call_status();
 		_0 = zephir_is_true(_1);
 	}
-	if (_0) {
-		RETURN_MM_BOOL(1);
-	} else {
-		RETURN_MM_BOOL(0);
-	}
+	RETURN_MM_BOOL(_0);
 
 }
 
@@ -296,8 +292,8 @@ PHP_METHOD(Phalcon_Http_Request_File, moveTo) {
 		RETURN_MM_NULL();
 	}
 
-	if (unlikely(Z_TYPE_P(destination_param) == IS_STRING)) {
-		destination = destination_param;
+	if (likely(Z_TYPE_P(destination_param) == IS_STRING)) {
+		zephir_get_strval(destination, destination_param);
 	} else {
 		ZEPHIR_INIT_VAR(destination);
 		ZVAL_EMPTY_STRING(destination);

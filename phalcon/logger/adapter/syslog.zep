@@ -20,6 +20,8 @@
 namespace Phalcon\Logger\Adapter;
 
 use Phalcon\Logger\Exception;
+use Phalcon\Logger\Adapter;
+use Phalcon\Logger\AdapterInterface;
 
 /**
  * Phalcon\Logger\Adapter\Syslog
@@ -36,7 +38,7 @@ use Phalcon\Logger\Exception;
  *	$logger->error("This is another error");
  *</code>
  */
-class Syslog extends \Phalcon\Logger\Adapter implements \Phalcon\Logger\AdapterInterface
+class Syslog extends Adapter implements AdapterInterface
 {
 
 	protected _opened = false;
@@ -47,7 +49,7 @@ class Syslog extends \Phalcon\Logger\Adapter implements \Phalcon\Logger\AdapterI
 	 * @param string name
 	 * @param array options
 	 */
-	public function __construct(name, options=null)
+	public function __construct(name, options = null)
 	{
 		var option, facility;
 
@@ -74,13 +76,11 @@ class Syslog extends \Phalcon\Logger\Adapter implements \Phalcon\Logger\AdapterI
 	 */
 	public function getFormatter()
 	{
-		var formatter;
-
-		let formatter = this->_formatter;
-		if typeof formatter != "object" {
-			let formatter = new \Phalcon\Logger\Formatter\Syslog(), this->_formatter = formatter;
+		if typeof this->_formatter !== "object" {
+			let this->_formatter = new \Phalcon\Logger\Formatter\Syslog();
 		}
-		return formatter;
+
+		return this->_formatter;
 	}
 
 	/**
@@ -96,7 +96,7 @@ class Syslog extends \Phalcon\Logger\Adapter implements \Phalcon\Logger\AdapterI
 		var appliedFormat;
 
 		let appliedFormat = this->getFormatter()->format(message, type, time, context);
-		if typeof appliedFormat != "array" {
+		if typeof appliedFormat !== "array" {
 			throw new Exception("The formatted message is not valid");
 		}
 

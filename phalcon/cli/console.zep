@@ -20,12 +20,18 @@
 
 namespace Phalcon\Cli;
 
+use Phalcon\Cli\Router\Route;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Cli\Console\Exception;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Events\EventsAwareInterface;
+
 /**
  * Phalcon\Cli\Console
  *
  * This component allows to create CLI applications using Phalcon
  */
-class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\EventsAwareInterface
+class Console implements InjectionAwareInterface, EventsAwareInterface
 {
 
 	protected _dependencyInjector;
@@ -35,6 +41,10 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 	protected _modules;
 
 	protected _moduleObject;
+
+	protected _arguments;
+
+	protected _options;
 
 	/**
 	 * Phalcon\Cli\Console constructor
@@ -46,6 +56,9 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 		if typeof dependencyInjector == "object" {
 			let this->_dependencyInjector = dependencyInjector;
 		}
+
+		let this->_arguments = [],
+			this->_options = [];
 	}
 
 	/**
@@ -73,7 +86,7 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 	 *
 	 * @param Phalcon\Events\ManagerInterface eventsManager
 	 */
-	public function setEventsManager(<\Phalcon\Events\ManagerInterface> eventsManager)
+	public function setEventsManager(<ManagerInterface> eventsManager)
 	{
 		let this->_eventsManager = eventsManager;
 	}
@@ -83,7 +96,7 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 	 *
 	 * @return Phalcon\Events\ManagerInterface
 	 */
-	public function getEventsManager() -> <\Phalcon\Events\ManagerInterface>
+	public function getEventsManager() -> <ManagerInterface>
 	{
 		return this->_eventsManager;
 	}
@@ -106,11 +119,8 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 	 *
 	 * @param array modules
 	 */
-	public function registerModules(modules)
+	public function registerModules(array! modules)
 	{
-		if typeof modules != "array" {
-			throw new \Phalcon\Cli\Console\Exception("Modules must be an Array");
-		}
 		let this->_modules = modules;
 	}
 
@@ -128,11 +138,8 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 	 *
 	 * @param array modules
 	 */
-	public function addModules(modules)
+	public function addModules(array! modules)
 	{
-		if typeof modules != "array" {
-			throw new \Phalcon\Cli\Console\Exception("Modules must be an Array");
-		}
 		let this->_modules = array_merge(modules, this->_modules);
 	}
 
@@ -152,7 +159,7 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 	 * @param array arguments
 	 * @return mixed
 	 */
-	public function handle(arguments=null)
+	public function handle(arguments = null)
 	{
 		var dependencyInjector, router, eventsManager,
 			moduleName, modules, module, path, className,
@@ -160,13 +167,18 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 
 		let dependencyInjector = this->_dependencyInjector;
 		if typeof dependencyInjector != "object" {
-			throw new \Phalcon\Cli\Console\Exception("A dependency injection object is required to access internal services");
+			throw new Exception("A dependency injection object is required to access internal services");
 		}
 
-		let eventsManager = <\Phalcon\Events\Manager> this->_eventsManager;
+		let eventsManager = <ManagerInterface> this->_eventsManager;
 
 		let router = <\Phalcon\Cli\Router> dependencyInjector->getShared("router");
-		router->handle(arguments);
+
+		if !arguments && this->_arguments {
+			router->handle(this->_arguments);
+		} else {
+			router->handle(arguments);
+		}
 
 		let moduleName = router->getModuleName();
 		if moduleName {
@@ -179,17 +191,17 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 
 			let modules = this->_modules;
 			if !isset modules[moduleName] {
-				throw new \Phalcon\Cli\Console\Exception("Module '" . moduleName . "' isn't registered in the console container");
+				throw new Exception("Module '" . moduleName . "' isn't registered in the console container");
 			}
 
 			let module = modules[moduleName];
 			if typeof module != "array" {
-				throw new \Phalcon\Cli\Console\Exception("Invalid module definition path");
+				throw new Exception("Invalid module definition path");
 			}
 
 			if fetch path, module["path"] {
 				if !file_exists(path) {
-					throw new \Phalcon\Cli\Console\Exception("Module definition path '" . path . "' doesn't exist");
+					throw new Exception("Module definition path '" . path . "' doesn't exist");
 				}
 				require path;
 			}
@@ -217,6 +229,7 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 		dispatcher->setTaskName(router->getTaskName());
 		dispatcher->setActionName(router->getActionName());
 		dispatcher->setParams(router->getParams());
+		dispatcher->setOptions(this->_options);
 
 		if typeof eventsManager == "object" {
 			if eventsManager->fire("console:beforeHandleTask", this, dispatcher) === false {
@@ -231,6 +244,70 @@ class Console implements \Phalcon\Di\InjectionAwareInterface, \Phalcon\Events\Ev
 		}
 
 		return task;
+	}
+
+	/**
+	 * Set an specific argument
+	 *
+	 * @param var arguments
+	 * @param boolean str
+	 * @param boolean shift
+	 */
+	public function setArgument(arguments = null, boolean! str = true, boolean! shift = true) -> <Console>
+	{
+		var arg, pos, args, opts, handleArgs;
+
+		let args = [],
+			opts = [],
+			handleArgs = [];
+
+		if typeof arguments != "array" {
+			throw new Exception("Arguments must be an array");
+		}
+
+		if shift && count(arguments) {
+			array_shift(arguments);
+		}
+
+		for arg in arguments {
+			if typeof arg == "string" {
+				if strncmp(arg, "--", 2) == 0 {
+					let pos = strpos(arg, "=");
+					if pos {
+						let opts[trim(substr(arg, 2, pos - 2))] = trim(substr(arg, pos + 1));
+					} else {
+						let opts[trim(substr(arg, 2))] = true;
+					}
+				} else {
+					if strncmp(arg, "-", 1) == 0 {
+						let opts[substr(arg, 1)] = true;
+					} else {
+						let args[] = arg;
+					}
+				}
+			} else {
+				let args[] = arg;
+			}
+		}
+
+		if str {
+			let this->_arguments = implode(Route::getDelimiter(), args);
+		} else {
+			if count(args) {
+				let handleArgs["task"] = array_shift(args);
+			}
+			if count(args) {
+				let handleArgs["action"] = array_shift(args);
+			}
+			if count(args) {
+				let handleArgs = array_merge(handleArgs, args);
+			}
+			let this->_arguments = handleArgs;
+		}
+
+		let this->_options = opts;
+
+		return this;
 	}
 
 }

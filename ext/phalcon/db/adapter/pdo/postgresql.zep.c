@@ -82,7 +82,7 @@ PHP_METHOD(Phalcon_Db_Adapter_Pdo_Postgresql, connect) {
 	int ZEPHIR_LAST_CALL_STATUS;
 	zephir_nts_static zephir_fcall_cache_entry *_3 = NULL;
 	zend_bool _1;
-	zval *descriptor = NULL, *schema, *sql, *_0, *_2;
+	zval *descriptor = NULL, *schema = NULL, *sql, *_0, *_2;
 
 	ZEPHIR_MM_GROW();
 	zephir_fetch_params(1, 0, 1, &descriptor);
@@ -102,7 +102,7 @@ PHP_METHOD(Phalcon_Db_Adapter_Pdo_Postgresql, connect) {
 	if (zephir_array_isset_string_fetch(&schema, descriptor, SS("schema"), 0 TSRMLS_CC)) {
 		zephir_array_unset_string(&descriptor, SS("schema"), PH_SEPARATE);
 	} else {
-		ZEPHIR_INIT_BNVAR(schema);
+		ZEPHIR_INIT_NVAR(schema);
 		ZVAL_STRING(schema, "", 1);
 	}
 	if (zephir_array_isset_string(descriptor, SS("password"))) {
@@ -324,9 +324,9 @@ PHP_METHOD(Phalcon_Db_Adapter_Pdo_Postgresql, describeColumns) {
 		if (Z_TYPE_P(_13) != IS_NULL) {
 			zephir_array_fetch_long(&_14, field, 9, PH_NOISY | PH_READONLY, "phalcon/db/adapter/pdo/postgresql.zep", 278 TSRMLS_CC);
 			ZEPHIR_INIT_NVAR(_8);
-			ZVAL_STRING(_8, "/^'|'?::[[:alnum:][:space:]]+$/", 0);
+			ZVAL_STRING(_8, "/^'|'?::[[:alnum:][:space:]]+$/", ZEPHIR_TEMP_PARAM_COPY);
 			ZEPHIR_INIT_NVAR(_9);
-			ZVAL_STRING(_9, "", 0);
+			ZVAL_STRING(_9, "", ZEPHIR_TEMP_PARAM_COPY);
 			ZEPHIR_CALL_FUNCTION(&_15, "preg_replace", &_16, _8, _9, _14);
 			zephir_check_temp_parameter(_8);
 			zephir_check_temp_parameter(_9);
@@ -388,7 +388,7 @@ PHP_METHOD(Phalcon_Db_Adapter_Pdo_Postgresql, getDefaultIdValue) {
 
 	object_init_ex(return_value, phalcon_db_rawvalue_ce);
 	ZEPHIR_INIT_VAR(_0);
-	ZVAL_STRING(_0, "default", 0);
+	ZVAL_STRING(_0, "default", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(NULL, return_value, "__construct", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();

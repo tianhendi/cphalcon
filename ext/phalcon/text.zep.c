@@ -129,7 +129,7 @@ PHP_METHOD(Phalcon_Text, uncamelize) {
  */
 PHP_METHOD(Phalcon_Text, increment) {
 
-	zval *str_param = NULL, *separator = NULL, *parts, *number, *_0;
+	zval *str_param = NULL, *separator = NULL, *parts, *number = NULL, *_0;
 	zval *str = NULL;
 
 	ZEPHIR_MM_GROW();
@@ -145,7 +145,7 @@ PHP_METHOD(Phalcon_Text, increment) {
 
 	if (Z_TYPE_P(separator) == IS_NULL) {
 		ZEPHIR_INIT_NVAR(separator);
-		ZVAL_LONG(separator, '_');
+		ZVAL_STRING(separator, "_", 1);
 	}
 	ZEPHIR_INIT_VAR(parts);
 	zephir_fast_explode(parts, separator, str, LONG_MAX TSRMLS_CC);
@@ -154,7 +154,7 @@ PHP_METHOD(Phalcon_Text, increment) {
 		ZEPHIR_SEPARATE(number);
 		zephir_increment(number);
 	} else {
-		ZEPHIR_INIT_BNVAR(number);
+		ZEPHIR_INIT_NVAR(number);
 		ZVAL_LONG(number, 1);
 	}
 	zephir_array_fetch_long(&_0, parts, 0, PH_NOISY | PH_READONLY, "phalcon/text.zep", 98 TSRMLS_CC);
@@ -285,7 +285,7 @@ PHP_METHOD(Phalcon_Text, random) {
 		ZVAL_LONG(&_1, end);
 		ZEPHIR_CALL_FUNCTION(&_2, "mt_rand", &_8, &_0, &_1);
 		zephir_check_call_status();
-		zephir_array_fetch(&_7, pool, _2, PH_NOISY | PH_READONLY, "phalcon/text.zep", 139 TSRMLS_CC);
+		zephir_array_fetch(&_7, pool, _2, PH_NOISY | PH_READONLY, "phalcon/text.zep", 144 TSRMLS_CC);
 		zephir_concat_self(&str, _7 TSRMLS_CC);
 	}
 	RETURN_CCTOR(str);
@@ -337,7 +337,6 @@ PHP_METHOD(Phalcon_Text, startsWith) {
  */
 PHP_METHOD(Phalcon_Text, endsWith) {
 
-	int ZEPHIR_LAST_CALL_STATUS;
 	zend_bool ignoreCase;
 	zval *str_param = NULL, *end_param = NULL, *ignoreCase_param = NULL;
 	zval *str = NULL, *end = NULL;
@@ -354,9 +353,7 @@ PHP_METHOD(Phalcon_Text, endsWith) {
 	}
 
 
-	ZEPHIR_RETURN_CALL_FUNCTION("ends_with", NULL, str, end, (ignoreCase ? ZEPHIR_GLOBAL(global_true) : ZEPHIR_GLOBAL(global_false)));
-	zephir_check_call_status();
-	RETURN_MM();
+	RETURN_MM_BOOL(zephir_end_with(str, end, (ignoreCase ? ZEPHIR_GLOBAL(global_true) : ZEPHIR_GLOBAL(global_false))));
 
 }
 

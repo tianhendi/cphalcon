@@ -74,7 +74,7 @@ class File implements FileInterface
 		if fetch name, file["name"] {
 			let this->_name = name;
 
-			if defined(PATHINFO_EXTENSION) {
+			if defined("PATHINFO_EXTENSION") {
 				let this->_extension = pathinfo(name, PATHINFO_EXTENSION);
 			}
 		}
@@ -171,12 +171,7 @@ class File implements FileInterface
 		var tmp;
 
 		let tmp = this->getTempName();
-
-		if typeof tmp == "string" && is_uploaded_file(tmp) {
-			return true;
-		} else {
-			return false;
-		}
+		return typeof tmp == "string" && is_uploaded_file(tmp);
 	}
 
 	/**
@@ -189,5 +184,4 @@ class File implements FileInterface
 	{
 		return move_uploaded_file(this->_tmp, destination);
 	}
-
 }

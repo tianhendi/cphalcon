@@ -89,7 +89,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 	HashTable *_2, *_13;
 	HashPosition _1, _12;
 	int number, ZEPHIR_LAST_CALL_STATUS;
-	zval *record, *field = NULL, *dependencyInjector = NULL, *metaData = NULL, *message = NULL, *bindTypes, *bindDataTypes = NULL, *columnMap = NULL, *conditions, *bindParams, *composeField = NULL, *columnField = NULL, *bindType = NULL, *primaryField = NULL, *attributeField = NULL, *params, *className, *replacePairs = NULL, *_0, **_3, *_4 = NULL, *_5 = NULL, _7 = zval_used_for_init, *_8 = NULL, *_9 = NULL, *_10 = NULL, *_11 = NULL, **_14, *_15 = NULL, *_16 = NULL, *_17 = NULL, *_19 = NULL;
+	zval *record, *field = NULL, *dependencyInjector = NULL, *metaData = NULL, *message = NULL, *bindTypes, *bindDataTypes = NULL, *columnMap = NULL, *conditions, *bindParams, *composeField = NULL, *columnField = NULL, *bindType = NULL, *primaryField = NULL, *attributeField = NULL, *params, *className, *replacePairs = NULL, *_0 = NULL, **_3, *_4 = NULL, *_5 = NULL, _7 = zval_used_for_init, *_8 = NULL, *_9 = NULL, *_10 = NULL, *_11 = NULL, **_14, *_15 = NULL, *_16 = NULL, *_17 = NULL, *_19 = NULL;
 
 	ZEPHIR_MM_GROW();
 	zephir_fetch_params(1, 1, 0, &record);
@@ -100,10 +100,10 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(spl_ce_InvalidArgumentException, "Parameter 'record' must be an instance of 'Phalcon\\Mvc\\ModelInterface'", "", 0);
 		return;
 	}
-	ZEPHIR_CALL_METHOD(&dependencyInjector, record, "getdi",  NULL);
+	ZEPHIR_CALL_METHOD(&dependencyInjector, record, "getdi", NULL);
 	zephir_check_call_status();
 	ZEPHIR_INIT_VAR(_0);
-	ZVAL_STRING(_0, "modelsMetadata", 0);
+	ZVAL_STRING(_0, "modelsMetadata", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&metaData, dependencyInjector, "getshared", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -123,8 +123,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 	ZEPHIR_INIT_VAR(bindParams);
 	array_init(bindParams);
 	number = 0;
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "field", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "field", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&field, this_ptr, "getoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -212,7 +212,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 		zephir_array_append(&bindTypes, bindType, PH_SEPARATE, "phalcon/mvc/model/validator/uniqueness.zep", 148);
 		number++;
 	}
-	ZEPHIR_CALL_METHOD(&_11, record, "getoperationmade",  NULL);
+	ZEPHIR_CALL_METHOD(&_11, record, "getoperationmade", NULL);
 	zephir_check_call_status();
 	if (ZEPHIR_IS_LONG(_11, 2)) {
 		if (ZEPHIR_GLOBAL(orm).column_renaming) {
@@ -273,7 +273,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 	ZEPHIR_INIT_VAR(params);
 	array_init(params);
 	zephir_array_update_string(&params, SL("di"), &dependencyInjector, PH_COPY | PH_SEPARATE);
-	ZEPHIR_INIT_BNVAR(_0);
+	ZEPHIR_INIT_NVAR(_0);
 	zephir_fast_join_str(_0, SL(" AND "), conditions TSRMLS_CC);
 	zephir_array_update_string(&params, SL("conditions"), &_0, PH_COPY | PH_SEPARATE);
 	zephir_array_update_string(&params, SL("bind"), &bindParams, PH_COPY | PH_SEPARATE);
@@ -285,7 +285,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 	zephir_check_call_status();
 	if (!ZEPHIR_IS_LONG(_8, 0)) {
 		ZEPHIR_INIT_VAR(_19);
-		ZVAL_STRING(_19, "message", 0);
+		ZVAL_STRING(_19, "message", ZEPHIR_TEMP_PARAM_COPY);
 		ZEPHIR_CALL_METHOD(&message, this_ptr, "getoption", NULL, _19);
 		zephir_check_temp_parameter(_19);
 		zephir_check_call_status();
@@ -308,7 +308,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Uniqueness, validate) {
 		ZEPHIR_CALL_FUNCTION(&_8, "strtr", &_20, message, replacePairs);
 		zephir_check_call_status();
 		ZEPHIR_INIT_NVAR(_19);
-		ZVAL_STRING(_19, "Unique", 0);
+		ZVAL_STRING(_19, "Unique", ZEPHIR_TEMP_PARAM_COPY);
 		ZEPHIR_CALL_METHOD(NULL, this_ptr, "appendmessage", NULL, _8, field, _19);
 		zephir_check_temp_parameter(_19);
 		zephir_check_call_status();

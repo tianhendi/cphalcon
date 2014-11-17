@@ -19,6 +19,8 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\Di\Injectable;
+
 /**
  * Phalcon\Mvc\Controller
  *
@@ -55,7 +57,7 @@ namespace Phalcon\Mvc;
  *
  *</code>
  */
-abstract class Controller extends \Phalcon\Di\Injectable
+abstract class Controller extends Injectable
 {
 
 	/**
@@ -68,5 +70,4 @@ abstract class Controller extends \Phalcon\Di\Injectable
 			this->{"onConstruct"}();
 		}
 	}
-
 }

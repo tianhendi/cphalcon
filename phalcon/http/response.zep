@@ -25,6 +25,7 @@ use Phalcon\Http\Response\HeadersInterface;
 use Phalcon\Http\Response\CookiesInterface;
 use Phalcon\Mvc\UrlInterface;
 use Phalcon\Http\Response\Headers;
+use Phalcon\Di\InjectionAwareInterface;
 
 /**
  * Phalcon\Http\Response
@@ -40,7 +41,7 @@ use Phalcon\Http\Response\Headers;
  *	$response->send();
  *</code>
  */
-class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
+class Response implements ResponseInterface, InjectionAwareInterface
 {
 
 	protected _sent = false;
@@ -54,6 +55,71 @@ class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
 	protected _file = null;
 
 	protected _dependencyInjector;
+
+	protected _statusCodes = [
+        // INFORMATIONAL CODES
+        100 : "Continue",
+        101 : "Switching Protocols",
+        102 : "Processing",
+        // SUCCESS CODES
+        200 : "OK",
+        201 : "Created",
+        202 : "Accepted",
+        203 : "Non-Authoritative Information",
+        204 : "No Content",
+        205 : "Reset Content",
+        206 : "Partial Content",
+        207 : "Multi-status",
+        208 : "Already Reported",
+        // REDIRECTION CODES
+        300 : "Multiple Choices",
+        301 : "Moved Permanently",
+        302 : "Found",
+        303 : "See Other",
+        304 : "Not Modified",
+        305 : "Use Proxy",
+        306 : "Switch Proxy", // Deprecated
+        307 : "Temporary Redirect",
+        // CLIENT ERROR
+        400 : "Bad Request",
+        401 : "Unauthorized",
+        402 : "Payment Required",
+        403 : "Forbidden",
+        404 : "Not Found",
+        405 : "Method Not Allowed",
+        406 : "Not Acceptable",
+        407 : "Proxy Authentication Required",
+        408 : "Request Time-out",
+        409 : "Conflict",
+        410 : "Gone",
+        411 : "Length Required",
+        412 : "Precondition Failed",
+        413 : "Request Entity Too Large",
+        414 : "Request-URI Too Large",
+        415 : "Unsupported Media Type",
+        416 : "Requested range not satisfiable",
+        417 : "Expectation Failed",
+        418 : "I'm a teapot",
+        422 : "Unprocessable Entity",
+        423 : "Locked",
+        424 : "Failed Dependency",
+        425 : "Unordered Collection",
+        426 : "Upgrade Required",
+        428 : "Precondition Required",
+        429 : "Too Many Requests",
+        431 : "Request Header Fields Too Large",
+        // SERVER ERROR
+        500 : "Internal Server Error",
+        501 : "Not Implemented",
+        502 : "Bad Gateway",
+        503 : "Service Unavailable",
+        504 : "Gateway Time-out",
+        505 : "HTTP Version not supported",
+        506 : "Variant Also Negotiates",
+        507 : "Insufficient Storage",
+        508 : "Loop Detected",
+        511 : "Network Authentication Required"
+    ];
 
 	/**
 	 * Phalcon\Http\Response constructor
@@ -112,9 +178,9 @@ class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
 	 * @param string message
 	 * @return Phalcon\Http\ResponseInterface
 	 */
-	public function setStatusCode(int code, string message) -> <ResponseInterface>
+	public function setStatusCode(int code, string message = null) -> <ResponseInterface>
 	{
-		var headers, currentHeadersRaw, key, value;
+		var headers, currentHeadersRaw, key, defaultMessage;
 
 		let headers = this->getHeaders(),
 			currentHeadersRaw = headers->toArray();
@@ -125,11 +191,22 @@ class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
 		 * Before that we would like to unset any existing HTTP/x.y headers
 		 */
 		if typeof currentHeadersRaw == "array" {
-			for key, value in currentHeadersRaw {
+			for key, _ in currentHeadersRaw {
 				if typeof key == "string" && strstr(key, "HTTP/") {
 					headers->remove(key);
 				}
 			}
+		}
+
+		// if an empty message is given we try and grab the default for this
+		// status code. If a default doesn't exist, stop here.
+		if message === null {
+			if !isset this->_statusCodes[code] {
+				throw new Exception("Non-standard statuscode given withou a message.");
+			}
+
+			let defaultMessage = this->_statusCodes[code],
+			    message = defaultMessage;
 		}
 
 		headers->setRaw("HTTP/1.1 " . code . " " . message);
@@ -299,7 +376,7 @@ class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
 	 * @param string charset
 	 * @return Phalcon\Http\ResponseInterface
 	 */
-	public function setContentType(string contentType, charset=null) -> <ResponseInterface>
+	public function setContentType(string contentType, charset = null) -> <ResponseInterface>
 	{
 		var headers, name;
 		let headers = this->getHeaders();
@@ -354,19 +431,7 @@ class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
 	 */
 	public function redirect(location = null, externalRedirect = false, int statusCode = 302) -> <ResponseInterface>
 	{
-		var header, url, dependencyInjector, messages, matched, message;
-
-		let messages = [
-			300: "Multiple Choices",
-			301: "Moved Permanently",
-			302: "Found",
-			303: "See Other",
-			304: "Not Modified",
-			305: "Use Proxy",
-			306: "Switch Proxy",
-			307: "Temporary Redirect",
-			308: "Permanent Redirect"
-		];
+		var header, url, dependencyInjector, matched, message;
 
 		if !location {
 			let location = "";
@@ -397,9 +462,10 @@ class Response implements ResponseInterface, \Phalcon\Di\InjectionAwareInterface
 		 * The HTTP status is 302 by default, a temporary redirection
 		 */
 		if statusCode < 300 || statusCode > 308 {
-			let statusCode = 302, message = "Redirect";
+			let statusCode = 302,
+			    message = this->_statusCodes[302];
 		} else {
-			fetch message, messages[statusCode];
+			fetch message, this->_statusCodes[statusCode];
 		}
 
 		this->setStatusCode(statusCode, message);

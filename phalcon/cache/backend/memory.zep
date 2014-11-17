@@ -19,6 +19,10 @@
 
 namespace Phalcon\Cache\Backend;
 
+use Phalcon\Cache\Backend;
+use Phalcon\Cache\BackendInterface;
+use Phalcon\Cache\Exception;
+
 /**
  * Phalcon\Cache\Backend\Memory
  *
@@ -38,7 +42,7 @@ namespace Phalcon\Cache\Backend;
  *
  *</code>
  */
-class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterface
+class Memory extends Backend implements BackendInterface
 {
 
 	protected _data;
@@ -57,7 +61,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 		if keyName === null {
 			let lastKey = this->_lastKey;
 		} else {
-			let lastKey = this->_prefix . keyName;
+			let lastKey = this->_prefix . keyName, this->_lastKey = lastKey;
 		}
 
 		if !fetch cachedContent, this->_data[lastKey] {
@@ -79,7 +83,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 	 * @param long lifetime
 	 * @param boolean stopBuffer
 	 */
-	public function save(var keyName=null, var content=null, lifetime=null, stopBuffer=true) -> void
+	public function save(var keyName = null, var content = null, lifetime = null, stopBuffer = true) -> void
 	{
 		var lastKey, frontend, cachedContent, preparedContent;
 
@@ -90,7 +94,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 		}
 
 		if !lastKey {
-			throw new \Phalcon\Cache\Exception("The cache must be started first");
+			throw new Exception("Cache must be started first");
 		}
 
 		let frontend = this->_frontend;
@@ -141,9 +145,9 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 	 * @param string|int prefix
 	 * @return array
 	 */
-	public function queryKeys(var prefix=null)
+	public function queryKeys(var prefix = null) -> array
 	{
-		var data, keys, index, value;
+		var data, keys, index;
 
 		let data = this->_data;
 		let keys = [];
@@ -151,7 +155,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 			if !prefix {
 				let keys = array_keys(data);
 			} else {
-				for index, value in data {
+				for index, _ in data {
 					let keys[] = index;
 				}
 			}
@@ -166,7 +170,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 	 * @param  long lifetime
 	 * @return boolean
 	 */
-	public function exists(var keyName=null, lifetime=null)
+	public function exists(var keyName = null, lifetime = null) -> boolean
 	{
 		var lastKey;
 
@@ -192,7 +196,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 	 * @param  long lifetime
 	 * @return long
 	 */
-	public function increment(keyName=null, value=null)
+	public function increment(keyName = null, value = null)
 	{
 		var lastKey, prefix, cachedContent, result;
 
@@ -229,7 +233,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 	 * @param  long value
 	 * @return long
 	 */
-	public function decrement(keyName=null, value=null)
+	public function decrement(keyName = null, value = null)
 	{
 		var lastKey, prefix, cachedContent, result;
 
@@ -264,7 +268,7 @@ class Memory extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInt
 	 *
 	 * @return boolean
 	 */
-	public function flush()
+	public function flush() -> boolean
 	{
 		let this->_data = null;
 		return true;

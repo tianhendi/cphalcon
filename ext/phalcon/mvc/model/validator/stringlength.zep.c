@@ -87,9 +87,9 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 
 	zephir_nts_static zephir_fcall_cache_entry *_6 = NULL;
 	zval *_4 = NULL;
+	zend_bool _1, _3;
 	int ZEPHIR_LAST_CALL_STATUS;
-	zend_bool invalidMaximum, invalidMinimum, _1, _3;
-	zval *record, *field = NULL, *isSetMin = NULL, *isSetMax = NULL, *value = NULL, *length = NULL, *maximum = NULL, *minimum = NULL, *message = NULL, *_0, *_2 = NULL, *_5 = NULL;
+	zval *record, *field = NULL, *isSetMin = NULL, *isSetMax = NULL, *value = NULL, *length = NULL, *maximum = NULL, *minimum = NULL, *message = NULL, *_0 = NULL, *_2 = NULL, *_5 = NULL;
 
 	ZEPHIR_MM_GROW();
 	zephir_fetch_params(1, 1, 0, &record);
@@ -101,21 +101,21 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 		return;
 	}
 	ZEPHIR_INIT_VAR(_0);
-	ZVAL_STRING(_0, "field", 0);
+	ZVAL_STRING(_0, "field", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&field, this_ptr, "getoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
 	if (Z_TYPE_P(field) != IS_STRING) {
-		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_mvc_model_exception_ce, "Field name must be a string", "phalcon/mvc/model/validator/stringlength.zep", 71);
+		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_mvc_model_exception_ce, "Field name must be a string", "phalcon/mvc/model/validator/stringlength.zep", 70);
 		return;
 	}
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "min", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "min", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&isSetMin, this_ptr, "issetoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "max", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "max", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&isSetMax, this_ptr, "issetoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -124,13 +124,13 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 		_1 = !zephir_is_true(isSetMax);
 	}
 	if (_1) {
-		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_mvc_model_exception_ce, "A minimum or maximum must be set", "phalcon/mvc/model/validator/stringlength.zep", 81);
+		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_mvc_model_exception_ce, "A minimum or maximum must be set", "phalcon/mvc/model/validator/stringlength.zep", 80);
 		return;
 	}
 	ZEPHIR_CALL_METHOD(&value, record, "readattribute", NULL, field);
 	zephir_check_call_status();
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "allowEmpty", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "allowEmpty", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&_2, this_ptr, "issetoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -148,17 +148,15 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 		ZEPHIR_INIT_NVAR(length);
 		ZVAL_LONG(length, zephir_fast_strlen_ev(value));
 	}
-	invalidMaximum = 0;
-	invalidMinimum = 0;
 	if (zephir_is_true(isSetMax)) {
-		ZEPHIR_INIT_BNVAR(_0);
-		ZVAL_STRING(_0, "max", 0);
+		ZEPHIR_INIT_NVAR(_0);
+		ZVAL_STRING(_0, "max", ZEPHIR_TEMP_PARAM_COPY);
 		ZEPHIR_CALL_METHOD(&maximum, this_ptr, "getoption", NULL, _0);
 		zephir_check_temp_parameter(_0);
 		zephir_check_call_status();
 		if (ZEPHIR_GT(length, maximum)) {
-			ZEPHIR_INIT_BNVAR(_0);
-			ZVAL_STRING(_0, "messageMaximum", 0);
+			ZEPHIR_INIT_NVAR(_0);
+			ZVAL_STRING(_0, "messageMaximum", ZEPHIR_TEMP_PARAM_COPY);
 			ZEPHIR_CALL_METHOD(&message, this_ptr, "getoption", NULL, _0);
 			zephir_check_temp_parameter(_0);
 			zephir_check_call_status();
@@ -172,8 +170,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 			zephir_array_update_string(&_4, SL(":max"), &maximum, PH_COPY | PH_SEPARATE);
 			ZEPHIR_CALL_FUNCTION(&_5, "strtr", &_6, message, _4);
 			zephir_check_call_status();
-			ZEPHIR_INIT_BNVAR(_0);
-			ZVAL_STRING(_0, "TooLong", 0);
+			ZEPHIR_INIT_NVAR(_0);
+			ZVAL_STRING(_0, "TooLong", ZEPHIR_TEMP_PARAM_COPY);
 			ZEPHIR_CALL_METHOD(NULL, this_ptr, "appendmessage", NULL, _5, field, _0);
 			zephir_check_temp_parameter(_0);
 			zephir_check_call_status();
@@ -181,14 +179,14 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 		}
 	}
 	if (zephir_is_true(isSetMin)) {
-		ZEPHIR_INIT_BNVAR(_0);
-		ZVAL_STRING(_0, "min", 0);
+		ZEPHIR_INIT_NVAR(_0);
+		ZVAL_STRING(_0, "min", ZEPHIR_TEMP_PARAM_COPY);
 		ZEPHIR_CALL_METHOD(&minimum, this_ptr, "getoption", NULL, _0);
 		zephir_check_temp_parameter(_0);
 		zephir_check_call_status();
 		if (ZEPHIR_LT(length, minimum)) {
-			ZEPHIR_INIT_BNVAR(_0);
-			ZVAL_STRING(_0, "messageMinimum", 0);
+			ZEPHIR_INIT_NVAR(_0);
+			ZVAL_STRING(_0, "messageMinimum", ZEPHIR_TEMP_PARAM_COPY);
 			ZEPHIR_CALL_METHOD(&message, this_ptr, "getoption", NULL, _0);
 			zephir_check_temp_parameter(_0);
 			zephir_check_call_status();
@@ -202,8 +200,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_StringLength, validate) {
 			zephir_array_update_string(&_4, SL(":min"), &minimum, PH_COPY | PH_SEPARATE);
 			ZEPHIR_CALL_FUNCTION(&_5, "strtr", &_6, message, _4);
 			zephir_check_call_status();
-			ZEPHIR_INIT_BNVAR(_0);
-			ZVAL_STRING(_0, "TooShort", 0);
+			ZEPHIR_INIT_NVAR(_0);
+			ZVAL_STRING(_0, "TooShort", ZEPHIR_TEMP_PARAM_COPY);
 			ZEPHIR_CALL_METHOD(NULL, this_ptr, "appendmessage", NULL, _5, field, _0);
 			zephir_check_temp_parameter(_0);
 			zephir_check_call_status();

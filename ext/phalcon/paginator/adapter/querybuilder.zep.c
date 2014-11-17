@@ -103,14 +103,14 @@ PHP_METHOD(Phalcon_Paginator_Adapter_QueryBuilder, __construct) {
 	zephir_update_property_this(this_ptr, SL("_config"), config TSRMLS_CC);
 	ZEPHIR_OBS_VAR(builder);
 	if (!(zephir_array_isset_string_fetch(&builder, config, SS("builder"), 0 TSRMLS_CC))) {
-		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_paginator_exception_ce, "Parameter 'builder' is required", "phalcon/paginator/adapter/querybuilder.zep", 77);
+		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_paginator_exception_ce, "Parameter 'builder' is required", "phalcon/paginator/adapter/querybuilder.zep", 78);
 		return;
 	} else {
 		zephir_update_property_this(this_ptr, SL("_builder"), builder TSRMLS_CC);
 	}
 	ZEPHIR_OBS_VAR(limit);
 	if (!(zephir_array_isset_string_fetch(&limit, config, SS("limit"), 0 TSRMLS_CC))) {
-		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_paginator_exception_ce, "Parameter 'limit' is required", "phalcon/paginator/adapter/querybuilder.zep", 83);
+		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_paginator_exception_ce, "Parameter 'limit' is required", "phalcon/paginator/adapter/querybuilder.zep", 84);
 		return;
 	} else {
 		zephir_update_property_this(this_ptr, SL("_limitRows"), limit TSRMLS_CC);
@@ -237,7 +237,7 @@ PHP_METHOD(Phalcon_Paginator_Adapter_QueryBuilder, getPaginate) {
 
 	int numberPage, before, ZEPHIR_LAST_CALL_STATUS;
 	double totalPages;
-	zval *originalBuilder, *builder, *totalBuilder, *limit, *number, *query = NULL, *page, *items = NULL, *totalQuery = NULL, *result = NULL, *row = NULL, *rowcount = NULL, *intTotalPages, *next = NULL, *_0, *_1, *_2, *_3, *_4, _5;
+	zval *originalBuilder, *builder, *totalBuilder, *limit, *number, *query = NULL, *page, *items = NULL, *totalQuery = NULL, *result = NULL, *row = NULL, *rowcount = NULL, *intTotalPages, *next = NULL, *_0, *_1, *_2 = NULL, *_3, *_4, _5;
 
 	ZEPHIR_MM_GROW();
 
@@ -268,7 +268,7 @@ PHP_METHOD(Phalcon_Paginator_Adapter_QueryBuilder, getPaginate) {
 		ZEPHIR_CALL_METHOD(NULL, builder, "limit", NULL, limit, number);
 		zephir_check_call_status();
 	}
-	ZEPHIR_CALL_METHOD(&query, builder, "getquery",  NULL);
+	ZEPHIR_CALL_METHOD(&query, builder, "getquery", NULL);
 	zephir_check_call_status();
 	ZEPHIR_INIT_VAR(page);
 	object_init(page);
@@ -283,23 +283,23 @@ PHP_METHOD(Phalcon_Paginator_Adapter_QueryBuilder, getPaginate) {
 	ZEPHIR_INIT_ZVAL_NREF(_1);
 	ZVAL_LONG(_1, before);
 	zephir_update_property_zval(page, SL("before"), _1 TSRMLS_CC);
-	ZEPHIR_CALL_METHOD(&items, query, "execute",  NULL);
+	ZEPHIR_CALL_METHOD(&items, query, "execute", NULL);
 	zephir_check_call_status();
 	zephir_update_property_zval(page, SL("items"), items TSRMLS_CC);
 	ZEPHIR_INIT_VAR(_2);
-	ZVAL_STRING(_2, "COUNT(*) [rowcount]", 0);
+	ZVAL_STRING(_2, "COUNT(*) [rowcount]", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(NULL, totalBuilder, "columns", NULL, _2);
 	zephir_check_temp_parameter(_2);
 	zephir_check_call_status();
-	ZEPHIR_INIT_BNVAR(_2);
+	ZEPHIR_INIT_NVAR(_2);
 	ZVAL_NULL(_2);
 	ZEPHIR_CALL_METHOD(NULL, totalBuilder, "orderby", NULL, _2);
 	zephir_check_call_status();
-	ZEPHIR_CALL_METHOD(&totalQuery, totalBuilder, "getquery",  NULL);
+	ZEPHIR_CALL_METHOD(&totalQuery, totalBuilder, "getquery", NULL);
 	zephir_check_call_status();
-	ZEPHIR_CALL_METHOD(&result, totalQuery, "execute",  NULL);
+	ZEPHIR_CALL_METHOD(&result, totalQuery, "execute", NULL);
 	zephir_check_call_status();
-	ZEPHIR_CALL_METHOD(&row, result, "getfirst",  NULL);
+	ZEPHIR_CALL_METHOD(&row, result, "getfirst", NULL);
 	zephir_check_call_status();
 	ZEPHIR_OBS_VAR(_3);
 	zephir_read_property(&_3, row, SL("rowcount"), PH_NOISY_CC);

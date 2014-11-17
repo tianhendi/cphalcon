@@ -17,6 +17,7 @@
 #include "kernel/require.h"
 #include "ext/spl/spl_exceptions.h"
 #include "kernel/exception.h"
+#include "kernel/operators.h"
 
 
 /*
@@ -35,6 +36,39 @@
  | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
  |          Eduar Carvajal <eduar@phalconphp.com>                         |
  +------------------------------------------------------------------------+
+ */
+/**
+ * Phalcon\Config\Adapter\Php
+ *
+ * Reads php files and converts them to Phalcon\Config objects.
+ *
+ * Given the next configuration file:
+ *
+ *<code>
+ *<?php
+ *return array(
+ * 'database' => array(
+ *     'adapter' => 'Mysql',
+ *     'host' => 'localhost',
+ *     'username' => 'scott',
+ *     'password' => 'cheetah',
+ *     'dbname' => 'test_db'
+ * ),
+ *
+ * phalcon' => array(
+ *    'controllersDir' => '../app/controllers/',
+ *    'modelsDir' => '../app/models/',
+ *    'viewsDir' => '../app/views/'
+ *));
+ *</code>
+ *
+ * You can read it as follows:
+ *
+ *<code>
+ * $config = new Phalcon\Config\Adapter\Php("path/config.php");
+ * echo $config->phalcon->controllersDir;
+ * echo $config->database->username;
+ *</code>
  */
 ZEPHIR_INIT_CLASS(Phalcon_Config_Adapter_Php) {
 
@@ -64,8 +98,8 @@ PHP_METHOD(Phalcon_Config_Adapter_Php, __construct) {
 		RETURN_MM_NULL();
 	}
 
-	if (unlikely(Z_TYPE_P(filePath_param) == IS_STRING)) {
-		filePath = filePath_param;
+	if (likely(Z_TYPE_P(filePath_param) == IS_STRING)) {
+		zephir_get_strval(filePath, filePath_param);
 	} else {
 		ZEPHIR_INIT_VAR(filePath);
 		ZVAL_EMPTY_STRING(filePath);

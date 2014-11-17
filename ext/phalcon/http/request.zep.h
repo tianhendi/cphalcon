@@ -23,6 +23,7 @@ PHP_METHOD(Phalcon_Http_Request, getJsonRawBody);
 PHP_METHOD(Phalcon_Http_Request, getServerAddress);
 PHP_METHOD(Phalcon_Http_Request, getServerName);
 PHP_METHOD(Phalcon_Http_Request, getHttpHost);
+PHP_METHOD(Phalcon_Http_Request, getURI);
 PHP_METHOD(Phalcon_Http_Request, getClientAddress);
 PHP_METHOD(Phalcon_Http_Request, getMethod);
 PHP_METHOD(Phalcon_Http_Request, getUserAgent);
@@ -52,7 +53,7 @@ PHP_METHOD(Phalcon_Http_Request, getBasicAuth);
 PHP_METHOD(Phalcon_Http_Request, getDigestAuth);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_request_setdi, 0, 0, 1)
-	ZEND_ARG_INFO(0, dependencyInjector)
+	ZEND_ARG_OBJ_INFO(0, dependencyInjector, Phalcon\\DiInterface, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_phalcon_http_request_get, 0, 0, 0)
@@ -164,6 +165,7 @@ ZEPHIR_INIT_FUNCS(phalcon_http_request_method_entry) {
 	PHP_ME(Phalcon_Http_Request, getServerAddress, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Request, getServerName, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Request, getHttpHost, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME(Phalcon_Http_Request, getURI, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_FINAL)
 	PHP_ME(Phalcon_Http_Request, getClientAddress, arginfo_phalcon_http_request_getclientaddress, ZEND_ACC_PUBLIC)
 	PHP_ME(Phalcon_Http_Request, getMethod, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_FINAL)
 	PHP_ME(Phalcon_Http_Request, getUserAgent, NULL, ZEND_ACC_PUBLIC)

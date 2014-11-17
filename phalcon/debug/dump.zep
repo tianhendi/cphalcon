@@ -28,7 +28,7 @@ namespace Phalcon\Debug;
  *	$foo = 123;
  *	echo (new \Phalcon\Debug\Dump())->var($foo, "foo");
  *</code>
- * 
+ *
  *<code>
  *	$foo = "string";
  *	$bar = ["key" => "value"];
@@ -97,7 +97,7 @@ class Dump
 	 * @param array styles
 	 * @return array
 	 */
-	public function setStyles(array styles = null) -> array
+	public function setStyles(var styles = null) -> array
 	{
 		var defaultStyles;
 
@@ -136,7 +136,7 @@ class Dump
 	public function one(variable, string name = null) -> string
 	{
 		return this->$var(variable, name);
-	}	
+	}
 
 	/**
 	 * Prepare an HTML string of information about a single variable.
@@ -149,7 +149,7 @@ class Dump
 	protected function output(variable, name = null, tab = 1) -> string
 	{
 		var key, value, output, space, type, attr;
-		let space = "  ", 
+		let space = "  ",
 			output = "";
 
 		if name {
@@ -172,6 +172,7 @@ class Dump
 		}
 
 		if typeof variable == "object" {
+
 			let output .= strtr("<b style=':style'>Object</b> :class", [":style": this->getStyle("obj"), ":class": get_class(variable)]);
 
 			if get_parent_class(variable) {
@@ -218,7 +219,7 @@ class Dump
 			if (in_array(get_class(variable), this->_methods)) {
 				let output .= str_repeat(space, tab) . "[already listed]\n";
 			} else {
-				for key, value in attr {
+				for value in attr {
 					let this->_methods[] = get_class(variable);
 
 					if value == "__construct" {
@@ -258,7 +259,7 @@ class Dump
 		return strtr("(<span style=':style'>:var</span>)", [":style": this->getStyle("other"), ":var": variable]);
 	}
 
-	 /**
+	/**
 	 * Returns an HTML string of information about a single variable.
 	 *
 	 *<code>
@@ -271,7 +272,10 @@ class Dump
 	 */
 	public function $var(variable, string name = null) -> string
 	{
-		return strtr("<pre style=':style'>:output</pre>", [":style": this->getStyle("pre"), ":output": this->output(variable, name)]);
+		return strtr("<pre style=':style'>:output</pre>", [
+			":style": this->getStyle("pre"),
+			":output": this->output(variable, name)
+		]);
 	}
 
 	/**
@@ -300,5 +304,4 @@ class Dump
 
 		return output;
 	}
-
 }

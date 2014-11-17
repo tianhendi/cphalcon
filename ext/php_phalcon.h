@@ -4,15 +4,17 @@
 #ifndef PHP_PHALCON_H
 #define PHP_PHALCON_H 1
 
+#ifdef PHP_WIN32
 #define ZEPHIR_RELEASE 1
+#endif
 
 #include "kernel/globals.h"
 
 #define PHP_PHALCON_NAME        ""
-#define PHP_PHALCON_VERSION     "2.0.0a"
+#define PHP_PHALCON_VERSION     "2.0.0b"
 #define PHP_PHALCON_EXTNAME     "phalcon"
 #define PHP_PHALCON_AUTHOR      "Phalcon Team"
-#define PHP_PHALCON_ZEPVERSION  "0.4.6a"
+#define PHP_PHALCON_ZEPVERSION  "0.5.8a"
 #define PHP_PHALCON_DESCRIPTION ""
 
 typedef struct _zephir_struct_db { 
@@ -20,10 +22,13 @@ typedef struct _zephir_struct_db {
 } zephir_struct_db;
 
 typedef struct _zephir_struct_orm { 
-	zend_bool column_renaming;
-	zend_bool events;
+	HashTable*  parser_cache;
+	HashTable*  ast_cache;
 	int cache_level;
+	int unique_cache_id;
+	zend_bool events;
 	zend_bool virtual_foreign_keys;
+	zend_bool column_renaming;
 	zend_bool not_null_validations;
 	zend_bool exception_on_failed_save;
 	zend_bool enable_literals;
@@ -32,6 +37,8 @@ typedef struct _zephir_struct_orm {
 
 
 ZEND_BEGIN_MODULE_GLOBALS(phalcon)
+
+	int initialized;
 
 	/* Memory */
 	zephir_memory_entry *start_memory; /**< The first preallocated frame */
@@ -43,6 +50,9 @@ ZEND_BEGIN_MODULE_GLOBALS(phalcon)
 
 	/** Function cache */
 	HashTable *fcache;
+
+	/* Cache enabled */
+	unsigned int cache_enabled;
 
 	/* Max recursion control */
 	unsigned int recursive_lock;
@@ -76,6 +86,8 @@ ZEND_EXTERN_MODULE_GLOBALS(phalcon)
 #else
 	#define ZEPHIR_VGLOBAL &(phalcon_globals)
 #endif
+
+#define ZEPHIR_API ZEND_API
 
 #define zephir_globals_def phalcon_globals
 #define zend_zephir_globals_def zend_phalcon_globals

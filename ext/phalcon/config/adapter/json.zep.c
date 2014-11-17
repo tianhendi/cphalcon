@@ -38,6 +38,25 @@
  |          Eduar Carvajal <eduar@phalconphp.com>                         |
  +------------------------------------------------------------------------+
  */
+/**
+ * Phalcon\Config\Adapter\Json
+ *
+ * Reads JSON files and converts them to Phalcon\Config objects.
+ *
+ * Given the following configuration file:
+ *
+ *<code>
+ * {"phalcon":{"baseuri":"\/phalcon\/"},"models":{"metadata":"memory"}}
+ *</code>
+ *
+ * You can read it as follows:
+ *
+ *<code>
+ * $config = new Phalcon\Config\Adapter\Json("path/config.json");
+ * echo $config->phalcon->baseuri;
+ * echo $config->models->metadata;
+ *</code>
+ */
 ZEPHIR_INIT_CLASS(Phalcon_Config_Adapter_Json) {
 
 	ZEPHIR_REGISTER_CLASS_EX(Phalcon\\Config\\Adapter, Json, phalcon, config_adapter_json, phalcon_config_ce, phalcon_config_adapter_json_method_entry, 0);
@@ -66,8 +85,8 @@ PHP_METHOD(Phalcon_Config_Adapter_Json, __construct) {
 		RETURN_MM_NULL();
 	}
 
-	if (unlikely(Z_TYPE_P(filePath_param) == IS_STRING)) {
-		filePath = filePath_param;
+	if (likely(Z_TYPE_P(filePath_param) == IS_STRING)) {
+		zephir_get_strval(filePath, filePath_param);
 	} else {
 		ZEPHIR_INIT_VAR(filePath);
 		ZVAL_EMPTY_STRING(filePath);

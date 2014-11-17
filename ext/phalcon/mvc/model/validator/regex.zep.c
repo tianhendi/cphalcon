@@ -84,7 +84,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 	zephir_nts_static zephir_fcall_cache_entry *_5 = NULL, *_9 = NULL;
 	int ZEPHIR_LAST_CALL_STATUS;
 	zend_bool failed, _3;
-	zval *record, *field = NULL, *value = NULL, *matches, *pattern = NULL, *message = NULL, *_0, *_1 = NULL, *_2 = NULL, *_4 = NULL, *_6, *_8 = NULL;
+	zval *record, *field = NULL, *value = NULL, *matches, *pattern = NULL, *message = NULL, *_0 = NULL, *_1 = NULL, *_2 = NULL, *_4 = NULL, *_6, *_8 = NULL;
 
 	ZEPHIR_MM_GROW();
 	zephir_fetch_params(1, 1, 0, &record);
@@ -96,7 +96,7 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 		return;
 	}
 	ZEPHIR_INIT_VAR(_0);
-	ZVAL_STRING(_0, "field", 0);
+	ZVAL_STRING(_0, "field", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&field, this_ptr, "getoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -104,8 +104,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 		ZEPHIR_THROW_EXCEPTION_DEBUG_STR(phalcon_mvc_model_exception_ce, "Field name must be a string", "phalcon/mvc/model/validator/regex.zep", 67);
 		return;
 	}
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "pattern", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "pattern", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&_1, this_ptr, "issetoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -115,8 +115,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 	}
 	ZEPHIR_CALL_METHOD(&value, record, "readattribute", NULL, field);
 	zephir_check_call_status();
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "allowEmpty", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "allowEmpty", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&_2, this_ptr, "issetoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -127,8 +127,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 	if (_3) {
 		RETURN_MM_BOOL(1);
 	}
-	ZEPHIR_INIT_BNVAR(_0);
-	ZVAL_STRING(_0, "pattern", 0);
+	ZEPHIR_INIT_NVAR(_0);
+	ZVAL_STRING(_0, "pattern", ZEPHIR_TEMP_PARAM_COPY);
 	ZEPHIR_CALL_METHOD(&pattern, this_ptr, "getoption", NULL, _0);
 	zephir_check_temp_parameter(_0);
 	zephir_check_call_status();
@@ -146,8 +146,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 		failed = 1;
 	}
 	if (failed == 1) {
-		ZEPHIR_INIT_BNVAR(_0);
-		ZVAL_STRING(_0, "message", 0);
+		ZEPHIR_INIT_NVAR(_0);
+		ZVAL_STRING(_0, "message", ZEPHIR_TEMP_PARAM_COPY);
 		ZEPHIR_CALL_METHOD(&message, this_ptr, "getoption", NULL, _0);
 		zephir_check_temp_parameter(_0);
 		zephir_check_call_status();
@@ -160,8 +160,8 @@ PHP_METHOD(Phalcon_Mvc_Model_Validator_Regex, validate) {
 		zephir_array_update_string(&_7, SL(":field"), &field, PH_COPY | PH_SEPARATE);
 		ZEPHIR_CALL_FUNCTION(&_8, "strtr", &_9, message, _7);
 		zephir_check_call_status();
-		ZEPHIR_INIT_BNVAR(_0);
-		ZVAL_STRING(_0, "Regex", 0);
+		ZEPHIR_INIT_NVAR(_0);
+		ZVAL_STRING(_0, "Regex", ZEPHIR_TEMP_PARAM_COPY);
 		ZEPHIR_CALL_METHOD(NULL, this_ptr, "appendmessage", NULL, _8, field, _0);
 		zephir_check_temp_parameter(_0);
 		zephir_check_call_status();

@@ -15,11 +15,13 @@
  | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
  |          Eduar Carvajal <eduar@phalconphp.com>                         |
  +------------------------------------------------------------------------+
- */
+*/
 
- namespace Phalcon;
+namespace Phalcon;
 
- /**
+use Phalcon\Config\Exception;
+
+/**
  * Phalcon\Config
  *
  * Phalcon\Config is designed to simplify the access to, and the use of, configuration data within applications.
@@ -44,56 +46,24 @@
  *</code>
  *
  */
-class Config implements \ArrayAccess
+class Config implements \ArrayAccess, \Countable
 {
 
 	/**
 	 * Phalcon\Config constructor
-	 *
-	 * @param	array arrayConfig
 	 */
-	public function __construct(arrayConfig=null)
+	public function __construct(array! arrayConfig = null)
 	{
-		var key, value, subkey, subvalue;
-		boolean hasNumericKey;
-
-		/**
-		 * Throw exceptions if bad parameters are passed
-		 */
-		if typeof arrayConfig != "array" {
-			if typeof arrayConfig != "null" {
-				throw new \Phalcon\Config\Exception("The configuration must be an Array");
-			} else {
-				return;
-			}
-		}
+		var key, value;
 
 		for key, value in arrayConfig {
 
-			/**
-			 * Phalcon\Config does not support numeric keys as properties
-			 */
-			if typeof key != "string" {
-				throw new \Phalcon\Config\Exception("Only string keys are allowed as configuration properties");
-			}
-
-			if typeof value == "array" {
-				let hasNumericKey = false;
-				for subkey, subvalue in value {
-					if typeof subkey == "int" {
-						let hasNumericKey = true;
-						break;
-					}
-				}
-				if hasNumericKey {
-					let this->{key} = value;
-				} else {
-					let this->{key} = new \Phalcon\Config(value);
-				}
+			let key = strval(key);
+			if typeof value === "array" {
+				let this->{key} = new self(value);
 			} else {
 				let this->{key} = value;
 			}
-
 		}
 	}
 
@@ -103,11 +73,8 @@ class Config implements \ArrayAccess
 	 *<code>
 	 * var_dump(isset($config['database']));
 	 *</code>
-	 *
-	 * @param string index
-	 * @return boolean
 	 */
-	public function offsetExists(string! index)
+	public function offsetExists(string! index) -> boolean
 	{
 		return isset this->{index};
 	}
@@ -119,14 +86,14 @@ class Config implements \ArrayAccess
 	 *<code>
 	 * echo $config->get('controllersDir', '../app/controllers/');
 	 *</code>
-	 *
-	 * @param string index
-	 * @param mixed defaultValue
-	 * @return mixed
 	 */
-	public function get(index, defaultValue=null)
+	public function get(string! index, var defaultValue = null)
 	{
+		if isset this->{index} {
+			return this->{index};
+		}
 
+		return defaultValue;
 	}
 
 	/**
@@ -135,11 +102,8 @@ class Config implements \ArrayAccess
 	 *<code>
 	 * print_r($config['database']);
 	 *</code>
-	 *
-	 * @param string index
-	 * @return string
 	 */
-	public function offsetGet(string! index)
+	public function offsetGet(string! index) -> string
 	{
 		return this->{index};
 	}
@@ -150,12 +114,10 @@ class Config implements \ArrayAccess
 	 *<code>
 	 * $config['database'] = array('type' => 'Sqlite');
 	 *</code>
-	 *
-	 * @param string $index
-	 * @param mixed $value
 	 */
-	public function offsetSet($index, $value)
+	public function offsetSet(string! index, var value)
 	{
+	    let this->{index} = value;
 	}
 
 	/**
@@ -164,27 +126,27 @@ class Config implements \ArrayAccess
 	 *<code>
 	 * unset($config['database']);
 	 *</code>
-	 *
-	 * @param string index
 	 */
-	public function offsetUnset(index)
+	public function offsetUnset(string! index)
 	{
-		return true;
+		//unset(this->{index});
+		let this->{index} = null;
 	}
 
 	/**
 	 * Merges a configuration into the current one
 	 *
 	 *<code>
-	 *	$appConfig = new \Phalcon\Config(array('database' => array('host' => 'localhost')));
-	 *	$globalConfig->merge($config2);
+	 * $appConfig = new \Phalcon\Config(array('database' => array('host' => 'localhost')));
+	 * $globalConfig->merge($config2);
 	 *</code>
 	 *
-	 * @param Phalcon\Config $config
+	 * @param Config config
+	 * @return this merged config
 	 */
-	public function merge(config)
+	public function merge(<Config> config) -> <Config>
 	{
-
+		return this->_merge(config);
 	}
 
 	/**
@@ -193,16 +155,14 @@ class Config implements \ArrayAccess
 	 *<code>
 	 *	print_r($config->toArray());
 	 *</code>
-	 *
-	 * @return array
 	 */
-	public function toArray()
+	public function toArray() -> array
 	{
 		var key, value, arrayConfig;
 
 		let arrayConfig = [];
 		for key, value in get_object_vars(this) {
-			if typeof value == "object" {
+			if typeof value === "object" {
 				if method_exists(value, "toArray") {
 					let arrayConfig[key] = value->toArray();
 				} else {
@@ -216,14 +176,55 @@ class Config implements \ArrayAccess
 	}
 
 	/**
-	 * Restores the state of a Phalcon\Config object
+	 * Returns the count of properties set in the config
 	 *
-	 * @param array data
-	 * @return Phalcon\Config
+	 *<code>
+	 * print count($config);
+	 *</code>
+	 *
+	 * or
+	 *
+	 *<code>
+	 * print $config->count();
+	 *</code>
 	 */
-	public static function __set_state(data) -> <\Phalcon\Config>
+	public function count() -> int
+	{
+		return count(get_object_vars(this));
+	}
+
+	/**
+	 * Restores the state of a Phalcon\Config object
+	 */
+	public static function __set_state(array! data) -> <Config>
 	{
 		return new self(data);
 	}
 
+	/**
+	 * Helper method for merge configs (forwarding nested config instance)
+	 *
+	 * @param Config config
+	 * @param Config instance = null
+	 *
+	 * @return Config merged config
+	 */
+	private function _merge(<Config> config, var instance = null) -> <Config>
+	{
+		var key, value;
+
+		if typeof instance !== "object" {
+			let instance = this;
+		}
+
+		for key, value in get_object_vars(config) {
+			if isset(instance->{key}) && typeof value === "object" && typeof instance->{key} === "object" {
+				this->_merge(value, instance->{key});
+			} else {
+				let instance->{key} = value;
+			}
+		}
+
+		return instance;
+	}
 }

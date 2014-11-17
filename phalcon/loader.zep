@@ -20,6 +20,7 @@
 namespace Phalcon;
 
 use Phalcon\Events\ManagerInterface;
+use Phalcon\Events\EventsAwareInterface;
 
 /**
  * Phalcon\Loader
@@ -44,7 +45,7 @@ use Phalcon\Events\ManagerInterface;
  * $adapter = Example\Adapter\Some();
  *</code>
  */
-class Loader implements \Phalcon\Events\EventsAwareInterface
+class Loader implements EventsAwareInterface
 {
 
 	protected _eventsManager = null;
@@ -122,19 +123,14 @@ class Loader implements \Phalcon\Events\EventsAwareInterface
 	 * @param boolean merge
 	 * @return Phalcon\Loader
 	 */
-	public function registerNamespaces(namespaces, boolean merge=false) -> <Loader>
+	public function registerNamespaces(array! namespaces, boolean merge=false) -> <Loader>
 	{
-
 		var currentNamespaces, mergedNamespaces;
-
-		if typeof namespaces != "array" {
-			throw new Exception("Parameter namespaces must be an array");
-		}
 
 		if merge {
 			let currentNamespaces = this->_namespaces;
 			if typeof currentNamespaces == "array" {
-				let mergedNamespaces = array_merge(currentNamespaces, namespaces);
+				let mergedNamespaces = currentNamespaces->merge(namespaces);
 			} else {
 				let mergedNamespaces = namespaces;
 			}
@@ -163,18 +159,14 @@ class Loader implements \Phalcon\Events\EventsAwareInterface
 	 * @param boolean merge
 	 * @return Phalcon\Loader
 	 */
-	public function registerPrefixes(prefixes, boolean merge=false) -> <Loader>
+	public function registerPrefixes(array! prefixes, boolean merge = false) -> <Loader>
 	{
 		var currentPrefixes, mergedPrefixes;
-
-		if typeof prefixes != "array" {
-			throw new Exception("Parameter prefixes must be an array");
-		}
 
 		if merge {
 			let currentPrefixes = this->_prefixes;
 			if typeof currentPrefixes == "array" {
-				let mergedPrefixes = array_merge(currentPrefixes, prefixes);
+				let mergedPrefixes = currentPrefixes->merge(prefixes);
 			} else {
 				let mergedPrefixes = prefixes;
 			}
@@ -202,18 +194,14 @@ class Loader implements \Phalcon\Events\EventsAwareInterface
 	 * @param boolean merge
 	 * @return Phalcon\Loader
 	 */
-	public function registerDirs(directories, boolean merge=false) -> <Loader>
+	public function registerDirs(array! directories, boolean merge = false) -> <Loader>
 	{
 		var currentDirectories, mergedDirectories;
-
-		if typeof directories != "array" {
-			throw new Exception("Parameter directories must be an array");
-		}
 
 		if merge {
 			let currentDirectories = this->_directories;
 			if typeof currentDirectories == "array" {
-				let mergedDirectories = array_merge(currentDirectories, directories);
+				let mergedDirectories = currentDirectories->merge(directories);
 			} else {
 				let mergedDirectories = directories;
 			}
@@ -241,18 +229,14 @@ class Loader implements \Phalcon\Events\EventsAwareInterface
 	 * @param boolean merge
 	 * @return Phalcon\Loader
 	 */
-	public function registerClasses(classes, merge=false) -> <Loader>
+	public function registerClasses(array! classes, boolean merge = false) -> <Loader>
 	{
 		var mergedClasses, currentClasses;
-
-		if typeof classes != "array" {
-			throw new Exception("Parameter classes must be an array");
-		}
 
 		if merge {
 			let currentClasses = this->_classes;
 			if typeof currentClasses == "array" {
-				let mergedClasses = array_merge(currentClasses, classes);
+				let mergedClasses = currentClasses->merge(classes);
 			} else {
 				let mergedClasses = classes;
 			}
@@ -552,5 +536,4 @@ class Loader implements \Phalcon\Events\EventsAwareInterface
 	{
 		return this->_checkedPath;
 	}
-
 }

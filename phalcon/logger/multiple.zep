@@ -19,6 +19,11 @@
 
 namespace Phalcon\Logger;
 
+use Phalcon\Logger;
+use Phalcon\Logger\AdapterInterface;
+use Phalcon\Logger\FormatterInterface;
+use Phalcon\Logger\Exception;
+
 /**
  * Phalcon\Logger\Multiple
  *
@@ -36,11 +41,8 @@ class Multiple
 	 *
 	 * @param Phalcon\Logger\AdapterInterface logger
 	 */
-	public function push(<\Phalcon\Logger\AdapterInterface> logger)
+	public function push(<AdapterInterface> logger)
 	{
-		if typeof logger == "object" {
-			throw new \Phalcon\Logger\Exception("The logger is invalid");
-		}
 		let this->_loggers[] = logger;
 	}
 
@@ -49,7 +51,7 @@ class Multiple
 	 *
 	 * @param Phalcon\Logger\FormatterInterface formatter
 	 */
-	public function setFormatter(<\Phalcon\Logger\FormatterInterface> formatter)
+	public function setFormatter(<FormatterInterface> formatter)
 	{
 		var loggers, logger;
 
@@ -68,14 +70,14 @@ class Multiple
 	 * @param string message
 	 * @param int type
 	 */
-	public function log(string message, int type=7)
+	public function log(string message, int type = 7)
 	{
 		var loggers, logger;
 
 		let loggers = this->_loggers;
 		if typeof loggers == "array" {
 			for logger in loggers {
-				logger->log(message, type);
+				logger->log(type, message);
 			}
 		}
 	}
@@ -87,7 +89,7 @@ class Multiple
  	 */
 	public function emergency(string message)
 	{
-		this->log(message, \Phalcon\Logger::EMERGENCY);
+		this->log(message, Logger::EMERGENCY);
 	}
 
 	/**
@@ -98,7 +100,7 @@ class Multiple
  	 */
 	public function debug(string message)
 	{
-		this->log(message, \Phalcon\Logger::DEBUG);
+		this->log(message, Logger::DEBUG);
 	}
 
 	/**
@@ -108,7 +110,7 @@ class Multiple
  	 */
 	public function error(string message)
 	{
-		this->log(message, \Phalcon\Logger::ERROR);
+		this->log(message, Logger::ERROR);
 	}
 
 	/**
@@ -118,7 +120,7 @@ class Multiple
  	 */
 	public function info(string message)
 	{
-		this->log(message, \Phalcon\Logger::INFO);
+		this->log(message, Logger::INFO);
 	}
 
 	/**
@@ -128,7 +130,7 @@ class Multiple
  	 */
 	public function notice(string message)
 	{
-		this->log(message, \Phalcon\Logger::NOTICE);
+		this->log(message, Logger::NOTICE);
 	}
 
 	/**
@@ -138,7 +140,7 @@ class Multiple
  	 */
 	public function warning(string message)
 	{
-		this->log(message, \Phalcon\Logger::WARNING);
+		this->log(message, Logger::WARNING);
 	}
 
 	/**
@@ -148,7 +150,6 @@ class Multiple
  	 */
 	public function alert(string message)
 	{
-		this->log(message, \Phalcon\Logger::ALERT);
+		this->log(message, Logger::ALERT);
 	}
-
 }

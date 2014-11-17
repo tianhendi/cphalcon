@@ -20,6 +20,7 @@
 
 namespace Phalcon;
 
+use Phalcon\DiInterface;
 use Phalcon\Di\Service;
 use Phalcon\Di\ServiceInterface;
 use Phalcon\Di\Exception;
@@ -56,7 +57,7 @@ use Phalcon\Di\Exception;
  *
  *</code>
  */
-class Di implements \Phalcon\DiInterface
+class Di implements DiInterface
 {
 
 	protected _services;
@@ -89,10 +90,10 @@ class Di implements \Phalcon\DiInterface
 	 * @param boolean shared
 	 * @return Phalcon\Di\ServiceInterface
 	 */
-	public function set(string! name, definition, shared = false) -> <ServiceInterface>
+	public function set(string! name, definition, boolean shared = false) -> <ServiceInterface>
 	{
 		var service;
-		let service = new \Phalcon\Di\Service(name, definition, shared),
+		let service = new Service(name, definition, shared),
 			this->_services[name] = service;
 		return service;
 	}
@@ -104,7 +105,7 @@ class Di implements \Phalcon\DiInterface
 	 * @param mixed definition
 	 * @return Phalcon\Di\ServiceInterface
 	 */
-	public function setShared(string! name, definition) -> <ServiceInterface>
+	public function setShared(string! name, var definition) -> <ServiceInterface>
 	{
 		var service;
 		let service = new Service(name, definition, true),
@@ -201,7 +202,7 @@ class Di implements \Phalcon\DiInterface
 	 */
 	public function get(string! name, parameters = null)
 	{
-		var service, instance;
+		var service, instance, reflection;
 
 		if fetch service, this->_services[name] {
 			/**
@@ -215,12 +216,27 @@ class Di implements \Phalcon\DiInterface
 			if class_exists(name) {
 				if typeof parameters == "array" {
 					if count(parameters) {
-						let instance = create_instance_params(name, parameters);
+						if is_php_version("5.6") {
+							let reflection = new \ReflectionClass(name),
+								instance = reflection->newInstanceArgs(parameters);
+						} else {
+							let instance = create_instance_params(name, parameters);
+						}
+					} else {
+						if is_php_version("5.6") {
+							let reflection = new \ReflectionClass(name),
+								instance = reflection->newInstance();
+						} else {
+							let instance = create_instance(name);
+						}
+					}
+				} else {
+					if is_php_version("5.6") {
+						let reflection = new \ReflectionClass(name),
+							instance = reflection->newInstance();
 					} else {
 						let instance = create_instance(name);
 					}
-				} else {
-					let instance = create_instance(name);
 				}
 			} else {
 				throw new Exception("Service '" . name . "' wasn't found in the dependency injection container");
@@ -325,7 +341,7 @@ class Di implements \Phalcon\DiInterface
 	 * @param mixed definition
 	 * @return boolean
 	 */
-	public function offsetSet(string! name, definition) -> boolean
+	public function offsetSet(string! name, var definition) -> boolean
 	{
 		this->setShared(name, definition);
 		return true;
@@ -404,7 +420,7 @@ class Di implements \Phalcon\DiInterface
 	 *
 	 * @param Phalcon\DiInterface dependencyInjector
 	 */
-	public static function setDefault(<\Phalcon\DiInterface> dependencyInjector)
+	public static function setDefault(<DiInterface> dependencyInjector)
 	{
 		let self::_default = dependencyInjector;
 	}
@@ -414,7 +430,7 @@ class Di implements \Phalcon\DiInterface
 	 *
 	 * @return Phalcon\DiInterface
 	 */
-	public static function getDefault() -> <\Phalcon\DiInterface>
+	public static function getDefault() -> <DiInterface>
 	{
 		return self::_default;
 	}
@@ -426,5 +442,4 @@ class Di implements \Phalcon\DiInterface
 	{
 		let self::_default = null;
 	}
-
 }

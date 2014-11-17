@@ -38,7 +38,7 @@ class Gd extends \Phalcon\Image\Adapter implements \Phalcon\Image\AdapterInterfa
 			let version = GD_VERSION;
 		} else {
 			let info = gd_info(), matches = null;
-			if (preg_match("/\\d+\\.\\d+(?:\\.\\d+)?/", info["GD Version"], matches)) {
+			if preg_match("/\\d+\\.\\d+(?:\\.\\d+)?/", info["GD Version"], matches) {
 				let version = matches[0];
 			}
 		}
@@ -157,7 +157,7 @@ class Gd extends \Phalcon\Image\Adapter implements \Phalcon\Image\AdapterInterfa
 			imagedestroy(this->_image);
 			let this->_image = image;
 			let this->_width  = imagesx(image);
-			let this->_height = imagesx(image);
+			let this->_height = imagesy(image);
 		}
 	}
 
@@ -179,7 +179,7 @@ class Gd extends \Phalcon\Image\Adapter implements \Phalcon\Image\AdapterInterfa
 			imagedestroy(this->_image);
 			let this->_image = image;
 			let this->_width  = imagesx(image);
-			let this->_height = imagesx(image);
+			let this->_height = imagesy(image);
 		}
 	}
 

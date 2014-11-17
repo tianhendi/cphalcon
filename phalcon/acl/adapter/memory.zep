@@ -20,6 +20,7 @@
 namespace Phalcon\Acl\Adapter;
 
 use Phalcon\Acl\Adapter;
+use Phalcon\Acl\Resource;
 use Phalcon\Acl\Exception;
 
 /**
@@ -239,7 +240,7 @@ class Memory extends Adapter
 	 * @param  string resourceName
 	 * @return boolean
 	 */
-	public function isResource(var resourceName)
+	public function isResource(var resourceName) -> boolean
 	{
 		return isset this->_resourcesNames[resourceName];
 	}
@@ -265,7 +266,7 @@ class Memory extends Adapter
 	 * @param   array accessList
 	 * @return  boolean
 	 */
-	public function addResource(var resourceValue, var accessList)
+	public function addResource(var resourceValue, var accessList) -> boolean
 	{
 		var resourceName, resourceObject;
 
@@ -274,7 +275,7 @@ class Memory extends Adapter
 			let resourceObject = resourceValue;
 		 } else {
 			let resourceName   = resourceValue;
-			let resourceObject = new \Phalcon\Acl\Resource(resourceName);
+			let resourceObject = new $Resource(resourceName);
 		 }
 
 		 if !isset this->_resourcesNames[resourceName] {
@@ -290,13 +291,18 @@ class Memory extends Adapter
 	 *
 	 * @param string resourceName
 	 * @param mixed accessList
+	 * @return boolean
 	 */
-	public function addResourceAccess(var resourceName, var accessList)
+	public function addResourceAccess(var resourceName, var accessList) -> boolean
 	{
 		var accessName, accessKey, exists;
 
 		if !isset this->_resourcesNames[resourceName] {
 			throw new Exception("Resource '" . resourceName . "' does not exist in ACL");
+		}
+
+		if typeof accessList != "array" && typeof accessList != "string" {
+			throw new Exception("Invalid value for accessList");
 		}
 
 		let exists = true;
@@ -308,13 +314,13 @@ class Memory extends Adapter
 				}
 			}
 		} else {
-			if typeof accessList == "string" {
-				let accessKey = resourceName . "!" . accessName;
-				if !isset accessList[accessKey] {
-					let this->_accessList[accessKey] = exists;
-				}
+			let accessKey = resourceName . "!" . accessList;
+			if !isset accessList[accessKey] {
+				let this->_accessList[accessKey] = exists;
 			}
 		}
+
+		return true;
 	}
 
 	/**
@@ -352,7 +358,7 @@ class Memory extends Adapter
 	 * @param string access
 	 * @param string action
 	 */
-	private function _allowOrDeny(var roleName, var resourceName, var access, var action)
+	protected function _allowOrDeny(var roleName, var resourceName, var access, var action)
 	{
 		var defaultAccess, accessList, accessName, accessKey, accessKeyAll, internalAccess;
 
@@ -373,7 +379,7 @@ class Memory extends Adapter
 			for accessName in access {
 				let accessKey = resourceName . "!" . accessName;
 				if !isset accessList[accessKey] {
-					throw new Exception("Acccess '" . accessName . "' does not exist in resource '" . resourceName . "'");
+					throw new Exception("Access '" . accessName . "' does not exist in resource '" . resourceName . "'");
 				}
 			}
 
@@ -395,7 +401,7 @@ class Memory extends Adapter
 			if access != "*" {
 				let accessKey = resourceName . "!" . access;
 				if !isset accessList[accessKey] {
-					throw new Exception("Acccess '" . access . "' does not exist in resource '" . resourceName . "'");
+					throw new Exception("Access '" . access . "' does not exist in resource '" . resourceName . "'");
 				}
 			}
 
@@ -447,13 +453,13 @@ class Memory extends Adapter
 	 */
 	public function allow(var roleName, var resourceName, var access)
 	{
-		var tmp;
+		var innerRoleName;
 
 		if roleName != "*" {
-			return this->_allowordeny(roleName, resourceName, access, \Phalcon\Acl::ALLOW);
+			return this->_allowOrDeny(roleName, resourceName, access, \Phalcon\Acl::ALLOW);
 		} else {
-			for roleName, tmp in this->_rolesNames {
-				this->_allowordeny(roleName, resourceName, access, \Phalcon\Acl::ALLOW);
+			for innerRoleName, _ in this->_rolesNames {
+				this->_allowOrDeny(innerRoleName, resourceName, access, \Phalcon\Acl::ALLOW);
 			}
 		}
 	}
@@ -485,13 +491,13 @@ class Memory extends Adapter
 	 */
 	public function deny(var roleName, var resourceName, var access)
 	{
-		var tmp;
+		var innerRoleName;
 
 		if roleName != "*" {
 			return this->_allowordeny(roleName, resourceName, access, \Phalcon\Acl::DENY);
 		} else {
-			for roleName, tmp in this->_rolesNames {
-				this->_allowordeny(roleName, resourceName, access, \Phalcon\Acl::DENY);
+			for innerRoleName, _ in this->_rolesNames {
+				this->_allowordeny(innerRoleName, resourceName, access, \Phalcon\Acl::DENY);
 			}
 		}
 	}

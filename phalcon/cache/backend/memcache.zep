@@ -19,7 +19,10 @@
 
 namespace Phalcon\Cache\Backend;
 
+use Phalcon\Cache\Backend;
+use Phalcon\Cache\BackendInterface;
 use Phalcon\Cache\Exception;
+use Phalcon\Cache\FrontendInterface;
 
 /**
  * Phalcon\Cache\Backend\Memcache
@@ -50,7 +53,7 @@ use Phalcon\Cache\Exception;
  *
  *</code>
  */
-class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendInterface
+class Memcache extends Backend implements BackendInterface
 {
 
 	protected _memcache = null;
@@ -61,7 +64,7 @@ class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendI
 	 * @param	Phalcon\Cache\FrontendInterface frontend
 	 * @param	array options
 	 */
-	public function __construct(<\Phalcon\Cache\FrontendInterface> frontend, options = null)
+	public function __construct(<FrontendInterface> frontend, options = null)
 	{
 		if typeof options != "array" {
 			let options = [];
@@ -166,7 +169,7 @@ class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendI
 		}
 
 		if !lastKey {
-			throw new Exception("The cache must be started first");
+			throw new Exception("Cache must be started first");
 		}
 
 		let frontend = this->_frontend;
@@ -190,7 +193,7 @@ class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendI
 		 * Prepare the content in the frontend
 		 */
 		let preparedContent = frontend->beforeStore(cachedContent);
-		
+
 		if typeof lifetime == "null" {
 			let tmp = this->_lastLifetime;
 
@@ -272,7 +275,7 @@ class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendI
 
 		if !fetch specialKey, options["statsKey"] {
 			throw new Exception("Unexpected inconsistency in options");
-		} 
+		}
 
 		let keys = memcache->get(specialKey);
 
@@ -294,9 +297,9 @@ class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendI
 	 * @param string prefix
 	 * @return array
 	 */
-	public function queryKeys(prefix = null)
+	public function queryKeys(prefix = null) -> array
 	{
-		var memcache, options, keys, specialKey, key, value, realKey;
+		var memcache, options, keys, specialKey, key, realKey;
 
 		let memcache = this->_memcache;
 
@@ -317,7 +320,7 @@ class Memcache extends \Phalcon\Cache\Backend implements \Phalcon\Cache\BackendI
 		let realKey = [];
 		let keys = memcache->get(specialKey);
 		if typeof keys == "array" {
-			for key, value in keys {
+			for key, _ in keys {
 				if !prefix || starts_with(key, prefix) {
 					let realKey[] = key;
 				}

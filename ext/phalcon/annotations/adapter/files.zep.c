@@ -79,7 +79,7 @@ PHP_METHOD(Phalcon_Annotations_Adapter_Files, __construct) {
 	}
 
 
-	if (Z_TYPE_P(options) != IS_ARRAY) {
+	if (Z_TYPE_P(options) == IS_ARRAY) {
 		if (zephir_array_isset_string_fetch(&annotationsDir, options, SS("annotationsDir"), 1 TSRMLS_CC)) {
 			zephir_update_property_this(this_ptr, SL("_annotationsDir"), annotationsDir TSRMLS_CC);
 		}
@@ -141,8 +141,8 @@ PHP_METHOD(Phalcon_Annotations_Adapter_Files, write) {
 		RETURN_MM_NULL();
 	}
 
-	if (unlikely(Z_TYPE_P(key_param) == IS_STRING)) {
-		key = key_param;
+	if (likely(Z_TYPE_P(key_param) == IS_STRING)) {
+		zephir_get_strval(key, key_param);
 	} else {
 		ZEPHIR_INIT_VAR(key);
 		ZVAL_EMPTY_STRING(key);
